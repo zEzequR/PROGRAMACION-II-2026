@@ -1,5 +1,16 @@
 CREATE DATABASE db_pp2;
 
+CREATE TABLE Ubicaciones
+(
+    id_ubicacion INT,
+    pais VARCHAR(60),
+    provincia VARCHAR(60),
+    ciudad VARCHAR(60),
+    codigo VARCHAR(60),
+    placeid TEXT,
+    PRIMARY KEY (id_ubicacion)
+);
+
 CREATE TYPE tipo_auth AS ENUM
 ('MANUAL', 'GOOGLE');
 
@@ -12,11 +23,12 @@ CREATE TABLE Personas
     nombre VARCHAR(255) NOT NULL,
     apellido VARCHAR(255) NOT NULL,
     telefono VARCHAR(30),
-    ubicacion JSONB,
+    id_ubicacion INT,
     activo BOOLEAN NOT NULL,    
     fecha_baja TIMESTAMP DEFAULT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP(2),
-    PRIMARY KEY (id_persona)
+    PRIMARY KEY (id_persona),
+    FOREIGN KEY (id_ubicacion) REFERENCES Ubicaciones(id_ubicacion)
 );
 
 CREATE TABLE Emprendedores
@@ -54,13 +66,6 @@ CREATE TABLE Clientes
     UNIQUE (id_tienda, id_persona)
 );
 
-CREATE TABLE Categorias_Productos
-(
-    id_cat INT,
-    categoria VARCHAR(80),
-    PRIMARY KEY (id_cat)
-);
-
 CREATE TYPE tipo_descuento AS ENUM
 ('MONTOFIJO', 'PORCENTAJE');
 
@@ -78,6 +83,13 @@ CREATE TABLE Cupones_Descuento
     FOREIGN KEY (id_tienda) REFERENCES Tiendas(id_tienda)
 );
 
+CREATE TABLE Categorias_Productos
+(
+    id_cat INT,
+    categoria VARCHAR(80),
+    PRIMARY KEY (id_cat)
+);
+
 CREATE TABLE Productos
 (
     id_producto INT,
@@ -88,11 +100,30 @@ CREATE TABLE Productos
     imagen_prod TEXT NOT NULL,
     descrip_prod VARCHAR(255),
     precio NUMERIC(18,2) NOT NULL,
-    espec_prod JSONB,
     activo BOOLEAN,
     PRIMARY KEY(id_producto),
     FOREIGN KEY (id_tienda) REFERENCES Tiendas(id_tienda),
     FOREIGN KEY (id_cat) REFERENCES Categorias_Productos(id_cat)
+);
+
+CREATE TABLE Atributos_Categoria
+(
+    id_atributo INT,
+    id_cat INT,
+    nombre_atributo VARCHAR(60),
+    PRIMARY KEY (id_atributo),
+    FOREIGN KEY (id_cat) REFERENCES Categorias_Productos(id_cat)
+);
+
+CREATE TABLE Especificaciones_Producto
+(
+    id_espec INT,
+    id_producto INT,
+    id_atributo INT,
+    valor VARCHAR(60),
+    PRIMARY KEY (id_espec),
+    FOREIGN KEY (id_producto) REFERENCES Productos(id_producto),
+    FOREIGN KEY (id_atributo) REFERENCES Atributos_Categoria(id_atributo)
 );
 
 CREATE TABLE Cupones_Descuentos_Productos
@@ -130,11 +161,23 @@ CREATE TABLE Productos_Digitales (
     FOREIGN KEY (id_lic_vta) REFERENCES Licencia_Venta(id_lic_vta)
 );
 
+CREATE TABLE Detalles_Pago
+(
+    id_det_pago INT,
+    id_transaccion INT UNIQUE,
+    estado VARCHAR(60),
+    metodo_pago VARCHAR(60),
+    monto NUMERIC(18,2),
+    fecha_pago TIMESTAMP DEFAULT CURRENT_TIMESTAMP(2),
+    PRIMARY KEY (id_det_pago)
+);
+
 CREATE TABLE Pagos
 (
     id_pago INT,
-    detalles_pago JSONB,
-    PRIMARY KEY (id_pago)
+    id_det_pago INT,
+    PRIMARY KEY (id_pago),
+    FOREIGN KEY (id_det_pago) REFERENCES Detalles_Pago(id_det_pago)
 );
 
 CREATE TYPE estado_venta AS ENUM
