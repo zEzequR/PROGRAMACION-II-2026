@@ -49,7 +49,6 @@ namespace MODELS #ffffd4{
         - telefono : string
         - fechaBaja : date
         - fechaCreacion : date
-        - ubicacion : json
         - activo : bool
     }
 
@@ -90,7 +89,6 @@ namespace MODELS #ffffd4{
         - imagenProd : string
         - descripProducto : string
         - precio : number
-        - especProd : json
         - activo : boolean
         + calcularPrecioVenta() : number
     }
@@ -185,16 +183,41 @@ namespace MODELS #ffffd4{
         - estado : string
         - idExterno : string
     }
+
+    class Ubicaciones{
+        - idUbicacion: int
+        - pais: string
+        - provincia: string
+        - ciudad : string
+        - codigoPostal : string
+        - placeId : string
+    }
+
+        class detallePago{
+        - idDetPago: int
+        - idTransaccion : string
+        - estado : string
+        - metodoPago : string
+        - monto : number
+        - fechaPago : string
+    }
+
+    entity atributosCategoria{
+    - <b><i><u><color: #aaa81a>idAtributo</color></u></i></b> : int
+    - <b><i><u><color: #ff9100>idCat</color></u></i></b>  : int
+    - nombreAtributo : string
+}
+    entity especificacionesProducto{
+    - <b><i><u><color: #ff9100>idEspec</color></u></i></b> : int
+    - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
+    - <b><i><u><color: #aaa81a>idAtributo</color></u></i></b> : int
+    - valor : string
+}
+
+
 }
 
 package JSONS <<Frame>> #ffd4d4 {
-    json Ubicacion{
-        "pais" : "string",
-        "provincia" : "string",
-        "ciudad" : "string",
-        "codigoPostal" : "string",
-        "placeId" : "string"
-    }
 
     json personalizacionTienda{
         "colorPrimario" : "string",
@@ -204,21 +227,6 @@ package JSONS <<Frame>> #ffd4d4 {
         "redesSociales" : "json"
     }
 
-    json especProd{
-        "talle" : "string",
-        "color" : "string",
-        "peso" : "string",
-        "dimensiones" : "string",
-        "material" : "string"
-    }
-
-    json detallePago{
-        "idTransaccion" : "string",
-        "estado" : "string",
-        "metodoPago" : "string",
-        "monto" : "number",
-        "fechaPago" : "string"
-    }
 }
 
 ' ==========================================
@@ -259,6 +267,9 @@ namespace SERVICIES #ddffd4{
         + modificarProducto(producto : PRODUCTOS)
         + buscarProductos(): List<PRODUCTOS>
         + obtenerTodos(): List<PRODUCTOS>
+        + guardarEspecificacion(e: EspecificacionesProducto) : void
+        + obtenerEspecificacionesPorProducto(idProducto: int) : List<EspecificacionesProducto>
+        + obtenerAtributosPorCategoria(idCat: int) : List<atributosCategoria>
     }
 
     class serviceCuponesDescuentos{
@@ -319,6 +330,8 @@ namespace CONTROLLERS #d4fff1{
         + eliminarProd() : void
         + obtenerInfoProd() : void
         + verificarKeyDigital() : void
+        + crearAtributo() : void
+        + obtenerAtributosPorCategoria() : void
     }
 
     class controladorCuponesDescuentos{
@@ -362,9 +375,8 @@ VENTAS -- estadoVenta
 detallePago -- estadoPago
 detallePago -- metodoPago
 cuponesDescuentos -- tipoDescuento
-PERSONAS -- Ubicacion
+PERSONAS -- Ubicaciones
 PERSONAS -- tipoAuth
-PRODUCTOS -- especProd
 TIENDAS *-- personalizacionTienda
 PAGOS -- detallePago
 CLIENTES -- VENTAS
@@ -377,7 +389,9 @@ detalleVenta -- licenciaVenta
 cuponesDescuentos -- TIENDAS
 cuponesDescuentosProductos -- PRODUCTOS
 PAGOS -- VENTAS
-
+categoriasProductos *--  atributosCategoria
+PRODUCTOS *-- especificacionesProducto
+atributosCategoria -- especificacionesProducto
 ' Herencia
 ' ____________________________________
 PERSONAS <|-- EMPRENDEDORES
@@ -416,6 +430,10 @@ serviceCheckOut ..> detalleVenta
 serviceCheckOut ..> CLIENTES
 serviceClientes ..> tarjetasPagos
 servicePagos ..> tarjetasPagos
+serviceProductos ..> categoriasProductos
+serviceProductos ..> especificacionesProducto
+serviceProductos ..> atributosCategoria
+
 ' ____________________________________
 ' Composiciones
 VENTAS *-- detalleVenta
