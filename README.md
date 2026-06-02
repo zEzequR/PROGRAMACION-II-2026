@@ -1,0 +1,7 @@
+## Sistema Web para Emprendedores
+
+* ***Integrantes:*** Calsino Leila, Ramos Ezequiel  
+* ***Profesor:*** Bruselario Sebastian  
+* ***Contexto y Problemática:*** Este desarrollo surge como respuesta al contexto comercial actual, donde una gran cantidad de transacciones se operan de manera informal a través de redes sociales y aplicaciones de mensajería. Esta modalidad genera desorganización administrativa y limita la capacidad de crecimiento y escalabilidad de los negocios.  
+* ***Alcance:*** El sistema está dirigido a microemprendedores, pequeños comerciantes, y vendedores independientes. El foco principal son aquellos usuarios y negocios que carecen de conocimientos técnicos avanzados o del presupuesto necesario para costear el desarrollo, alojamiento y mantenimiento de una página web a medida.  
+* ***Descripción del Proyecto***:** Para resolver esta problemática, proponemos una plataforma web que funcionará como una solución integral de ventas en línea. Por medio de una interfaz intuitiva, el sistema permitirá a múltiples emprendedores la autogestión de sus propias tiendas de comercio electrónico. Cada usuario podrá crear una tienda online personalizada, administrar el stock de productos físicos y digitales, gestionar las órdenes de compra de sus clientes y procesar cobros integrados. Al brindarles estas herramientas, el sistema busca facilitar el acceso al e-commerce y profesionalizar todo el ciclo de ventas.

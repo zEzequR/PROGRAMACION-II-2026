@@ -1,0 +1,423 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam DefaultFontName "Ubuntu"
+
+' ==========================================
+' 1. ENUMERADORES
+' ==========================================
+
+package ENUMS <<Frame>> #ffe9d4{
+    enum estadoVenta{
+        ABIERTA
+        CANCELADA
+        CERRADA
+    }
+
+    enum estadoPago{
+        PENDIENTE
+        PAGADA
+        RECHAZADO
+    }
+
+    enum metodoPago{
+        CREDITO
+        DEBITO
+        EFECTIVO
+        MERCADOPAGO
+    }
+
+    enum tipoDescuento{
+        MONTOFIJO
+        PORCENTAJE
+    }
+
+    enum tipoAuth{
+        MANUAL
+        GOOGLE
+    }
+}
+
+namespace MODELS #ffffd4{
+    entity PERSONAS{
+        - <b><i><u><color: #ff0000>idPersona</color></u></i></b> : int
+        - email : string
+        - psw : string
+        - tipoAuth : string
+        - nombre : string
+        - apellido : string
+        - telefono : string
+        - fechaBaja : date
+        - fechaCreacion : date
+        - ubicacion : json
+        - activo : bool
+    }
+
+    entity EMPRENDEDORES{
+        - <b><i><u><color: #ff9100>idEmprendedor</color></u></i></b> : int
+        - <b><i><u><color: #ff0000>idPersona</color></u></i></b> : int
+        - cuit : int
+        - mpAccessToken : string
+    }
+
+    entity CLIENTES{
+        - <b><i><u><color: #bdca00>idCliente </color></u></i></b> : int
+        - <b><i><u><color: #ff0000>idPersona</color></u></i></b> : int
+        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
+        - suscripcion : boolean
+    }
+
+
+
+    entity TIENDAS{
+        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
+        - <b><i><u><color: #ff9100>idEmprendedor</color></u></i></b> : int
+        - idPlantilla : int
+        - nombreTienda : string
+        - logoTienda : string
+        - personalizacionTienda: json
+        - fechaCreacion : date
+    }
+
+
+
+    entity PRODUCTOS{
+        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
+        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
+        - <b><i><u><color: #ff9100>idCat</color></u></i></b> : int
+        - tipoProd : string
+        - nombreProd : string
+        - imagenProd : string
+        - descripProducto : string
+        - precio : number
+        - especProd : json
+        - activo : boolean
+        + calcularPrecioVenta() : number
+    }
+
+
+    entity categoriasProductos{
+        - <b><i><u><color: #ff9100>idCat</color></u></i></b> : int
+        - categoria : string
+    }
+
+    entity productosDigitales{
+        - <b><i><u>idProductoDigital</u></i></b> : int
+        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
+        - idLicVta : int
+        - archivoProd : string
+    }
+
+    entity productosFisicos{
+        - <b><i><u>idProductoFisico</u></i></b> : int
+        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
+        - stock : int
+        + actualizarStock(cant: int, signo: int): void
+        + validarStock(cant: int): boolean
+        + verificarEstadoStock(): boolean
+        + getStockActual(): int
+        + getDetallesStock(): String
+    }
+
+    entity cuponesDescuentos{
+        - <b><i><u><color: #0004ff>idCuponDesc</color></u></i></b>  : int
+        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
+        - codigo : string
+        - tipoDescuento : tipoDescuento
+        - valor : number
+        - fechaExpiracion : date
+        - usosMaximos : number
+        - usosActuales : number
+    }
+
+    entity cuponesDescuentosProductos{
+        - <b><i><u><color: #0004ff>idCuponDesc</color></u></i></b> : int
+        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
+    }
+
+    entity VENTAS{
+        - <b><i><u><color: #9300b1>idVenta </color></u></i></b> : int
+        - fechaVenta : date
+        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
+        - <b><i><u><color: #6a7200>idCliente </color></u></i></b> : int
+        - precioFinal : number
+        - estadoVenta : estadoVenta
+        - <b><i><u><color: #ff0080>idPago </color></u></i></b> : int
+    }
+
+    entity detalleVenta{
+        - <b><i><u><color: #9300b1>idVenta </color></u></i></b> : int
+        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
+        - idLicVta : int
+        - precioUnitario : number
+        - cantidad : int
+        - subtotal : number
+    }
+
+    entity licenciaVenta{
+        - <b><i><u>idLicVta</u></i></b> : int
+        - claveDigital: string
+        - claveUsada : boolean
+    }
+
+    entity PAGOS{
+        - <b><i><u><color: #ff0080>idPago </color></u></i></b> : int
+        - detallePago : json
+    }
+
+    entity tarjetasPagos{
+        - <b><i><u><color: #81376f>idTarjeta </color></u></i></b> : int
+        - <b><i><u><color: #bdca00>idCliente </color></u></i></b> : int
+        - servicio : string
+        - servicioClienteId : string
+        - servicioTarjetaId : string
+        - ultDigitosTarjeta : string
+        - marcaTarjeta : string
+        - expiraMes : int
+        - expiraAno : int
+        - porDefecto : boolean
+    }
+
+    entity CORREOS{
+        - asunto : string
+        - mensaje : string
+        - cantidadEnviados : int
+        - estado : string
+        - idExterno : string
+    }
+}
+
+package JSONS <<Frame>> #ffd4d4 {
+    json Ubicacion{
+        "pais" : "string",
+        "provincia" : "string",
+        "ciudad" : "string",
+        "codigoPostal" : "string",
+        "placeId" : "string"
+    }
+
+    json personalizacionTienda{
+        "colorPrimario" : "string",
+        "colorSecundario" : "string",
+        "fuente" : "string",
+        "banner" : "string",
+        "redesSociales" : "json"
+    }
+
+    json especProd{
+        "talle" : "string",
+        "color" : "string",
+        "peso" : "string",
+        "dimensiones" : "string",
+        "material" : "string"
+    }
+
+    json detallePago{
+        "idTransaccion" : "string",
+        "estado" : "string",
+        "metodoPago" : "string",
+        "monto" : "number",
+        "fechaPago" : "string"
+    }
+}
+
+' ==========================================
+' CAPA DE PERSISTENCIA (Servicios)
+' ==========================================
+
+namespace SERVICIES #ddffd4{
+    class servicePersonas{
+        + verificarExistenciaUsuario() : boolean
+        + guardarPersona(usuario : PERSONAS) : void
+    }
+
+    class serviceEmprendedores{
+        + guardarEmprendedor(emprendedor : EMPRENDEDORES) : void
+        + modificarDatosUsuario() : void
+        + buscarEmprendedor() : EMPRENDEDORES
+    }
+
+    class serviceClientes {
+        + guardarCliente(cliente : CLIENTES) : void
+        + buscarClientes(): CLIENTES
+        + obtenerTodos(): List<CLIENTES>
+        + guardarTarjeta() : void
+        + eliminarTarjeta() : void
+        + obtenerTarjeta() : tarjetasPagos
+        + obtenerClientesSuscriptos(suscripcion : true) : List<CLIENTES>
+    }
+
+    class serviceTiendas{
+        + guardarTienda(tienda : TIENDAS) : void
+        + modificarTienda(tienda : TIENDAS) : void
+        + buscarPorNombre(nombreTienda : string): TIENDAS
+        + obtenerTodas(): List<TIENDAS>
+    }
+
+    class serviceProductos {
+        + guardarProducto(producto : PRODUCTOS)
+        + modificarProducto(producto : PRODUCTOS)
+        + buscarProductos(): List<PRODUCTOS>
+        + obtenerTodos(): List<PRODUCTOS>
+    }
+
+    class serviceCuponesDescuentos{
+        + guardarCuponDesc(cupon : cuponesDescuentos)
+        + modificarCuponDesc(cupon : cuponesDescuentos)
+        + buscarCuponDesc(): List<cuponesDescuentos>
+        + obtenerTodos(): List<cuponesDescuentos>
+    }
+
+    class serviceCheckOut{
+        + crearVenta() : void
+        + obtenerVentas() : void
+        + obtenerDetalleVenta() : void
+        + realizarPago() : void
+        + agregarDatosPagoCliente() : void
+        + aplicarDescPago() : void
+    }
+
+    class servicePagos{
+        + guardarFuenteIngreso() : void
+        + obtenerDetallesPago() : void
+    }
+    
+    class serviceCorreos{
+        + enviarCorreo() : void
+    }
+}
+
+' =========================================
+'  CONTROLADORES
+' ==========================================
+
+namespace CONTROLLERS #d4fff1{
+    class controladorAutenticacion{
+        + registrarseManual() : void
+        + registrarseGoogle() : void
+        + loggearseManual() : void
+        + loggearseGoogle() : void
+        + cerrarSesion() : void
+    }
+
+    class controladorEmprendedores{
+        + crearEmprendedor() : void
+        + modificarDatosUsuario() : void
+    }
+
+    class controladorTiendas{
+        + crearTienda() : void
+        + modificarTienda() : void
+        + eliminarTienda() : void
+        + crearCategoria() : void
+        + obtenerCategorias() : void
+    }
+
+    class controladorProductos{
+        + crearProd() : void
+        + modificarProd() : void
+        + eliminarProd() : void
+        + obtenerInfoProd() : void
+        + verificarKeyDigital() : void
+    }
+
+    class controladorCuponesDescuentos{
+        + crearCuponesDesc() : void
+        + modificarCuponesDesc() : void
+        + eliminarCuponesDesc() : void
+    }
+
+    class controladorClientes{
+        + crearCliente() : void
+        + obtenerClientes() : void
+        + modificarDatosUsuario() : void
+        + agregarTarjeta() : void
+        + eliminarTarjeta() : void
+        + obtenerTarjetas() : void
+    }
+
+    class controladorCheckOut{
+        + crearVenta() : void
+        + obtenerVentas() : void
+        + obtenerDetalleVenta() : void
+        + realizarPago() : void
+        + agregarDatosPagoCliente() : void
+        + aplicarDescPago() : void
+    }
+
+    class controladorPagos{
+        + agregarFuenteIngreso() : void
+        + obtenerDetallesPago() : void
+    }
+
+    class controladorCorreos{
+        + enviarCorreo() : void
+    }
+}
+
+' =========================================
+'  RELACIONES
+' ==========================================
+VENTAS -- estadoVenta
+detallePago -- estadoPago
+detallePago -- metodoPago
+cuponesDescuentos -- tipoDescuento
+PERSONAS -- Ubicacion
+PERSONAS -- tipoAuth
+PRODUCTOS -- especProd
+TIENDAS *-- personalizacionTienda
+PAGOS -- detallePago
+CLIENTES -- VENTAS
+CLIENTES -- tarjetasPagos
+productosDigitales -- licenciaVenta
+TIENDAS -- PRODUCTOS
+TIENDAS -- CLIENTES
+TIENDAS -- VENTAS
+detalleVenta -- licenciaVenta
+cuponesDescuentos -- TIENDAS
+cuponesDescuentosProductos -- PRODUCTOS
+PAGOS -- VENTAS
+
+' Herencia
+' ____________________________________
+PERSONAS <|-- EMPRENDEDORES
+PERSONAS <|-- CLIENTES
+PRODUCTOS <|-- productosDigitales
+PRODUCTOS <|-- productosFisicos
+' Dependencias
+' ____________________________________
+controladorAutenticacion --> servicePersonas
+controladorCheckOut --> serviceCheckOut
+controladorClientes --> serviceClientes
+controladorCuponesDescuentos --> serviceCuponesDescuentos
+controladorEmprendedores --> serviceEmprendedores
+controladorPagos --> servicePagos
+controladorProductos --> serviceProductos
+controladorTiendas --> serviceTiendas
+controladorCorreos --> serviceCorreos
+' Agregaciones
+' ____________________________________
+serviceClientes o-- CLIENTES
+serviceProductos o-- PRODUCTOS
+serviceTiendas o-- TIENDAS
+serviceCheckOut o-- tarjetasPagos
+serviceCuponesDescuentos o-- cuponesDescuentos
+serviceCuponesDescuentos o-- cuponesDescuentosProductos
+servicePagos o-- PAGOS
+serviceEmprendedores o-- EMPRENDEDORES
+servicePersonas o-- PERSONAS
+serviceCorreos o-- CORREOS
+' ____________________________________
+' Dependencia débiles
+PRODUCTOS ..> categoriasProductos
+serviceCheckOut ..> PAGOS
+serviceCheckOut ..> VENTAS
+serviceCheckOut ..> detalleVenta
+serviceCheckOut ..> CLIENTES
+serviceClientes ..> tarjetasPagos
+servicePagos ..> tarjetasPagos
+' ____________________________________
+' Composiciones
+VENTAS *-- detalleVenta
+
+@enduml

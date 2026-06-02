@@ -1,0 +1,2839 @@
+{
+  "info": {
+    "_postman_id": "532f8e62-d783-4e4e-9f69-48f94dd1ac33",
+    "name": "MI API TEST",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54533664",
+    "_collection_link": "https://go.postman.co/collection/54533664-532f8e62-d783-4e4e-9f69-48f94dd1ac33?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "AUTH",
+      "item": [
+        {
+          "name": "Registrarse Manual",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\r\n    \"psw\": \"12345\",\r\n    \"tipoAuth\": \"Manual\",\r\n    \"nombre\": \"Ezequiel\",\r\n    \"apellido\": \"Ramos\",\r\n    \"telefono\": \"+5493413922015\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/usuarios/registrarse",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "usuarios",
+                "registrarse"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Registrarse Manual",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\r\n    \"psw\": \"12345\",\r\n    \"tipoAuth\": \"Manual\",\r\n    \"nombre\": \"Ezequiel\",\r\n    \"apellido\": \"Ramos\",\r\n    \"telefono\": \"+5493413922015\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/usuarios/registrarse",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "usuarios",
+                    "registrarse"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "151"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"97-0gGoYWtLBSqhg7tKabBxyDikF2U\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:22:51 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"nombre\": \"Ezequiel\",\n    \"apellido\": \"Ramos\",\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\n    \"telefono\": \"+5493413922015\",\n    \"fechaCreacion\": 1779754971484\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login Manual",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\r\n    \"psw\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/usuarios/login",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "usuarios",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Login Manual",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\r\n    \"psw\": \"123456\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/usuarios/login",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "usuarios",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "64"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"40-B434XbQ6VcTXolwAFJC+jo7+EtA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:23:10 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Loggeado en el sistema correctamente\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TIENDA",
+      "item": [
+        {
+          "name": "Crear Tienda",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\" : \"tienda eze\",\r\n    \"logoTienda\" : \"URL o ARCHIVO del LOGO\",\r\n    \"plantilla\" : 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/tiendas/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "tiendas",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Tienda",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\" : \"tienda eze\",\r\n    \"logoTienda\" : \"URL o ARCHIVO del LOGO\",\r\n    \"plantilla\" : 1\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/tiendas/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "tiendas",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "132"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"84-4/mbuLpx36d3rN/mk+NaSv7mryk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:23:19 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tienda creada con éxito\",\n    \"nombreTienda\": \"tienda eze\",\n    \"logoTienda\": \"URL o ARCHIVO del LOGO\",\n    \"plantilla\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Modificar Tienda",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\" : \"ezequ\",\r\n    \"logoTienda\" : \"https://www.institutozonaoeste.edu.ar/assets/logo-IZO-d8e2a478.webp\",\r\n    \"plantilla\" : 2\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/tiendas/modificar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "tiendas",
+                "modificar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Modificar Tienda",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\" : \"ezequ\",\r\n    \"logoTienda\" : \"https://www.institutozonaoeste.edu.ar/assets/logo-IZO-d8e2a478.webp\",\r\n    \"plantilla\" : 2\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/tiendas/modificar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "tiendas",
+                    "modificar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "176"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"b0-+uV5kGye81tfrp3X6svG4l0LFlk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:23:25 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tienda modificada con éxito\",\n    \"nombreTienda\": \"ezequ\",\n    \"logoTienda\": \"https://www.institutozonaoeste.edu.ar/assets/logo-IZO-d8e2a478.webp\",\n    \"plantilla\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar Tienda",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\" : \"ezee\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/tiendas/eliminar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "tiendas",
+                "eliminar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Eliminar Tienda",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\" : \"ezee\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/tiendas/eliminar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "tiendas",
+                    "eliminar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "77"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4d-yBfPJj2eFNsa6ugjaLgO2p2IBzw\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:23:32 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tienda eliminada con éxito\",\n    \"nombreTienda\": \"ezee\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PAGOS",
+      "item": [
+        {
+          "name": "Realizar Pago",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"montoTotal\": 4000\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/pagos/pagar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "pagos",
+                "pagar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Realizar Pago",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"montoTotal\": 4000\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/pagos/pagar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "pagos",
+                    "pagar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "173"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"ad-FbpMtQyIDbKSE3I5SSN+ryOGeOw\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:23:45 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Pago realizado con éxito\",\n    \"comprobante\": {\n        \"nombreTienda\": \"ezeMate\",\n        \"ultDigitosTarjeta\": \"4242\",\n        \"monto\": 4000,\n        \"fechaPago\": \"2026-05-26T00:23:45.955Z\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener Detalles de Pago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://192.168.1.8:3000/pagos/detallespago?nombreTienda=eze Mate&idPago=5261",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "pagos",
+                "detallespago"
+              ],
+              "query": [
+                {
+                  "key": "nombreTienda",
+                  "value": "eze Mate",
+                  "type": "text"
+                },
+                {
+                  "key": "idPago",
+                  "value": "5261",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Obtener Detalles de Pago",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://192.168.1.8:3000/pagos/detallespago?nombreTienda=eze Mate&idPago=5261",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "pagos",
+                    "detallespago"
+                  ],
+                  "query": [
+                    {
+                      "key": "nombreTienda",
+                      "value": "eze Mate"
+                    },
+                    {
+                      "key": "idPago",
+                      "value": "5261"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "195"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"c3-H54gNkMEx+NyJQ9CGP7BnPUkQSI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:24:34 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Detalles del pago obtenidos con éxito\",\n    \"pago\": {\n        \"nombreTienda\": \"eze Mate\",\n        \"idPago\": \"5261\",\n        \"monto\": 4000,\n        \"moneda\": \"ARS\",\n        \"estadoPago\": \"aprobado\",\n        \"fechaPago\": 1779755074627\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CÓDIGOS DE DESCUENTO",
+      "item": [
+        {
+          "name": "Crear Código de Descuento",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"codigo\" : \"2026\",\r\n    \"porcentaje\" : \"50\",\r\n    \"aplicaProducto\" : \r\n    [\r\n        \"remera\",\r\n        \"medias\",\r\n        \"pantalón\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/cupones/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "cupones",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Código de Descuento",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"codigo\" : \"2026\",\r\n    \"porcentaje\" : \"50\",\r\n    \"aplicaProducto\" : \r\n    [\r\n        \"remera\",\r\n        \"medias\",\r\n        \"pantalón\"\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/cupones/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "cupones",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "157"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"9d-BaDd9+xwZUlR/dRutz2L5rBc4sk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:24:54 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"El código de descuento se creó correctamente\",\n    \"codigo\": \"2026\",\n    \"porcentaje\": \"50\",\n    \"aplicaProducto\": [\n        \"remera\",\n        \"medias\",\n        \"pantalón\"\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Modificar Código de Descuento",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"codigo\" : \"eze30\",\r\n    \"porcentaje\" : \"30\",\r\n    \"aplicaProducto\" : \r\n    [\r\n        \"remera\",\r\n        \"pantalón\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/cupones/modificar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "cupones",
+                "modificar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Modificar Código de Descuento",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"codigo\" : \"eze30\",\r\n    \"porcentaje\" : \"30\",\r\n    \"aplicaProducto\" : \r\n    [\r\n        \"remera\",\r\n        \"pantalón\"\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/cupones/modificar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "cupones",
+                    "modificar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "132"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"84-0UrdDj541zqc78dujT7SaxrMkeA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:25:01 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Código modificado con éxito\",\n    \"codigo\": \"eze30\",\n    \"porcentaje\": \"30\",\n    \"aplicaProducto\": [\n        \"remera\",\n        \"pantalón\"\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar Código de Descuento",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"codigo\" : \"eze30\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/cupones/eliminar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "cupones",
+                "eliminar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Eliminar Código de Descuento",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"codigo\" : \"eze30\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/cupones/eliminar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "cupones",
+                    "eliminar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "73"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"49-vXNcVagj0iHVplRIAExDVXhOV8U\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:25:09 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Código eliminado con éxito\",\n    \"codigo\": \"eze30\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PRODUCTOS",
+      "item": [
+        {
+          "name": "Crear Producto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreProd\" : \"Remera\",\r\n    \"imagenProd\" : \"URL o archivo de la remera\",\r\n    \"descripProd\" : \"Remera talle M, bla bla\",\r\n    \"catProd\" : \"Indumentaria\",\r\n    \"tipoProd\" : \"Físico\",\r\n    \"precio\" : 2000,\r\n    \"stock\" : 30,\r\n    \"especProd\" : \r\n    {\r\n        \"talle\" : \"M\",\r\n        \"color\" : \"rojo\",\r\n        \"marca\" : \"nike\"\r\n    },\r\n    \"activo\" : true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/productos/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "productos",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Producto",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreProd\" : \"Remera\",\r\n    \"imagenProd\" : \"URL o archivo de la remera\",\r\n    \"descripProd\" : \"Remera talle M, bla bla\",\r\n    \"catProd\" : \"Indumentaria\",\r\n    \"tipoProd\" : \"Físico\",\r\n    \"precio\" : 2000,\r\n    \"stock\" : 30,\r\n    \"especProd\" : \r\n    {\r\n        \"talle\" : \"M\",\r\n        \"color\" : \"rojo\",\r\n        \"marca\" : \"nike\"\r\n    },\r\n    \"activo\" : true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/productos/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "productos",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "310"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"136-cmJK5yY8RlqDirAIHaWRsa95Gf0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:25:47 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Se ingresó el producto correctamente\",\n    \"nombreProd\": \"Remera\",\n    \"imagenProd\": \"URL o archivo de la remera\",\n    \"descripProd\": \"Remera talle M, bla bla\",\n    \"catProd\": \"Indumentaria\",\n    \"tipoProd\": \"Físico\",\n    \"precio\": 2000,\n    \"stock\": 30,\n    \"especProd\": {\n        \"talle\": \"M\",\n        \"color\": \"rojo\",\n        \"marca\": \"nike\"\n    },\n    \"activo\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Modificar Producto",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreProd\" : \"Zapatillas\",\r\n    \"descripProd\" : \"Zapatillas addias, talle 45, bla bla\",\r\n    \"precio\" : 6000,\r\n    \"stock\" : 30,\r\n    \"especProd\" : \r\n    {\r\n        \"talle\" : \"45\",\r\n        \"color\" : \"blanco\",\r\n        \"marca\" : \"addidas\",\r\n        \"modelo\" : \"campus\"\r\n    },\r\n    \"activo\" : false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/productos/modificar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "productos",
+                "modificar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Modificar Producto",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreProd\" : \"Zapatillas\",\r\n    \"descripProd\" : \"Zapatillas addias, talle 45, bla bla\",\r\n    \"precio\" : 6000,\r\n    \"stock\" : 30,\r\n    \"especProd\" : \r\n    {\r\n        \"talle\" : \"45\",\r\n        \"color\" : \"blanco\",\r\n        \"marca\" : \"addidas\",\r\n        \"modelo\" : \"campus\"\r\n    },\r\n    \"activo\" : false\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/productos/modificar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "productos",
+                    "modificar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "265"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"109-ZdeE0sPiMta6U309xk2YP6xpzto\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:25:54 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Se modificó el producto correctamente\",\n    \"nombreProd\": \"Zapatillas\",\n    \"descripProd\": \"Zapatillas addias, talle 45, bla bla\",\n    \"precio\": 6000,\n    \"stock\": 30,\n    \"especProd\": {\n        \"talle\": \"45\",\n        \"color\": \"blanco\",\n        \"marca\": \"addidas\",\n        \"modelo\": \"campus\"\n    },\n    \"activo\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar Producto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreProd\" : \"Zapatillas\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/productos/eliminar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "productos",
+                "eliminar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Eliminar Producto",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreProd\" : \"Zapatillas\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/productos/eliminar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "productos",
+                    "eliminar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "83"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"53-1GDbuCI6bjZLWLtolOuB4hvR0Co\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:26:04 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Producto eliminado con éxito\",\n    \"nombreProd\": \"Zapatillas\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener Productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://192.168.1.8:3000/productos/obtener?nombreTienda=eze Mate",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "productos",
+                "obtener"
+              ],
+              "query": [
+                {
+                  "key": "nombreTienda",
+                  "value": "eze Mate",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Obtener Productos",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://192.168.1.8:3000/productos/obtener?nombreTienda=eze Mate",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "productos",
+                    "obtener"
+                  ],
+                  "query": [
+                    {
+                      "key": "nombreTienda",
+                      "value": "eze Mate"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "289"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"121-Eu1Bt/jM1wSeaDqoqFl45uLScxg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:26:12 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Productos obtenidos con éxito\",\n    \"nombreTienda\": \"eze Mate\",\n    \"categoria\": null,\n    \"productos\": [\n        {\n            \"nombreProducto\": \"Remera\",\n            \"precio\": 5000,\n            \"stock\": 10,\n            \"categoria\": \"Ropa\",\n            \"activo\": true\n        },\n        {\n            \"nombreProducto\": \"Pantalón\",\n            \"precio\": 8000,\n            \"stock\": 5,\n            \"categoria\": \"Ropa\",\n            \"activo\": true\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CATEGORÍA PRODUCTO",
+      "item": [
+        {
+          "name": "Crear Categoria",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"categoria\" : \"Indumentaria\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/categorias/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "categorias",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Categoria",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"categoria\" : \"Indumentaria\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/categorias/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "categorias",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "56"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"38-JV8PuRGrX7FKVMju6vLafeXzr6c\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:26:32 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Categoría creada con éxito\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener Categorías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://192.168.1.8:3000/categorias/obtener",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "categorias",
+                "obtener"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Obtener Categorías",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://192.168.1.8:3000/categorias/obtener",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "categorias",
+                    "obtener"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "172"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"ac-gcNVpHbFSNvBvp7IzIHqiZ8Qn/E\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:26:39 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Categorías obtenidas con éxito\",\n    \"categorias\": [\n        {\n            \"categoria\": \"Ropa\"\n        },\n        {\n            \"categoria\": \"Tecnología\"\n        },\n        {\n            \"categoria\": \"Alimentos\"\n        },\n        {\n            \"categoria\": \"Hogar\"\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CLIENTES",
+      "item": [
+        {
+          "name": "Obtener Clientes",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/clientes/obtener?email=ezequiel2013ramos6@gmail.com&nombre=ezequiel&apellido=ramos&telefono=+543413922015",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "clientes",
+                "obtener"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "ezequiel2013ramos6@gmail.com"
+                },
+                {
+                  "key": "nombre",
+                  "value": "ezequiel"
+                },
+                {
+                  "key": "apellido",
+                  "value": "ramos"
+                },
+                {
+                  "key": "telefono",
+                  "value": "+543413922015"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Obtener Clientes",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/clientes/obtener?email=ezequiel2013ramos6@gmail.com&nombre=ezequiel&apellido=ramos&telefono=+543413922015",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "clientes",
+                    "obtener"
+                  ],
+                  "query": [
+                    {
+                      "key": "email",
+                      "value": "ezequiel2013ramos6@gmail.com"
+                    },
+                    {
+                      "key": "nombre",
+                      "value": "ezequiel"
+                    },
+                    {
+                      "key": "apellido",
+                      "value": "ramos"
+                    },
+                    {
+                      "key": "telefono",
+                      "value": "+543413922015"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "199"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"c7-wxgmj/FEKgf6eGmzvhHlQHnWOhI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:26:52 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Se encontraron clientes\",\n    \"clientes\": [\n        {\n            \"emailCliente\": \"ezequiel2013ramos6@gmail.com\",\n            \"nombreCliente\": \"ezequiel\",\n            \"apellidoCliente\": \"ramos\",\n            \"telefonoCliente\": \" 543413922015\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Crear Cliente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\r\n    \"nombre\": \"ezee\",\r\n    \"apellido\": \"ramos\",\r\n    \"telefono\": \"+5493411234567\",\r\n    \"marketing\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/clientes/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "clientes",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Cliente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"email\": \"ezequiel2013ramos6@gmail.com\",\r\n    \"nombre\": \"ezee\",\r\n    \"apellido\": \"ramos\",\r\n    \"telefono\": \"+5493411234567\",\r\n    \"marketing\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/clientes/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "clientes",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "239"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"ef-xs8M3nmngcR75KRd+hOy7H8Q7Nc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:27:00 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Cliente creado con éxito\",\n    \"cliente\": {\n        \"nombreTienda\": \"ezeMate\",\n        \"email\": \"ezequiel2013ramos6@gmail.com\",\n        \"nombre\": \"ezee\",\n        \"apellido\": \"ramos\",\n        \"telefono\": \"+5493411234567\",\n        \"marketing\": true,\n        \"fechaCreacion\": 1779755220886\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "VENTAS",
+      "item": [
+        {
+          "name": "Buscar Ventas",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/ventas/obtener?fechaVenta=23/5/2026&Producto=remera",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "ventas",
+                "obtener"
+              ],
+              "query": [
+                {
+                  "key": "fechaVenta",
+                  "value": "23/5/2026"
+                },
+                {
+                  "key": "Producto",
+                  "value": "remera"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Buscar Ventas",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/ventas/obtener?fechaVenta=23/5/2026&Producto=remera",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "ventas",
+                    "obtener"
+                  ],
+                  "query": [
+                    {
+                      "key": "fechaVenta",
+                      "value": "23/5/2026"
+                    },
+                    {
+                      "key": "Producto",
+                      "value": "remera"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "167"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"a7-B0PKENV8vQX4oVVJwd0gHKph8EE\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:27:14 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tiendas obtenidas con éxito\",\n    \"ventas\": [\n        {\n            \"fechaVenta\": \"23/5/2026\",\n            \"detalleVenta\": [\n                {\n                    \"precioProducto\": 2000,\n                    \"cantidad\": 2,\n                    \"precioFinal\": 4000\n                }\n            ]\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Crear Venta",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"emailCliente\": \"ezequiel2013ramos6@gmail.com@gmail.com\",\r\n    \"nombreCliente\": \"eze\",\r\n    \"apellidoCliente\": \"Ramos\",\r\n    \"estadoVenta\": \"pendiente\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\",\r\n    \"productos\": [\r\n        {\r\n            \"nombreProducto\": \"Remera\",\r\n            \"precioUnitario\": 5000,\r\n            \"cantidad\": 2\r\n        },\r\n        {\r\n            \"nombreProducto\": \"Pantalón\",\r\n            \"precioUnitario\": 8000,\r\n            \"cantidad\": 1\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/ventas/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "ventas",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Venta",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"emailCliente\": \"ezequiel2013ramos6@gmail.com@gmail.com\",\r\n    \"nombreCliente\": \"eze\",\r\n    \"apellidoCliente\": \"Ramos\",\r\n    \"estadoVenta\": \"pendiente\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\",\r\n    \"productos\": [\r\n        {\r\n            \"nombreProducto\": \"Remera\",\r\n            \"precioUnitario\": 5000,\r\n            \"cantidad\": 2\r\n        },\r\n        {\r\n            \"nombreProducto\": \"Pantalón\",\r\n            \"precioUnitario\": 8000,\r\n            \"cantidad\": 1\r\n        }\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/ventas/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "ventas",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "517"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"205-ZqOpN6AisvMv5v2Z7NjJsAxtXAk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:27:23 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Venta creada con éxito\",\n    \"comprobante\": {\n        \"nombreTienda\": \"ezeMate\",\n        \"fechaVenta\": 1779755243767,\n        \"estadoVenta\": \"pendiente\",\n        \"precioFinal\": 18000,\n        \"cliente\": {\n            \"nombre\": \"eze\",\n            \"apellido\": \"Ramos\",\n            \"email\": \"ezequiel2013ramos6@gmail.com@gmail.com\"\n        },\n        \"detalleVenta\": [\n            {\n                \"nombreProducto\": \"Remera\",\n                \"precioUnitario\": 5000,\n                \"cantidad\": 2,\n                \"subtotal\": 10000\n            },\n            {\n                \"nombreProducto\": \"Pantalón\",\n                \"precioUnitario\": 8000,\n                \"cantidad\": 1,\n                \"subtotal\": 8000\n            }\n        ],\n        \"pago\": {\n            \"ultDigitosTarjeta\": \"4242\",\n            \"marcaTarjeta\": \"Visa\",\n            \"estado\": \"aprobado\"\n        }\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener Detalle de Venta",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"emailCliente\": \"ezequiel2013ramos6@gmail.com@gmail.com\",\r\n    \"nombreCliente\": \"eze\",\r\n    \"apellidoCliente\": \"Ramos\",\r\n    \"estadoVenta\": \"pendiente\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\",\r\n    \"productos\": [\r\n        {\r\n            \"nombreProducto\": \"Remera\",\r\n            \"precioUnitario\": 5000,\r\n            \"cantidad\": 2\r\n        },\r\n        {\r\n            \"nombreProducto\": \"Pantalón\",\r\n            \"precioUnitario\": 8000,\r\n            \"cantidad\": 1\r\n        }\r\n    ]\r\n}"
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/ventas/obtener?nombreTienda=eze Mate&emailCliente=ezequiel2013ramos6@gmail.com",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "ventas",
+                "obtener"
+              ],
+              "query": [
+                {
+                  "key": "nombreTienda",
+                  "value": "eze Mate"
+                },
+                {
+                  "key": "emailCliente",
+                  "value": "ezequiel2013ramos6@gmail.com"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Obtener Detalle de Venta",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\": \"ezeMate\",\r\n    \"emailCliente\": \"ezequiel2013ramos6@gmail.com@gmail.com\",\r\n    \"nombreCliente\": \"eze\",\r\n    \"apellidoCliente\": \"Ramos\",\r\n    \"estadoVenta\": \"pendiente\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\",\r\n    \"productos\": [\r\n        {\r\n            \"nombreProducto\": \"Remera\",\r\n            \"precioUnitario\": 5000,\r\n            \"cantidad\": 2\r\n        },\r\n        {\r\n            \"nombreProducto\": \"Pantalón\",\r\n            \"precioUnitario\": 8000,\r\n            \"cantidad\": 1\r\n        }\r\n    ]\r\n}"
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/ventas/obtener?nombreTienda=eze Mate&emailCliente=ezequiel2013ramos6@gmail.com",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "ventas",
+                    "obtener"
+                  ],
+                  "query": [
+                    {
+                      "key": "nombreTienda",
+                      "value": "eze Mate"
+                    },
+                    {
+                      "key": "emailCliente",
+                      "value": "ezequiel2013ramos6@gmail.com"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "142"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"8e-RgWuiahzn2pa69sLAIG6VF1ZaYc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:27:32 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tiendas obtenidas con éxito\",\n    \"ventas\": [\n        {\n            \"detalleVenta\": [\n                {\n                    \"precioProducto\": 2000,\n                    \"cantidad\": 2,\n                    \"precioFinal\": 4000\n                }\n            ]\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EMPRENDEDORES",
+      "item": [
+        {
+          "name": "Crear Emprendedor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"ezequiel@gmail.com\",\r\n    \"psw\": \"12345\",\r\n    \"nombre\": \"Ezequiel\",\r\n    \"apellido\": \"Ramos\",\r\n    \"telefono\": \"+5493413922015\",\r\n    \"cuit\": \"20-12345678-9\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/emprendedores/crear",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "emprendedores",
+                "crear"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Crear Emprendedor",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"ezequiel@gmail.com\",\r\n    \"psw\": \"12345\",\r\n    \"nombre\": \"Ezequiel\",\r\n    \"apellido\": \"Ramos\",\r\n    \"telefono\": \"+5493413922015\",\r\n    \"cuit\": \"20-12345678-9\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/emprendedores/crear",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "emprendedores",
+                    "crear"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "222"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"de-/oaBY5fFO7C3vkDs24BzN70f/4I\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:27:45 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Emprendedor creado con éxito\",\n    \"emprendedor\": {\n        \"email\": \"ezequiel@gmail.com\",\n        \"nombre\": \"Ezequiel\",\n        \"apellido\": \"Ramos\",\n        \"telefono\": \"+5493413922015\",\n        \"cuit\": \"20-12345678-9\",\n        \"fechaCreacion\": 1779755265360\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "USUARIOS",
+      "item": [
+        {
+          "name": "Modificar Datos Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"cliente@gmail.com\",\r\n    \"nombre\": \"Ezequiel Cristian\",\r\n    \"apellido\": \"Ramos\",\r\n    \"telefono\": \"+5493413922015\",\r\n    \"localidad\": {\r\n        \"ciudad\": \"Rosario\",\r\n        \"provincia\": \"Santa Fe\"\r\n        }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/usuarios/modificar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "usuarios",
+                "modificar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Modificar Datos Usuario",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"cliente@gmail.com\",\r\n    \"nombre\": \"Ezequiel Cristian\",\r\n    \"apellido\": \"Ramos\",\r\n    \"telefono\": \"+5493413922015\",\r\n    \"localidad\": {\r\n        \"ciudad\": \"Rosario\",\r\n        \"provincia\": \"Santa Fe\"\r\n        }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/usuarios/modificar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "usuarios",
+                    "modificar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "240"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"f0-QEypAyN6XxcOaEnTjPSTMBZEyIw\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 00:27:57 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Datos del usuario modificados con éxito\",\n    \"cliente\": {\n        \"email\": \"cliente@gmail.com\",\n        \"nombre\": \"Ezequiel Cristian\",\n        \"apellido\": \"Ramos\",\n        \"telefono\": \"+5493413922015\",\n        \"localidad\": {\n            \"ciudad\": \"Rosario\",\n            \"provincia\": \"Santa Fe\"\n        }\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TARJETAS",
+      "item": [
+        {
+          "name": "Agregar Tarjeta",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"servicio\": \"mercado pago\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\",\r\n    \"expiraMes\": 12,\r\n    \"expiraAno\": 2028,\r\n    \"porDefecto\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/tarjetas/agregar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "tarjetas",
+                "agregar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Agregar Tarjeta",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"servicio\": \"mercado pago\",\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\",\r\n    \"expiraMes\": 12,\r\n    \"expiraAno\": 2028,\r\n    \"porDefecto\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/tarjetas/agregar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "tarjetas",
+                    "agregar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "166"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"a6-xVE43QBhl/Y9RH83g8I5Cgk9ndM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 12:36:13 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tarjeta agregada con éxito\",\n    \"tarjeta\": {\n        \"ultDigitosTarjeta\": \"4242\",\n        \"marcaTarjeta\": \"Visa\",\n        \"expiraMes\": 12,\n        \"expiraAno\": 2028,\n        \"porDefecto\": true\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar Tarjeta",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/tarjetas/eliminar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "tarjetas",
+                "eliminar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Eliminar Tarjeta",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"ultDigitosTarjeta\": \"4242\",\r\n    \"marcaTarjeta\": \"Visa\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/tarjetas/eliminar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "tarjetas",
+                    "eliminar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "79"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4f-/1dfLwbHc3ng2gOP2GDVJ1nTUh0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 12:37:00 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tarjeta Visa terminada en 4242 eliminada con éxito\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener Tarjetas",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/tarjetas/obtener?emailCliente=ezequiel2013ramos6@gmail.com&nombreCliente=Ezequiel&apellidoCliente=Ramos&telefonoCliente=+5493413922015",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "tarjetas",
+                "obtener"
+              ],
+              "query": [
+                {
+                  "key": "emailCliente",
+                  "value": "ezequiel2013ramos6@gmail.com"
+                },
+                {
+                  "key": "nombreCliente",
+                  "value": "Ezequiel"
+                },
+                {
+                  "key": "apellidoCliente",
+                  "value": "Ramos"
+                },
+                {
+                  "key": "telefonoCliente",
+                  "value": "+5493413922015"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Obtener Tarjetas",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/tarjetas/obtener?emailCliente=ezequiel2013ramos6@gmail.com&nombreCliente=Ezequiel&apellidoCliente=Ramos&telefonoCliente=+5493413922015",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "tarjetas",
+                    "obtener"
+                  ],
+                  "query": [
+                    {
+                      "key": "emailCliente",
+                      "value": "ezequiel2013ramos6@gmail.com"
+                    },
+                    {
+                      "key": "nombreCliente",
+                      "value": "Ezequiel"
+                    },
+                    {
+                      "key": "apellidoCliente",
+                      "value": "Ramos"
+                    },
+                    {
+                      "key": "telefonoCliente",
+                      "value": "+5493413922015"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "305"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"131-q1VNsMGjRWz2IyiblQ6mEwG9lVw\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 12:37:25 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Tarjetas obtenidas con éxito\",\n    \"nombreCliente\": \"Ezequiel\",\n    \"apellidoCliente\": \"Ramos\",\n    \"emailCliente\": \"ezequiel2013ramos6@gmail.com\",\n    \"telefonoCliente\": \" 5493413922015\",\n    \"tarjetas\": [\n        {\n            \"ultDigitosTarjeta\": \"4242\",\n            \"marcaTarjeta\": \"Visa\",\n            \"expiraMes\": 12,\n            \"expiraAno\": 2028,\n            \"porDefecto\": true\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BILLETERAS",
+      "item": [
+        {
+          "name": "Agregar Fuente Ingreso",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nombreTienda\" : \"ezeMate\",\r\n    \"servicio\" : \"mercado pago\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://192.168.1.8:3000/billeteras/agregar",
+              "protocol": "http",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "8"
+              ],
+              "port": "3000",
+              "path": [
+                "billeteras",
+                "agregar"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Agregar Fuente Ingreso",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nombreTienda\" : \"ezeMate\",\r\n    \"servicio\" : \"mercado pago\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://192.168.1.8:3000/billeteras/agregar",
+                  "protocol": "http",
+                  "host": [
+                    "192",
+                    "168",
+                    "1",
+                    "8"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "billeteras",
+                    "agregar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "142"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"8e-8UJlWaD0ZYgybPWNkewwccCiCVA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 26 May 2026 12:33:51 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"estado\": \"OK\",\n    \"mensaje\": \"Fuente de ingreso de mercado pago agregada con éxito a ezeMate\",\n    \"nombreTienda\": \"ezeMate\",\n    \"servicio\": \"mercado pago\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
