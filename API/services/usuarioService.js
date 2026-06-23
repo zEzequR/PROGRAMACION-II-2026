@@ -27,5 +27,3 @@ export async function registrarseManualService(user)
         throw new Error(err.message)
     }
 }
-
-export default registrarseManualService;

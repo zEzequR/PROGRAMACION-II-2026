@@ -1,4 +1,5 @@
 import { registrarseManualService } from "../services/usuarioService.js";
+import { generarToken } from "../utils/generarToken.js";
 import Usuario from "../models/usuario.js";
 
 export async function registrarseManual(req, res)
@@ -90,12 +91,17 @@ export async function logggearseManual(req, res)
                         mensaje: "Faltan campos obligatorios"
                     });
             }
+        
         else
             {
+                const token = generarToken(
+                    { email }
+                );
                 return res.status(200).json(
                     {
                         estado: "OK",
-                        mensaje: "Loggeado en el sistema correctamente"
+                        mensaje: "Loggeado en el sistema correctamente",
+                        token
                     });
             }
     }

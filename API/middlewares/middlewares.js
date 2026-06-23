@@ -1,1 +1,0 @@
-//acá van 'verificaciones de seguridad'
