@@ -6,6 +6,6 @@ const router = Router();
 
 router.post('/registrarse', usuarioControlador.registrarseManual);
 router.post('/login', usuarioControlador.logggearseManual);
-router.put('/modificar', middleware.userAuth('BASIC'), usuarioControlador.modificarDatosUsuario);
+router.put('/modificar', middleware.userAuth('JWT'), usuarioControlador.modificarDatosUsuario);
 
 export default router;

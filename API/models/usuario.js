@@ -7,6 +7,7 @@ class Usuario
     nombre,
     apellido,
     telefono,
+    activo,
     fecha_creacion)
     {
         this.id_persona = id_persona;
@@ -16,9 +17,8 @@ class Usuario
         this.nombre = nombre;
         this.apellido = apellido;
         this.telefono = telefono;
-        this.fecha_creacion = Date.now();
+        this.activo = true;
     }
-    
 }
 
 export default Usuario;

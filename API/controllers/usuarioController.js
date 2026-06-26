@@ -14,7 +14,7 @@ export async function registrarseManual(req, res)
             tipoAuth,
             nombre,
             apellido,
-            telefono,
+            telefono
         } = req.body;
         let usuario = new Usuario
         (
@@ -25,7 +25,7 @@ export async function registrarseManual(req, res)
             nombre,
             apellido,
             telefono,
-            null
+            true
         );
         const dbRes = await registrarseManualService(usuario);
 

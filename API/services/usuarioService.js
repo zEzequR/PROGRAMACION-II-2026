@@ -10,12 +10,13 @@ export async function registrarseManualService(user)
         tipo_auth,
         nombre,
         apellido,
-        telefono)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        telefono,
+        activo)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
     `
     const values = [user.id_persona, user.email, user.psw, user.tipo_auth,
-        user.nombre, user.apellido, user.telefono]
+        user.nombre, user.apellido, user.telefono, user.activo]
 
     try
     {
