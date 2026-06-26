@@ -4,14 +4,12 @@ class Pagos
         idTransaccion,
         estado,
         metodoPago,
-        monto,
-        fechaPago
+        monto
     )
     {
         this.idTransaccion = idTransaccion;
         this.estado = estado;
         this.metodoPago = metodoPago;
         this.monto = monto;
-        this.fechaPago = fechaPago;
     }
 }

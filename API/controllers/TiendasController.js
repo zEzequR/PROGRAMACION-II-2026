@@ -12,11 +12,13 @@ export async function crearTienda(req, res)
             logoTienda,
             personalizacionTienda
         } = req.body
+
         let Tienda = new Tiendas(idPlantilla,
             nombreTienda,
             logoTienda,
             personalizacionTienda
         )
+        
         let dbRes = await crearTiendaService(Tienda)
         if(dbRes)
         {
@@ -50,11 +52,13 @@ export async function modificarTienda(req, res)
             logoTienda,
             personalizacionTienda
         } = req.body
+
         let Tienda = new Tiendas(
             nombreTienda,
             logoTienda,
             personalizacionTienda
         ) = req.body
+
         const dbRes = await modificarTiendaService(Tienda);
         if(dbRes)
             {
@@ -82,4 +86,9 @@ export async function modificarTienda(req, res)
             mensaje: "No se pudo modificar la tienda"
         });
     }
+}
+
+export async function eliminarTienda(req, res)
+{
+    //Todavía no está desarrollada la lógica para el borrado completo de la tienda
 }

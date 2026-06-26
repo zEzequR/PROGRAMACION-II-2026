@@ -19,3 +19,24 @@ export default function crearPagoService(Pago)
         throw new Error(err.message)
     }
 }
+
+export default function actualizarPagoService(Pago)
+{
+    const query = `
+    CALL spu_actualizar_pago(
+    $1, $2, $3
+    )
+    `
+    
+    const values = []
+    
+    try
+    {
+        const resultado = await pool.query(query, values);
+        return resultado.rows[0]
+    }
+    catch(err)
+    {
+        throw new Error(err.message)
+    }
+}
