@@ -1,6 +1,8 @@
 @startuml
 left to right direction
 skinparam linetype ortho
+skinparam nodesep 100 
+skinparam ranksep 140
 skinparam DefaultFontName "Ubuntu"
 
 ' ==========================================
@@ -40,7 +42,6 @@ package ENUMS <<Frame>> #ffe9d4{
 
 namespace MODELS #ffffd4{
     entity PERSONAS{
-        - <b><i><u><color: #ff0000>idPersona</color></u></i></b> : int
         - email : string
         - psw : string
         - tipoAuth : string
@@ -53,24 +54,17 @@ namespace MODELS #ffffd4{
     }
 
     entity EMPRENDEDORES{
-        - <b><i><u><color: #ff9100>idEmprendedor</color></u></i></b> : int
-        - <b><i><u><color: #ff0000>idPersona</color></u></i></b> : int
         - cuit : int
         - mpAccessToken : string
     }
 
     entity CLIENTES{
-        - <b><i><u><color: #bdca00>idCliente </color></u></i></b> : int
-        - <b><i><u><color: #ff0000>idPersona</color></u></i></b> : int
-        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
         - suscripcion : boolean
     }
 
 
 
     entity TIENDAS{
-        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
-        - <b><i><u><color: #ff9100>idEmprendedor</color></u></i></b> : int
         - idPlantilla : int
         - nombreTienda : string
         - logoTienda : string
@@ -81,9 +75,6 @@ namespace MODELS #ffffd4{
 
 
     entity PRODUCTOS{
-        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
-        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
-        - <b><i><u><color: #ff9100>idCat</color></u></i></b> : int
         - tipoProd : string
         - nombreProd : string
         - imagenProd : string
@@ -95,20 +86,14 @@ namespace MODELS #ffffd4{
 
 
     entity categoriasProductos{
-        - <b><i><u><color: #ff9100>idCat</color></u></i></b> : int
         - categoria : string
     }
 
     entity productosDigitales{
-        - <b><i><u>idProductoDigital</u></i></b> : int
-        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
-        - idLicVta : int
         - archivoProd : string
     }
 
     entity productosFisicos{
-        - <b><i><u>idProductoFisico</u></i></b> : int
-        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
         - stock : int
         + actualizarStock(cant: int, signo: int): void
         + validarStock(cant: int): boolean
@@ -118,8 +103,6 @@ namespace MODELS #ffffd4{
     }
 
     entity cuponesDescuentos{
-        - <b><i><u><color: #0004ff>idCuponDesc</color></u></i></b>  : int
-        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
         - codigo : string
         - tipoDescuento : tipoDescuento
         - valor : number
@@ -128,47 +111,27 @@ namespace MODELS #ffffd4{
         - usosActuales : number
     }
 
-    entity cuponesDescuentosProductos{
-        - <b><i><u><color: #0004ff>idCuponDesc</color></u></i></b> : int
-        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
-    }
-
     entity VENTAS{
-        - <b><i><u><color: #9300b1>idVenta </color></u></i></b> : int
         - fechaVenta : date
-        - <b><i><u><color: #13a500>idTienda</color></u></i></b> : int
-        - <b><i><u><color: #6a7200>idCliente </color></u></i></b> : int
         - precioFinal : number
         - estadoVenta : estadoVenta
-        - <b><i><u><color: #ff0080>idPago </color></u></i></b> : int
     }
 
     entity detalleVenta{
-        - <b><i><u><color: #9300b1>idVenta </color></u></i></b> : int
-        - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
-        - idLicVta : int
         - precioUnitario : number
         - cantidad : int
         - subtotal : number
     }
 
     entity licenciaVenta{
-        - <b><i><u>idLicVta</u></i></b> : int
         - claveDigital: string
         - claveUsada : boolean
     }
 
-    entity PAGOS{
-        - <b><i><u><color: #ff0080>idPago </color></u></i></b> : int
-        - detallePago : json
-    }
-
     entity tarjetasPagos{
-        - <b><i><u><color: #81376f>idTarjeta </color></u></i></b> : int
-        - <b><i><u><color: #bdca00>idCliente </color></u></i></b> : int
         - servicio : string
-        - servicioClienteId : string
-        - servicioTarjetaId : string
+        - servicioClienteID : string
+        - servicioTarjetaID : string
         - ultDigitosTarjeta : string
         - marcaTarjeta : string
         - expiraMes : int
@@ -185,7 +148,6 @@ namespace MODELS #ffffd4{
     }
 
     class Ubicaciones{
-        - idUbicacion: int
         - pais: string
         - provincia: string
         - ciudad : string
@@ -194,8 +156,6 @@ namespace MODELS #ffffd4{
     }
 
         class detallePago{
-        - idDetPago: int
-        - idTransaccion : string
         - estado : string
         - metodoPago : string
         - monto : number
@@ -203,14 +163,9 @@ namespace MODELS #ffffd4{
     }
 
     entity atributosCategoria{
-    - <b><i><u><color: #aaa81a>idAtributo</color></u></i></b> : int
-    - <b><i><u><color: #ff9100>idCat</color></u></i></b>  : int
     - nombreAtributo : string
 }
     entity especificacionesProducto{
-    - <b><i><u><color: #ff9100>idEspec</color></u></i></b> : int
-    - <b><i><u><color: #00b1b1>idProducto </color></u></i></b> : int
-    - <b><i><u><color: #aaa81a>idAtributo</color></u></i></b> : int
     - valor : string
 }
 
@@ -237,12 +192,13 @@ namespace SERVICIES #ddffd4{
     class servicePersonas{
         + verificarExistenciaUsuario() : boolean
         + guardarPersona(usuario : PERSONAS) : void
+        + modificarDatosUsuario() : void
     }
 
     class serviceEmprendedores{
         + guardarEmprendedor(emprendedor : EMPRENDEDORES) : void
-        + modificarDatosUsuario() : void
         + buscarEmprendedor() : EMPRENDEDORES
+        + guardarFuenteIngreso() : void
     }
 
     class serviceClientes {
@@ -256,6 +212,7 @@ namespace SERVICIES #ddffd4{
     }
 
     class serviceTiendas{
+        + crearTienda(tienda: TIENDAS) : void
         + guardarTienda(tienda : TIENDAS) : void
         + modificarTienda(tienda : TIENDAS) : void
         + buscarPorNombre(nombreTienda : string): TIENDAS
@@ -279,18 +236,17 @@ namespace SERVICIES #ddffd4{
         + obtenerTodos(): List<cuponesDescuentos>
     }
 
-    class serviceCheckOut{
+    class serviceVenta{
         + crearVenta() : void
         + obtenerVentas() : void
         + obtenerDetalleVenta() : void
-        + realizarPago() : void
-        + agregarDatosPagoCliente() : void
-        + aplicarDescPago() : void
     }
 
     class servicePagos{
-        + guardarFuenteIngreso() : void
         + obtenerDetallesPago() : void
+        + realizarPago() : void
+        + agregarDatosPagoCliente() : void
+        + aplicarDescPago() : void
     }
     
     class serviceCorreos{
@@ -303,18 +259,21 @@ namespace SERVICIES #ddffd4{
 ' ==========================================
 
 namespace CONTROLLERS #d4fff1{
-    class controladorAutenticacion{
+    class controladorUsuarios{
         + registrarseManual() : void
         + registrarseGoogle() : void
         + loggearseManual() : void
         + loggearseGoogle() : void
-        + cerrarSesion() : void
-    }
-
-    class controladorEmprendedores{
         + crearEmprendedor() : void
         + modificarDatosUsuario() : void
+        + agregarFuenteIngreso() : void
+        + crearCliente() : void
+        + obtenerClientes() : void
+        + agregarTarjeta() : void
+        + eliminarTarjeta() : void
+        + obtenerTarjetas() : void
     }
+
 
     class controladorTiendas{
         + crearTienda() : void
@@ -322,6 +281,10 @@ namespace CONTROLLERS #d4fff1{
         + eliminarTienda() : void
         + crearCategoria() : void
         + obtenerCategorias() : void
+        + crearCuponesDesc() : void
+        + modificarCuponesDesc() : void
+        + eliminarCuponesDesc() : void
+        + enviarCorreo() : void
     }
 
     class controladorProductos{
@@ -334,38 +297,16 @@ namespace CONTROLLERS #d4fff1{
         + obtenerAtributosPorCategoria() : void
     }
 
-    class controladorCuponesDescuentos{
-        + crearCuponesDesc() : void
-        + modificarCuponesDesc() : void
-        + eliminarCuponesDesc() : void
-    }
-
-    class controladorClientes{
-        + crearCliente() : void
-        + obtenerClientes() : void
-        + modificarDatosUsuario() : void
-        + agregarTarjeta() : void
-        + eliminarTarjeta() : void
-        + obtenerTarjetas() : void
-    }
-
     class controladorCheckOut{
         + crearVenta() : void
         + obtenerVentas() : void
         + obtenerDetalleVenta() : void
+        + crearPago() : void
         + realizarPago() : void
-        + agregarDatosPagoCliente() : void
         + aplicarDescPago() : void
-    }
-
-    class controladorPagos{
-        + agregarFuenteIngreso() : void
         + obtenerDetallesPago() : void
     }
 
-    class controladorCorreos{
-        + enviarCorreo() : void
-    }
 }
 
 ' =========================================
@@ -378,61 +319,60 @@ cuponesDescuentos -- tipoDescuento
 PERSONAS -- Ubicaciones
 PERSONAS -- tipoAuth
 TIENDAS *-- personalizacionTienda
-PAGOS -- detallePago
 CLIENTES -- VENTAS
 CLIENTES -- tarjetasPagos
 productosDigitales -- licenciaVenta
 TIENDAS -- PRODUCTOS
 TIENDAS -- CLIENTES
-TIENDAS -- VENTAS
+TIENDAS ---- VENTAS
 detalleVenta -- licenciaVenta
 cuponesDescuentos -- TIENDAS
-cuponesDescuentosProductos -- PRODUCTOS
-PAGOS -- VENTAS
+detallePago -- VENTAS
+PRODUCTOS -- cuponesDescuentos
 categoriasProductos *--  atributosCategoria
 PRODUCTOS *-- especificacionesProducto
 atributosCategoria -- especificacionesProducto
 ' Herencia
 ' ____________________________________
-PERSONAS <|-- EMPRENDEDORES
-PERSONAS <|-- CLIENTES
+PERSONAS <|--- EMPRENDEDORES
+PERSONAS <|---- CLIENTES
 PRODUCTOS <|-- productosDigitales
 PRODUCTOS <|-- productosFisicos
 ' Dependencias
 ' ____________________________________
-controladorAutenticacion --> servicePersonas
-controladorCheckOut --> serviceCheckOut
-controladorClientes --> serviceClientes
-controladorCuponesDescuentos --> serviceCuponesDescuentos
-controladorEmprendedores --> serviceEmprendedores
-controladorPagos --> servicePagos
+controladorUsuarios --> servicePersonas
+controladorCheckOut --> servicePagos
+controladorUsuarios --> serviceClientes
+controladorTiendas --> serviceCuponesDescuentos
+controladorUsuarios --> serviceEmprendedores
 controladorProductos --> serviceProductos
+controladorProductos --> serviceCuponesDescuentos
 controladorTiendas --> serviceTiendas
-controladorCorreos --> serviceCorreos
+controladorTiendas --> serviceCorreos
 ' Agregaciones
 ' ____________________________________
 serviceClientes o-- CLIENTES
 serviceProductos o-- PRODUCTOS
 serviceTiendas o-- TIENDAS
-serviceCheckOut o-- tarjetasPagos
+servicePagos o-- tarjetasPagos
 serviceCuponesDescuentos o-- cuponesDescuentos
-serviceCuponesDescuentos o-- cuponesDescuentosProductos
-servicePagos o-- PAGOS
+servicePagos o-- detallePago
 serviceEmprendedores o-- EMPRENDEDORES
 servicePersonas o-- PERSONAS
 serviceCorreos o-- CORREOS
+serviceVenta o-- VENTAS
 ' ____________________________________
 ' Dependencia débiles
 PRODUCTOS ..> categoriasProductos
-serviceCheckOut ..> PAGOS
-serviceCheckOut ..> VENTAS
-serviceCheckOut ..> detalleVenta
-serviceCheckOut ..> CLIENTES
+servicePagos ..> detallePago
+servicePagos ..> VENTAS
+servicePagos ..> detalleVenta
+servicePagos ..> CLIENTES
 serviceClientes ..> tarjetasPagos
-servicePagos ..> tarjetasPagos
 serviceProductos ..> categoriasProductos
 serviceProductos ..> especificacionesProducto
 serviceProductos ..> atributosCategoria
+serviceVenta ..> detalleVenta
 
 ' ____________________________________
 ' Composiciones

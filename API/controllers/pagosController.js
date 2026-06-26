@@ -1,0 +1,1 @@
+import Pagos from '../models/pagos.js'
