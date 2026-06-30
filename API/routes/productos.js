@@ -8,6 +8,6 @@ router.post('/crear', productoControlador.crearProd);
 router.put('/modificar', productoControlador.modificarProd);
 router.delete('/eliminar', productoControlador.eliminarProd);
 router.get('/obtener', productoControlador.obtenerProductos);
-
+router.get('verificarKeyDigital', productoControlador.verificarKey);
 
 export default router;
