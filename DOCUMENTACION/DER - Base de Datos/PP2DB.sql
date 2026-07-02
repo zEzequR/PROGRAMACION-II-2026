@@ -2,7 +2,7 @@ CREATE DATABASE db_pp2;
 
 CREATE TABLE Ubicaciones
 (
-    id_ubicacion INT,
+    id_ubicacion INT GENERATED ALWAYS AS IDENTITY,
     pais VARCHAR(60),
     provincia VARCHAR(60),
     ciudad VARCHAR(60),
@@ -16,14 +16,14 @@ CREATE TYPE tipo_auth AS ENUM
 
 CREATE TABLE Categorias_Productos
 (
-    id_cat INT,
+    id_cat INT GENERATED ALWAYS AS IDENTITY,
     categoria VARCHAR(80),
     PRIMARY KEY (id_cat)
 );
 
 CREATE TABLE Personas
 (
-    id_persona INT,
+    id_persona INT GENERATED ALWAYS AS IDENTITY,
     email VARCHAR(255) UNIQUE NOT NULL,
     psw VARCHAR(255),
     tipo_auth tipo_auth NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE Personas
 
 CREATE TABLE Emprendedores
 (
-    id_emprendedor INT,
+    id_emprendedor INT GENERATED ALWAYS AS IDENTITY,
     id_persona INT,
     cuit VARCHAR(20),
     mp_access_token TEXT,
@@ -52,7 +52,7 @@ CREATE TABLE Emprendedores
 
 CREATE TABLE Tiendas
 (
-    id_tienda INT,
+    id_tienda INT GENERATED ALWAYS AS IDENTITY,
     id_emprendedor INT,
     id_plantilla INT,
     nombre_tienda  VARCHAR(100),  -- "Configuración de datos del negocio"
@@ -65,7 +65,7 @@ CREATE TABLE Tiendas
 
 CREATE TABLE Clientes
 (
-    id_cliente INT,
+    id_cliente INT GENERATED ALWAYS AS IDENTITY,
     id_persona INT,
     id_tienda INT,
     suscripcion BOOL,
@@ -80,7 +80,7 @@ CREATE TYPE tipo_descuento AS ENUM
 
 CREATE TABLE Cupones_Descuento
 (
-    id_cupon_desc INT,
+    id_cupon_desc INT GENERATED ALWAYS AS IDENTITY,
     id_tienda INT NOT NULL,
     codigo VARCHAR(255) NOT NULL,
     tipo tipo_descuento NOT NULL,    
@@ -94,7 +94,7 @@ CREATE TABLE Cupones_Descuento
 
 CREATE TABLE Productos
 (
-    id_producto INT,
+    id_producto INT GENERATED ALWAYS AS IDENTITY,
     id_tienda INT,
     id_cat INT,
     tipo_prod VARCHAR(7) NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE Productos
 
 CREATE TABLE Atributos_Categoria
 (
-    id_atributo INT,
+    id_atributo INT GENERATED ALWAYS AS IDENTITY,
     id_cat INT,
     nombre_atributo VARCHAR(60),
     PRIMARY KEY (id_atributo),
@@ -119,7 +119,7 @@ CREATE TABLE Atributos_Categoria
 
 CREATE TABLE Especificaciones_Producto
 (
-    id_espec INT,
+    id_espec INT GENERATED ALWAYS AS IDENTITY,
     id_producto INT,
     id_atributo INT,
     valor VARCHAR(60),
@@ -138,7 +138,7 @@ CREATE TABLE Cupones_Descuentos_Productos
 );
 
 CREATE TABLE Productos_Fisicos (
-    id_producto_fisico INT,
+    id_producto_fisico INT GENERATED ALWAYS AS IDENTITY,
     id_producto INT,
     stock INT,
     PRIMARY KEY (id_producto_fisico),
@@ -147,14 +147,14 @@ CREATE TABLE Productos_Fisicos (
 
 CREATE TABLE Licencia_Venta
 (
-    id_lic_vta INT,
+    id_lic_vta INT GENERATED ALWAYS AS IDENTITY,
     clave_digital TEXT,
     clave_usada BOOLEAN,
     PRIMARY KEY (id_lic_vta)
 );
 
 CREATE TABLE Productos_Digitales (
-    id_producto_digital INT,
+    id_producto_digital INT GENERATED ALWAYS AS IDENTITY,
     id_producto INT,
     id_lic_vta INT,
     archivo_prod TEXT NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE Productos_Digitales (
 
 CREATE TABLE Detalles_Pago
 (
-    id_det_pago INT,
+    id_det_pago INT GENERATED ALWAYS AS IDENTITY,
     id_transaccion INT UNIQUE,
     estado VARCHAR(60),
     metodo_pago VARCHAR(60),
@@ -176,7 +176,7 @@ CREATE TABLE Detalles_Pago
 
 CREATE TABLE Pagos
 (
-    id_pago INT,
+    id_pago INT GENERATED ALWAYS AS IDENTITY,
     id_det_pago INT,
     PRIMARY KEY (id_pago),
     FOREIGN KEY (id_det_pago) REFERENCES Detalles_Pago(id_det_pago)
@@ -187,7 +187,7 @@ CREATE TYPE estado_venta AS ENUM
 
 CREATE TABLE Ventas
 (
-    id_venta INT,
+    id_venta INT GENERATED ALWAYS AS IDENTITY,
     fecha_venta DATE,
     id_tienda INT,
     id_cliente INT,
@@ -216,7 +216,7 @@ CREATE TABLE Detalle_Venta
 
 CREATE TABLE tarjetas_pagos
 (
-    id_tarjeta INT,
+    id_tarjeta INT GENERATED ALWAYS AS IDENTITY,
     id_cliente INT,
     servicio VARCHAR(20) NOT NULL,
     servicio_cliente_id VARCHAR(255) NOT NULL,     -- ID del cliente en MP/Stripe
@@ -228,7 +228,9 @@ CREATE TABLE tarjetas_pagos
     por_defecto BOOLEAN,
     PRIMARY KEY (id_tarjeta),
     FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)
-);
+); 
+
+
 
 SELECT * FROM Personas
 
@@ -630,3 +632,6 @@ BEGIN
     AND id_transaccion = p_id_transaccion;
 END;
 $$;
+
+
+SELECT * FROM Personas

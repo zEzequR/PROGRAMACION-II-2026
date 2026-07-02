@@ -1,6 +1,9 @@
-import { registrarseManualService } from "../services/usuarioService.js";
+import { registrarseManualService, buscarUsuarioPorEmailService } from "../services/usuarioService.js";
 import { generarToken } from "../utils/generarToken.js";
 import Usuario from "../models/usuario.js";
+import { ROLES } from "../config/enums.js";
+import { hashPsw, comparePsw } from '../utils/password.js'
+
 
 export async function registrarseManual(req, res)
 {
@@ -18,9 +21,9 @@ export async function registrarseManual(req, res)
         } = req.body;
         let usuario = new Usuario
         (
-            1,
+            null,
             email,
-            psw,
+            await hashPsw(psw),
             tipoAuth,
             nombre,
             apellido,
@@ -77,33 +80,53 @@ export async function logggearseManual(req, res)
 {
     try
     {
-        const 
+        if (!req.email || !req.psw)
         {
-            email,
-            psw
-        } = req.body
-
-        if (!email || !psw)
-            {
-                return res.status(400).json(
-                    {
-                        estado : "ERROR",
-                        mensaje: "Faltan campos obligatorios"
-                    });
-            }
-        
+            return res.status(400).json(
+                {
+                    estado : "ERROR",
+                    mensaje: "Faltan campos obligatorios"
+                });
+        }
         else
+        {
+            const usuario = await buscarUsuarioPorEmailService(req.email);
+            if (!usuario)
+            {
+                return res.status(401).json(
+                {
+                    estado: "ERROR",
+                    mensaje: "Email o contraseña incorrectos"
+                })
+            }
+            if (await comparePsw(req.psw, usuario.psw))
             {
                 const token = generarToken(
-                    { email }
+                    {
+                        id: usuario.id_persona,
+                        email: req.email,
+                        nombre: usuario.nombre,
+                        apellido: usuario.apellido,
+                        telefono: usuario.telefono,
+                        rol: ROLES.USUARIO
+                    }
                 );
                 return res.status(200).json(
-                    {
-                        estado: "OK",
-                        mensaje: "Loggeado en el sistema correctamente",
-                        token
-                    });
+                {
+                    estado: "OK",
+                    mensaje: "Loggeado en el sistema correctamente",
+                    token
+                })
             }
+            else
+            {
+                return res.status(401).json(
+                {
+                    estado: "ERROR",
+                    mensaje: "Contraseña incorrecta"
+                })
+            }
+        }
     }
     catch(err)
     {
