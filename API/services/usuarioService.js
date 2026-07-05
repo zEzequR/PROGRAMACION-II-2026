@@ -1,5 +1,6 @@
 import e from 'express';
 import pool from '../config/conexion.js'
+import { comparePsw } from '../utils/password.js'
 
 export async function registrarseManualService(user)
 {
@@ -29,9 +30,11 @@ export async function registrarseManualService(user)
     }
 }
 
-export async function buscarUsuarioPorEmailService(email)
+export async function autenticarUsuarioService(email, psw)
 {
-    const query = `SELECT * FROM Personas WHERE email = $1`
+    const query = `
+        SELECT * FROM Personas WHERE email = $1
+    `
 
     try
     {
@@ -39,12 +42,17 @@ export async function buscarUsuarioPorEmailService(email)
 
         if (resultado.rows.length === 0)
         {
-            return null;
+            throw new Error("Credenciales inválidas");
         }
+
+        if (!await comparePsw(psw, resultado.rows[0].psw))
+            {
+                throw new Error("Credenciales inválidas");
+            }
         return resultado.rows[0]
     }
     catch(err)
     {
         throw new Error(err.message)
-    }
+    }   
 }

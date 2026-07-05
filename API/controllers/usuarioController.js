@@ -1,8 +1,8 @@
-import { registrarseManualService, buscarUsuarioPorEmailService } from "../services/usuarioService.js";
+import { registrarseManualService, autenticarUsuarioService } from "../services/usuarioService.js";
 import { generarToken } from "../utils/generarToken.js";
-import Usuario from "../models/usuario.js";
+import { Usuario } from "../models/usuario.js";
 import { ROLES } from "../config/enums.js";
-import { hashPsw, comparePsw } from '../utils/password.js'
+import { hashPsw } from '../utils/password.js'
 
 
 export async function registrarseManual(req, res)
@@ -82,59 +82,62 @@ export async function logggearseManual(req, res)
     {
         if (!req.email || !req.psw)
         {
-            return res.status(400).json(
-                {
-                    estado : "ERROR",
-                    mensaje: "Faltan campos obligatorios"
-                });
+            throw new Error("Faltan campos obligatorios");
         }
         else
         {
-            const usuario = await buscarUsuarioPorEmailService(req.email);
-            if (!usuario)
-            {
-                return res.status(401).json(
+            let usuario = new Usuario
+            (
+                null,
+                req.email,
+                req.psw,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+            const dbRes = await autenticarUsuarioService(usuario.email, usuario.psw);
+            const token = generarToken(
                 {
-                    estado: "ERROR",
-                    mensaje: "Email o contraseña incorrectos"
-                })
-            }
-            if (await comparePsw(req.psw, usuario.psw))
+                    id: dbRes.id_persona,
+                    email: req.email,
+                    nombre: dbRes.nombre,
+                    apellido: dbRes.apellido,
+                    telefono: dbRes.telefono,
+                    rol: ROLES.USUARIO
+                }
+            );
+            return res.status(200).json(
             {
-                const token = generarToken(
-                    {
-                        id: usuario.id_persona,
-                        email: req.email,
-                        nombre: usuario.nombre,
-                        apellido: usuario.apellido,
-                        telefono: usuario.telefono,
-                        rol: ROLES.USUARIO
-                    }
-                );
-                return res.status(200).json(
-                {
-                    estado: "OK",
-                    mensaje: "Loggeado en el sistema correctamente",
-                    token
-                })
-            }
-            else
-            {
-                return res.status(401).json(
-                {
-                    estado: "ERROR",
-                    mensaje: "Contraseña incorrecta"
-                })
-            }
+                estado: "OK",
+                mensaje: "Loggeado en el sistema correctamente",
+                token
+            })
         }
     }
     catch(err)
     {
-        return res.status(500).json(
-            {
-                estado : "ERROR",
+        if (err.message === "Faltan campos obligatorios")
+        {
+            return res.status(400).json({
+                estado: "ERROR",
                 mensaje: err.message
             });
+        }
+
+        if (err.message === "Credenciales inválidas")
+        {
+            return res.status(401).json({
+                estado: "ERROR",
+                mensaje: "Email o contraseña incorrectos"
+            });
+        }
+
+        return res.status(500).json({
+            estado: "ERROR",
+            mensaje: "Hubo un error en el servidor: " + err.message
+        });
     }
 }
 

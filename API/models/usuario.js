@@ -1,6 +1,6 @@
 class Usuario
 {
-    constructor(id_persona,
+    constructor(idPersona,
     email,
     psw,
     tipo_auth,
@@ -10,7 +10,7 @@ class Usuario
     activo,
     fecha_creacion)
     {
-        this.id_persona = id_persona;
+        this.idPersona = idPersona;
         this.email = email;
         this.psw = psw;
         this.tipo_auth = tipo_auth;
@@ -21,4 +21,61 @@ class Usuario
     }
 }
 
-export default Usuario;
+class Emprendedor extends Usuario
+{
+    constructor(
+        idPersona,
+        idEmprendedor,
+        email,
+        psw,
+        tipo_auth,
+        nombre, 
+        apellido, 
+        telefono, 
+        cuit, 
+        mpAccessToken)
+    {
+        super(
+            idPersona,
+            email,
+            psw,
+            tipo_auth, 
+            nombre, 
+            apellido, 
+            telefono);
+        
+        this.idEmprendedor = idEmprendedor
+        this.cuit = cuit;
+        this.mpAccessToken = mpAccessToken;
+    }
+}
+
+class Cliente extends Usuario {
+    constructor(
+        idPersona,
+        idCliente, 
+        email, 
+        psw, 
+        tipo_auth, 
+        nombre, 
+        apellido, 
+        telefono, 
+        id_tienda, 
+        suscripcion)
+    {
+        
+        super(
+            idPersona, 
+            email, 
+            psw, 
+            tipo_auth, 
+            nombre, 
+            apellido, 
+            telefono);
+        this.idCliente = idCliente;
+        this.id_tienda = id_tienda;
+        this.suscripcion = suscripcion;
+    }
+}
+
+export { Usuario, Emprendedor, Cliente };

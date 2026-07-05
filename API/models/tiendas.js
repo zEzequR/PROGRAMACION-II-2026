@@ -1,4 +1,4 @@
-class Tiendas
+export class Tiendas
 {
     constructor(
         idPlantilla,
