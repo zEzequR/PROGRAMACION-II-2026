@@ -1,4 +1,4 @@
-class cuponesDescuentos
+export class cuponesDescuentos
 {
     constructor(
         codigo,

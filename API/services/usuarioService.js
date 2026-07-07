@@ -56,3 +56,25 @@ export async function autenticarUsuarioService(email, psw)
         throw new Error(err.message)
     }   
 }
+
+
+export async function obtenerIdTienda(idPersona) {
+    const query = `
+        SELECT tiendas.id_tienda
+        FROM tiendas
+        JOIN emprendedores ON tiendas.id_emprendedor = emprendedores.id_emprendedor
+        WHERE emprendedores.id_persona = $1 AND tiendas.activo = TRUE
+    `;
+    
+    try {
+        const resultado = await pool.query(query, [idPersona]);
+        
+        if (resultado.rowCount > 0) {
+            return resultado.rows[0].id_tienda;
+        }
+        return null;
+        
+    } catch(err) {
+        throw new Error(err.message);
+    }
+}

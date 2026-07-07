@@ -1,202 +1,139 @@
-import Productos from '../models/productos.js'
-import Categorias from '../models/categorias.js'
-import cuponesDescuentos from '../models/cuponesDescuentos.js'
+import { Productos, ProductosDigitales, ProductosFisicos } from '../models/productos.js'
+import { cuponesDescuentos } from '../models/cuponesDescuentos.js';
 import { crearProductoService, modificarProductoService,
-    eliminarProductoService, reactivarProductoService, verProductosService,
-    crearCuponService, eliminarCuponService, modificarCuponService,
-    crearEspecificacionesAtributosService } from '../services/productosService.js';
+    eliminarProductoService, reactivarProductoService,
+    crearCuponService, crearEspecificacionesAtributosService } from '../services/productosService.js';
+import { categoriasProductos, atributosCategoria, especificacionesProducto } from '../models/categorias.js';
 
-export async function crearProducto(req, res, type)
+export async function crearProducto(req, res)
 {
-    switch(type)
+    try
     {
-        case "DIGITAL":
+        const { 
+            tipoProd, 
+            idCat, 
+            nombreProd, 
+            imagenProd, 
+            descripProd, 
+            precio, 
+            activo, 
+            archivoProd, 
+            stock       
+        } = req.body;
+
+        let nuevoProd;
+
+        switch(tipoProd)
         {
-            try
+            case "DIGITAL":
             {
-                const
-                {
-                    tipoProd,
-                    nombreProd,
-                    imagenProd,
-                    descripProd,
-                    precio,
-                    activo,
-                    archivoProd
-                } = req.body
-                const producto = new Productos(tipoProd, nombreProd,
-                    imagenProd, descripProd,
-                    precio, activo, archivoProd);
-                
-                const dbRes = await crearProductoService(producto);
-                if (dbRes)
-                {
-                    return res.status(201).json(
-                    {
-                        estado: "EXITO",
-                        mensaje: "Producto físico creado correctamente"
-                    });
-                }
-                else
-                    {
-                        return res.status(500).json(
-                        {
-                            estado: "ERROR",
-                            mensaje: "No se pudo crear el producto"
-                        });
-                    }
+                //cuando se conecten los servicios de google,
+                //await a que el archivo se suba a drive y se
+                //tenga el link al archivo
+                nuevoProd = new ProductosDigitales(
+                    "DIGITAL", nombreProd, imagenProd, descripProd,
+                    precio, activo, archivoProd
+                );
+                break;
             }
-            catch(err)
+            case "FISICO":
             {
-                return res.status(500).json(
-                {
+                nuevoProd = new ProductosFisicos(
+                    "FISICO", nombreProd, imagenProd, descripProd,
+                    precio, activo, stock
+                );
+                break;
+            }
+            default:
+                return res.status(400).json({
                     estado: "ERROR",
-                    mensaje: "No se pudo crear el producto por un error desconocido"
+                    mensaje: "El tipo de producto no es válido"
                 });
-            }
         }
-        case "FISICO":
+
+        const dbRes = await crearProductoService(nuevoProd, idCat, req.user.id_tienda);
+
+        if (dbRes)
         {
-            try
-                {
-                    const
-                    {
-                        tipoProd,
-                        nombreProd,
-                        imagenProd,
-                        descripProd,
-                        precio,
-                        activo,
-                        stock
-                    } = req.body
-                    const producto = new Productos(tipoProd, nombreProd,
-                        imagenProd, descripProd,
-                        precio, activo, stock);
-                    
-                    const dbRes = await crearProductoService(producto);
-                    if (dbRes)
-                    {
-                        return res.status(201).json(
-                        {
-                            estado: "EXITO",
-                            mensaje: "Producto digital creado correctamente"
-                        });
-                    }
-                    else
-                        {
-                            return res.status(500).json(
-                            {
-                                estado: "ERROR",
-                                mensaje: "No se pudo crear el producto"
-                            });
-                        }
-                }
-            catch(err)
-                {
-                    return res.status(500).json(
-                    {
-                        estado: "ERROR",
-                        mensaje: "No se pudo crear el producto por un error desconocido"
-                    });
-                }
+            return res.status(201).json(
+            {
+                estado: "EXITO",
+                mensaje: `Producto ${nuevoProd.tipoProd.toLowerCase()} creado correctamente`
+            });
         }
+    }
+    catch(err)
+    {
+        return res.status(500).json(
+        {
+            estado: "ERROR",
+            mensaje: `No se pudo crear el producto: ${err.message}`
+        });
     }
 }
 
 export async function modificarProducto(req, res)
 {
-    switch(type)
+    try
     {
-        case "DIGITAL":
+        const {
+            idProd,
+            tipoProd, 
+            idCat, 
+            nombreProd, 
+            imagenProd, 
+            descripProd, 
+            precio, 
+            activo, 
+            archivoProd, 
+            stock       
+        } = req.body;
+
+        let prodMod;
+
+        switch(tipoProd)
         {
-            try
+            case "DIGITAL":
             {
-                const
-                {
-                    tipoProd,
-                    nombreProd,
-                    imagenProd,
-                    descripProd,
-                    precio,
-                    activo,
-                    archivoProd
-                } = req.body
-                const producto = new Productos(tipoProd, nombreProd,
-                    imagenProd, descripProd,
-                    precio, activo, archivoProd);
-                
-                const dbRes = await modificarProductoService(producto);
-                if (dbRes)
-                {
-                    return res.status(201).json(
-                    {
-                        estado: "EXITO",
-                        mensaje: "Producto físico modificado correctamente"
-                    });
-                }
-                else
-                    {
-                        return res.status(500).json(
-                        {
-                            estado: "ERROR",
-                            mensaje: "No se pudo modificar el producto"
-                        });
-                    }
+                prodMod = new ProductosDigitales(
+                    "DIGITAL", nombreProd, imagenProd, descripProd,
+                    precio, activo, archivoProd
+                );
+                break;
             }
-            catch(err)
+            case "FISICO":
             {
-                return res.status(500).json(
-                {
+                prodMod = new ProductosFisicos(
+                    "FISICO", nombreProd, imagenProd, descripProd,
+                    precio, activo, stock
+                );
+                break;
+            }
+            default:
+                return res.status(400).json({
                     estado: "ERROR",
-                    mensaje: "No se pudo modificado el producto por un error desconocido"
+                    mensaje: "El tipo de producto no es válido"
                 });
-            }
         }
-        case "FISICO":
+
+        const dbRes = await modificarProductoService(prodMod, idCat, idProd, req.user.id_tienda);
+
+        if (dbRes)
         {
-            try
-                {
-                    const
-                    {
-                        tipoProd,
-                        nombreProd,
-                        imagenProd,
-                        descripProd,
-                        precio,
-                        activo,
-                        stock
-                    } = req.body
-                    const producto = new Productos(tipoProd, nombreProd,
-                        imagenProd, descripProd,
-                        precio, activo, stock);
-                    
-                    const dbRes = await modificarProductoService(producto);
-                    if (dbRes)
-                    {
-                        return res.status(201).json(
-                        {
-                            estado: "EXITO",
-                            mensaje: "Producto digital modificado correctamente"
-                        });
-                    }
-                    else
-                        {
-                            return res.status(500).json(
-                            {
-                                estado: "ERROR",
-                                mensaje: "No se pudo modificar el producto"
-                            });
-                        }
-                }
-            catch(err)
-                {
-                    return res.status(500).json(
-                    {
-                        estado: "ERROR",
-                        mensaje: "No se pudo modificar el producto por un error desconocido"
-                    });
-                }
+            return res.status(200).json(
+            {
+                estado: "EXITO",
+                mensaje: `Producto ${prodMod.tipoProd.toLowerCase()} modificado correctamente`
+            });
         }
+    }
+    catch(err)
+    {
+        return res.status(500).json(
+        {
+            estado: "ERROR",
+            mensaje: `No se pudo modificar el producto: ${err.message}`
+        });
     }
 }
 
@@ -206,35 +143,26 @@ export async function eliminarProducto(req, res)
     {
         const
         {
-            idProd,
-            idTienda
+            idProd
         } = req.body
 
-        const dbRes = await eliminarProductoService(idProd, idTienda)
+        const dbRes = await eliminarProductoService(idProd, req.user.id_tienda)
 
         if (dbRes)
         {
-            return res.status(201).json(
+            return res.status(200).json(
             {
                 estado: "EXITO",
                 mensaje: "Producto eliminado correctamente"
             });
         }
-        else
-            {
-                return res.status(500).json(
-                {
-                    estado: "ERROR",
-                    mensaje: "No se pudo eliminar el producto"
-                });
-            }
     }
     catch(err)
     {
         return res.status(500).json(
             {
                 estado: "ERROR",
-                mensaje: "No se pudo eliminar el producto"
+                mensaje: `No se pudo eliminar el producto ${err.message}`
             });
     }
 }
@@ -245,11 +173,19 @@ export async function reactivarProducto(req, res)
     {
         const
         {
-            idProd,
-            idTienda
+            idProd
         } = req.body
 
-        const dbRes = await reactivarProductoService(idProd, idTienda);
+        const dbRes = await reactivarProductoService(idProd, req.user.id_tienda);
+
+        if(dbRes)
+        {
+            return res.status(200).json(
+            {
+                estado: "EXITO",
+                mensaje: "Producto reactivado correctamente"
+            });
+        }
     }
     catch(err)
     {
@@ -277,103 +213,44 @@ export async function obtenerProductos(req, res)
     }
 }
 
-export async function crearCupon(req, res, apliesTo)
+export async function crearCupon(req, res)
 {
-    switch(apliesTo)
+    try
     {
-        case "TIENDA":
+        const
+        {
+            codigo,
+            tipoDescuento,
+            valor,
+            fechaExpiracion,
+            usosMaximos,
+            usosActuales,
+            listaProd
+        } = req.body
+
+        const nuevoCupon = new cuponesDescuentos(codigo,
+            tipoDescuento, valor, fechaExpiracion, usosMaximos,
+            0
+        )
+
+        const dbRes = await crearCuponService(nuevoCupon, req.user.id_tienda,
+            "PRODUCTO", listaProd);
+        if(dbRes)
+        {
+            return res.status(201).json(
             {
-                try
-                {
-                    const
-                    {
-                        codigo,
-                        tipoDescuento,
-                        valor,
-                        fechaExpiracion,
-                        usosMaximos,
-                        usosActuales
-                    } = req.body
-                    
-                    const cupon = new cuponesDescuentos(codigo, tipoDescuento,
-                        valor, fechaExpiracion, usosMaximos, usosActuales
-                    )
-
-                    const dbRes = await crearCuponService(cupon);
-
-                    if (dbRes)
-                    {
-                        return res.status(201).json(
-                        {
-                            estado: "EXITO",
-                            mensaje: "Cupón creado correctamente"
-                        });
-                    }
-                    else
-                        {
-                            return res.status(500).json(
-                            {
-                                estado: "ERROR",
-                                mensaje: "No se pudo crear el cupón"
-                            });
-                        }
-
-                }
-                catch(err)
-                {
-                    return res.status(500).json(
-                    {
-                        estado: "ERROR",
-                        mensaje: "No se pudo crear el cupón"
-                    });
-                }
-            }
-        case "PRODUCTO":
-            {
-                try
-                {
-                    const
-                    {
-                        codigo,
-                        tipoDescuento,
-                        valor,
-                        fechaExpiracion,
-                        usosMaximos,
-                        usosActuales
-                    } = req.body
-                    
-                    const cupon = new cuponesDescuentos(codigo, tipoDescuento,
-                        valor, fechaExpiracion, usosMaximos, usosActuales
-                    )
-
-                    const dbRes = await crearCuponService(cupon);
-
-                    if (dbRes)
-                    {
-                        return res.status(201).json(
-                        {
-                            estado: "EXITO",
-                            mensaje: "Cupón creado correctamente"
-                        });
-                    }
-                    else
-                        {
-                            return res.status(500).json(
-                            {
-                                estado: "ERROR",
-                                mensaje: "No se pudo crear el cupón"
-                            });
-                        }
-                }
-                catch(err)
-                {
-                    return res.status(500).json(
-                    {
-                        estado: "ERROR",
-                        mensaje: "No se pudo crear el cupón"
-                    });
-                }
-            }
+                estado: "OK",
+                mensaje: "Se creó el cupón con éxito"
+            });
+        }
+    }
+    catch(err)
+    {
+        return res.status(500).json(
+        {
+            estado: "ERROR",
+            mensaje: `No se pudo crear el cupón: ${err.message}`
+        });
     }
 }
 
@@ -393,49 +270,45 @@ export async function eliminarCupon(req, res)
     }
 }
 
-export async function modificarCupon(req, res, appliesTo)
+export async function modificarCupon(req, res)
 {
-    if(appliesTo)
+    try
+    {
+        const
         {
-            const
-            {
-                codigo,
-                tipoDescuento,
-                valor,
-                fechaExpiracion,
-                usosMaximos,
-                usosActuales
-            } = req.body
-            
-            const cupon = new cuponesDescuentos(codigo, tipoDescuento,
-                valor, fechaExpiracion, usosMaximos, usosActuales);
-            
-            const dbRes = await modificarCuponService(cupon)
-            if (dbRes)
-            {
-                return res.status(201).json(
-                {
-                    estado: "EXITO",
-                    mensaje: "Cupón modificado correctamente"
-                });
-            }
-            else
-                {
-                    return res.status(500).json(
-                    {
-                        estado: "ERROR",
-                        mensaje: "No se pudo modificar el cupón"
-                    });
-                }
-        }
-    else
+            idProd,
+            idCupon,
+            codigo,
+            tipoDescuento,
+            valor,
+            fechaExpiracion,
+            usosMaximos,
+            usosActuales,
+            listaProd
+        } = req.body
+
+        const cupon = new cuponesDescuentos(codigo, tipoDescuento,
+            valor, fechaExpiracion, usosMaximos, usosActuales);
+        
+        const dbRes = await modificarCuponService(nuevoCupon, req.user.id_tienda,
+            listaProd)
+        if (dbRes)
         {
-            return res.status(500).json(
+            return res.status(201).json(
             {
-                estado: "ERROR",
-                mensaje: "No se pudo modificar el cupón"
+                estado: "EXITO",
+                mensaje: "Cupón modificado correctamente"
             });
         }
+    }
+    catch(err)
+    {
+        return res.status(500).json(
+        {
+            estado: "ERROR",
+            mensaje: "No se pudo modificar el cupón"
+        });
+    }
 }
 
 export async function crearEspecificacionesAtributos(req, res)
@@ -444,16 +317,17 @@ export async function crearEspecificacionesAtributos(req, res)
     {
         const
         {
-            categoria,
+            idCat,
             nombreAtributo,
-            valor
+            valor,
+            idProd
         } = req.body;
 
-        const especificacionesProducto = new categoria(categoria,
+        const especificacionesProd = new especificacionesProducto(null,
             nombreAtributo, valor
         )
 
-        const dbRes = await crearEspecificacionesAtributosService(especificacionesProducto);
+        const dbRes = await crearEspecificacionesAtributosService(especificacionesProd, idCat ,idProd);
 
         if (dbRes)
         {
@@ -473,12 +347,12 @@ export async function crearEspecificacionesAtributos(req, res)
             }
         
     }
-    catch
+    catch (err)
     {
         return res.status(500).json(
         {
             estado: "ERROR",
-            mensaje: "No se pudo modificar el cupón"
+            mensaje: `Error al crear las especificaciones del producto: ${err.message}`
         });
     }
 }

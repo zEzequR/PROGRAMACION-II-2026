@@ -1,4 +1,4 @@
-import { registrarseManualService, autenticarUsuarioService } from "../services/usuarioService.js";
+import { registrarseManualService, autenticarUsuarioService, obtenerIdTienda } from "../services/usuarioService.js";
 import { generarToken } from "../utils/generarToken.js";
 import { Usuario } from "../models/usuario.js";
 import { ROLES } from "../config/enums.js";
@@ -97,17 +97,27 @@ export async function logggearseManual(req, res)
                 null,
                 null
             );
+
             const dbRes = await autenticarUsuarioService(usuario.email, usuario.psw);
-            const token = generarToken(
-                {
-                    id: dbRes.id_persona,
-                    email: req.email,
-                    nombre: dbRes.nombre,
-                    apellido: dbRes.apellido,
-                    telefono: dbRes.telefono,
-                    rol: ROLES.USUARIO
-                }
-            );
+            const idTienda = await obtenerIdTienda(dbRes.id_persona);
+            
+            let tokenPayload = {
+                id: dbRes.id_persona,
+                email: req.email,
+                nombre: dbRes.nombre,
+                apellido: dbRes.apellido,
+                telefono: dbRes.telefono,
+                rol: ROLES.USUARIO
+            };
+
+            if (idTienda)
+            {
+                tokenPayload.rol = ROLES.EMPRENDEDOR;
+                tokenPayload.id_tienda = idTienda;
+            }
+
+            const token = generarToken(tokenPayload);
+
             return res.status(200).json(
             {
                 estado: "OK",

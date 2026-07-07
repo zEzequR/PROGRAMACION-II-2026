@@ -1,19 +1,30 @@
 import pool from '../config/conexion.js'
 
-export async function crearProductoService(Producto)
+export async function crearProductoService(Producto, idCat, idTienda)
 {
-    const query = + `
+    const query = `
         CALL spu_crear_producto(
         $1, $2, $3, $4, $5, $6, $7, $8,
         $9, $10, $11)
-        RETURNING *
     `
-    const values = [];
+    const values = [
+        idTienda,
+        idCat,
+        Producto.tipoProd,
+        Producto.nombreProd,
+        Producto.imagenProd,
+        Producto.descripProd,
+        Producto.precio,
+        Producto.activo,
+        Producto.stock || null,
+        Producto.archivoProd || null,
+        null
+    ];
     
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return true
     }
     catch(err)
     {
@@ -21,20 +32,31 @@ export async function crearProductoService(Producto)
     }
 }
 
-export async function modificarProductoService(Producto)
+export async function modificarProductoService(Producto, idCat, idProd, idTienda)
 {
-    const query = + `
+    const query = `
         CALL spu_modificar_producto(
         $1, $2, $3, $4, $5, $6, $7, $8,
-        $9, $10, $11, $12)
-        RETURNING *
+        $9, $10, $11)
     `
-    const values = [];
+    const values = [
+        idTienda,
+        idProd,
+        idCat, 
+        Producto.tipoProd,
+        Producto.nombreProd || null,
+        Producto.imagenProd || null,
+        Producto.descripProd || null,
+        Producto.precio !== undefined ? Producto.precio : null,
+        Producto.stock !== undefined ? Producto.stock : null,
+        Producto.archivoProd || null,
+        null
+    ];
     
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return true
     }
     catch(err)
     {
@@ -44,17 +66,19 @@ export async function modificarProductoService(Producto)
 
 export async function eliminarProductoService(idProducto, idTienda)
 {
-    const query = + `
-        CALL spu_modificar_producto(
+    const query = `
+        CALL spu_eliminar_producto(
         $1, $2)
-        RETURNING *
     `
-    const values = [];
+    const values = [
+        idProducto,
+        idTienda
+    ];
     
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return true
     }
     catch(err)
     {
@@ -64,17 +88,19 @@ export async function eliminarProductoService(idProducto, idTienda)
 
 export async function reactivarProductoService(idProducto, idTienda)
 {
-    const query = + `
+    const query = `
         CALL spu_reactivar_producto(
         $1, $2)
-        RETURNING *
     `
-    const values = [];
+    const values = [
+        idProducto,
+        idTienda
+    ];
     
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return true
     }
     catch(err)
     {
@@ -126,19 +152,27 @@ export async function verProductosService(filtrers, viewType)
     }
 }
 
-export async function crearCuponService(cupon)
+export async function crearCuponService(cupon, idTienda, aplica, listaProd)
 {
-    const query = + `
+    const query = `
         CALL spu_crear_cupon_descuento(
-        $1, $2, $3, $4, $5, $6, $7)
-        RETURNING *
+        $1, $2, $3, $4, $5, $6, $7, $8)
     `
-    const values = [];
+    const values = [
+        idTienda,
+        cupon.codigo,
+        cupon.tipoDescuento,
+        cupon.valor,
+        cupon.fechaExpiracion,
+        cupon.usosMaximos,
+        aplica,
+        listaProd
+    ];
     
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return true
     }
     catch(err)
     {
@@ -166,7 +200,7 @@ export async function eliminarCuponService(idCupon, idTienda, aplicaProd)
     }
 }
 
-export async function modificarCuponService(cupon)
+export async function modificarCuponService(cupon, idTienda, listaProd)
 {
     const query = + `
         CALL spu_modificar_cupon_descuento(
@@ -186,19 +220,23 @@ export async function modificarCuponService(cupon)
     }
 }
 
-async function crearEspecificacionesAtributosService(categoria)
+export async function crearEspecificacionesAtributosService(especificaciones, idCat, idProd)
 {
-    const query = + `
+    const query = `
         CALL spu_crear_especificaciones_producto(
         $1, $2, $3, $4)
-        RETURNING *
     `
-    const values = [];
+    const values = [
+        idCat,
+        especificaciones.nombreAtributo,
+        especificaciones.valor,
+        idProd
+    ];
     
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return true
     }
     catch(err)
     {

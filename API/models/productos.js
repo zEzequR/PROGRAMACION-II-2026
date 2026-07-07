@@ -20,27 +20,30 @@ class Productos
 
 class ProductosDigitales extends Productos
 {
-    constructor(
-        archivoProd,
-    )
+    constructor(tipoProd, nombreProd, imagenProd,
+    descripProd, precio, activo,
+    archivoProd)
     {
+
         super(tipoProd, nombreProd,
-            imagenProd, descripProd,
-            precio, activo);
+        imagenProd, descripProd,
+        precio, activo);
+
         this.archivoProd = archivoProd;
     }
 }
 
 class ProductosFisicos extends Productos
 {
-    constructor(
-        stock
-    )
+    constructor(tipoProd, nombreProd, imagenProd,
+    descripProd, precio, activo,
+    stock)
     {
-        super(tipoProd, nombreProd,
-            imagenProd, descripProd,
-            precio, activo);
+        super(tipoProd, nombreProd, imagenProd,
+        descripProd, precio, activo);
+        
         this.stock = stock;
     }
 }
 
+export { Productos, ProductosDigitales, ProductosFisicos }
