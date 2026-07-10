@@ -13,3 +13,5 @@ class Pagos
         this.monto = monto;
     }
 }
+
+export default Pagos;

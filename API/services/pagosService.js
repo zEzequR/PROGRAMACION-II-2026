@@ -1,18 +1,22 @@
 import pool from '../config/conexion.js'
 
-export default function crearPagoService(Pago)
+export async function crearPagoService(Pago)
 {
     const query = `
-    CALL spu_crear_pago(
-    $1, $2, $3, $4, $5)
-    RETURNING *
+    CALL spu_crear_pago($1, $2, $3, $4)
     `
-    const values = []
+    const values =
+    [
+        Pago.idTransaccion,
+        Pago.estado,
+        Pago.metodoPago,
+        Pago.monto
+    ]
 
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return resultado
     }
     catch(err)
     {
@@ -20,20 +24,22 @@ export default function crearPagoService(Pago)
     }
 }
 
-export default function actualizarPagoService(Pago)
+export async function actualizarPagoService(Pago)
 {
     const query = `
-    CALL spu_actualizar_pago(
-    $1, $2, $3
-    )
+    CALL spu_actualizar_pago($1, $2, $3)
     `
-    
-    const values = []
-    
+    const values =
+    [
+        Pago.idDetPago,
+        Pago.idTransaccion,
+        Pago.estado
+    ]
+
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        return resultado
     }
     catch(err)
     {
