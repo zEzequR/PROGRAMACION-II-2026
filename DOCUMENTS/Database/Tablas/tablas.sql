@@ -1,4 +1,4 @@
-CREATE DATABASE db_pp2;
+--CREATE DATABASE db_pp2;
 
 CREATE TABLE Ubicaciones
 (
@@ -164,7 +164,7 @@ CREATE TABLE Productos_Digitales (
     id_producto INT,
     archivo_prod TEXT NOT NULL,
     PRIMARY KEY (id_producto_digital),
-    FOREIGN KEY (id_producto) REFERENCES Productos(id_producto),
+    FOREIGN KEY (id_producto) REFERENCES Productos(id_producto)
 );
 
 CREATE TABLE Detalles_Pago
