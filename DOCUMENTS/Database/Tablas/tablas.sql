@@ -70,6 +70,7 @@ CREATE TABLE Clientes
     id_persona INT,
     id_tienda INT,
     suscripcion BOOL,
+    resend_contact_id VARCHAR(255) DEFAULT NULL,
     PRIMARY KEY(id_cliente),
     FOREIGN KEY(id_tienda) REFERENCES Tiendas(id_tienda),
     FOREIGN KEY (id_persona) REFERENCES Personas(id_persona),
@@ -151,19 +152,19 @@ CREATE TABLE Productos_Fisicos (
 CREATE TABLE Licencia_Venta
 (
     id_lic_vta INT GENERATED ALWAYS AS IDENTITY,
+    id_producto INT,
     clave_digital TEXT,
     clave_usada BOOLEAN,
-    PRIMARY KEY (id_lic_vta)
+    PRIMARY KEY (id_lic_vta),
+    FOREIGN KEY (id_producto) REFERENCES Productos(id_producto)
 );
 
 CREATE TABLE Productos_Digitales (
     id_producto_digital INT GENERATED ALWAYS AS IDENTITY,
     id_producto INT,
-    id_lic_vta INT,
     archivo_prod TEXT NOT NULL,
     PRIMARY KEY (id_producto_digital),
     FOREIGN KEY (id_producto) REFERENCES Productos(id_producto),
-    FOREIGN KEY (id_lic_vta) REFERENCES Licencia_Venta(id_lic_vta)
 );
 
 CREATE TABLE Detalles_Pago

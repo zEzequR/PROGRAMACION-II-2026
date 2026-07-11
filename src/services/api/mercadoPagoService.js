@@ -1,5 +1,5 @@
 import { Preference } from 'mercadopago'
-import mpClient from '../config/mercadopago.js'
+import mpClient from '../../config/mercadopago.js'
 
 export async function crearPreferenciaService(venta)
 {

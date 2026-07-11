@@ -3,6 +3,7 @@ import rutaUsuarios from './routes/usuarios.js'
 import rutaTiendas from './routes/tiendas.js'
 import rutaProductos from './routes/productos.js'
 import rutaPagos from './routes/pagos.js'
+import rutaCupones from './routes/cupones.js'
 
 const app = express();
 
@@ -12,5 +13,6 @@ app.use('/usuarios', rutaUsuarios);
 app.use('/tiendas', rutaTiendas);
 app.use('/productos', rutaProductos);
 app.use('/pagos', rutaPagos);
+app.use('/cupones', rutaCupones);
 
 export default app;

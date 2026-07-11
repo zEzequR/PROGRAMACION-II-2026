@@ -184,3 +184,5 @@ BEGIN
         Productos.id_producto IN (SELECT id_producto FROM Cupones_Descuentos_Productos)));
 END;
 $$;
+
+SELECT * FROM Productos

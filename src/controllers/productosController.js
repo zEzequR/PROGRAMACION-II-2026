@@ -1,8 +1,7 @@
 import { Productos, ProductosDigitales, ProductosFisicos } from '../models/productos.js'
-import { cuponesDescuentos } from '../models/cuponesDescuentos.js';
 import { crearProductoService, modificarProductoService,
     eliminarProductoService, reactivarProductoService,
-    crearCuponService, crearEspecificacionesAtributosService } from '../services/productosService.js';
+    crearEspecificacionesAtributosService } from '../services/productosService.js';
 import { categoriasProductos, atributosCategoria, especificacionesProducto } from '../models/categorias.js';
 
 export async function crearProducto(req, res)
@@ -76,8 +75,11 @@ export async function modificarProducto(req, res)
 {
     try
     {
+        const
+        {
+            idProd
+        } = req.params
         const {
-            idProd,
             tipoProd, 
             idCat, 
             nombreProd, 
@@ -144,7 +146,7 @@ export async function eliminarProducto(req, res)
         const
         {
             idProd
-        } = req.body
+        } = req.params
 
         const dbRes = await eliminarProductoService(idProd, req.user.id_tienda)
 
@@ -174,7 +176,7 @@ export async function reactivarProducto(req, res)
         const
         {
             idProd
-        } = req.body
+        } = req.params
 
         const dbRes = await reactivarProductoService(idProd, req.user.id_tienda);
 
@@ -213,114 +215,19 @@ export async function obtenerProductos(req, res)
     }
 }
 
-export async function crearCupon(req, res)
-{
-    try
-    {
-        const
-        {
-            codigo,
-            tipoDescuento,
-            valor,
-            fechaExpiracion,
-            usosMaximos,
-            usosActuales,
-            listaProd
-        } = req.body
-
-        const nuevoCupon = new cuponesDescuentos(codigo,
-            tipoDescuento, valor, fechaExpiracion, usosMaximos,
-            0
-        )
-
-        const dbRes = await crearCuponService(nuevoCupon, req.user.id_tienda,
-            "PRODUCTO", listaProd);
-        if(dbRes)
-        {
-            return res.status(201).json(
-            {
-                estado: "OK",
-                mensaje: "Se creó el cupón con éxito"
-            });
-        }
-    }
-    catch(err)
-    {
-        return res.status(500).json(
-        {
-            estado: "ERROR",
-            mensaje: `No se pudo crear el cupón: ${err.message}`
-        });
-    }
-}
-
-export async function eliminarCupon(req, res)
-{
-    try
-    {
-        //preguntar
-    }
-    catch(err)
-    {
-        return res.status(500).json(
-        {
-            estado: "ERROR",
-            mensaje: "No se pudo crear el cupón"
-        });
-    }
-}
-
-export async function modificarCupon(req, res)
-{
-    try
-    {
-        const
-        {
-            idProd,
-            idCupon,
-            codigo,
-            tipoDescuento,
-            valor,
-            fechaExpiracion,
-            usosMaximos,
-            usosActuales,
-            listaProd
-        } = req.body
-
-        const cupon = new cuponesDescuentos(codigo, tipoDescuento,
-            valor, fechaExpiracion, usosMaximos, usosActuales);
-        
-        const dbRes = await modificarCuponService(nuevoCupon, req.user.id_tienda,
-            listaProd)
-        if (dbRes)
-        {
-            return res.status(201).json(
-            {
-                estado: "EXITO",
-                mensaje: "Cupón modificado correctamente"
-            });
-        }
-    }
-    catch(err)
-    {
-        return res.status(500).json(
-        {
-            estado: "ERROR",
-            mensaje: "No se pudo modificar el cupón"
-        });
-    }
-}
-
 export async function crearEspecificacionesAtributos(req, res)
 {
     try
     {
         const
         {
+            idProd
+        } = req.params
+        const
+        {
             idCat,
             nombreAtributo,
-            valor,
-            idProd
+            valor
         } = req.body;
 
         const especificacionesProd = new especificacionesProducto(null,

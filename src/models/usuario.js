@@ -61,7 +61,9 @@ class Cliente extends Usuario {
         apellido, 
         telefono, 
         id_tienda, 
-        suscripcion)
+        suscripcion,
+        resendContactID
+    )
     {
         
         super(
@@ -75,6 +77,7 @@ class Cliente extends Usuario {
         this.idCliente = idCliente;
         this.id_tienda = id_tienda;
         this.suscripcion = suscripcion;
+        this.resendContactID = resendContactID;
     }
 }
 

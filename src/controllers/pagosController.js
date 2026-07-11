@@ -1,6 +1,6 @@
 import Pagos from '../models/pagos.js'
 import { crearPagoService, actualizarPagoService } from '../services/pagosService.js'
-import { crearPreferenciaService } from '../services/mercadopagoService.js'
+import { crearPreferenciaService } from '../services/api/mercadoPagoService.js'
 import { Payment } from 'mercadopago'
 import mpClient from '../config/mercadopago.js'
 
