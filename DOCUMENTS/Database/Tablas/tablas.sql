@@ -163,6 +163,7 @@ CREATE TABLE Productos_Digitales (
     id_producto_digital INT GENERATED ALWAYS AS IDENTITY,
     id_producto INT,
     archivo_prod TEXT NOT NULL,
+    usa_licencia BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (id_producto_digital),
     FOREIGN KEY (id_producto) REFERENCES Productos(id_producto)
 );

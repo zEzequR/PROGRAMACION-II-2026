@@ -8,16 +8,15 @@ export async function crearProducto(req, res)
 {
     try
     {
-        const { 
+        const
+        { 
             tipoProd, 
             idCat, 
             nombreProd, 
             imagenProd, 
             descripProd, 
             precio, 
-            activo, 
-            archivoProd, 
-            stock       
+            activo     
         } = req.body;
 
         let nuevoProd;
@@ -26,17 +25,26 @@ export async function crearProducto(req, res)
         {
             case "DIGITAL":
             {
+                const
+                {
+                    archivoProd,
+                    usaLicencia
+                } = req.body;
                 //cuando se conecten los servicios de google,
                 //await a que el archivo se suba a drive y se
                 //tenga el link al archivo
                 nuevoProd = new ProductosDigitales(
                     "DIGITAL", nombreProd, imagenProd, descripProd,
-                    precio, activo, archivoProd
+                    precio, activo, archivoProd, usaLicencia
                 );
                 break;
             }
             case "FISICO":
             {
+                const
+                {
+                    stock 
+                } = req.body;
                 nuevoProd = new ProductosFisicos(
                     "FISICO", nombreProd, imagenProd, descripProd,
                     precio, activo, stock
@@ -86,9 +94,7 @@ export async function modificarProducto(req, res)
             imagenProd, 
             descripProd, 
             precio, 
-            activo, 
-            archivoProd, 
-            stock       
+            activo  
         } = req.body;
 
         let prodMod;
@@ -97,14 +103,23 @@ export async function modificarProducto(req, res)
         {
             case "DIGITAL":
             {
+                const
+                {
+                    archivoProd,
+                    usaLicencia
+                } = req.body;
                 prodMod = new ProductosDigitales(
                     "DIGITAL", nombreProd, imagenProd, descripProd,
-                    precio, activo, archivoProd
+                    precio, activo, archivoProd, usaLicencia
                 );
                 break;
             }
             case "FISICO":
             {
+                const
+                {
+                    stock 
+                } = req.body;
                 prodMod = new ProductosFisicos(
                     "FISICO", nombreProd, imagenProd, descripProd,
                     precio, activo, stock

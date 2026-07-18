@@ -22,7 +22,7 @@ class ProductosDigitales extends Productos
 {
     constructor(tipoProd, nombreProd, imagenProd,
     descripProd, precio, activo,
-    archivoProd)
+    archivoProd, usaLicencia)
     {
 
         super(tipoProd, nombreProd,
@@ -30,6 +30,7 @@ class ProductosDigitales extends Productos
         precio, activo);
 
         this.archivoProd = archivoProd;
+        this.usaLicencia = usaLicencia;
     }
 }
 

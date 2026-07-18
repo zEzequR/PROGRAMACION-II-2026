@@ -48,4 +48,6 @@ CREATE VIEW vw_obtener_categorias AS
 SELECT categoria
 FROM Categorias_Productos;
 
-SELECT * FROM categorias_productos
+SELECT * FROM categorias_productos;
+SELECT * FROM atributos_categoria;
+SELECT * FROM especificaciones_producto;

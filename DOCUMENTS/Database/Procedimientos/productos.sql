@@ -16,7 +16,7 @@ CREATE PROCEDURE spu_crear_producto(
     p_activo BOOLEAN,
     p_stock INT DEFAULT NULL,
     p_archivo_prod TEXT DEFAULT NULL,
-    p_clave_digital VARCHAR(100) DEFAULT NULL
+    p_usa_licencia BOOLEAN DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$
@@ -34,12 +34,8 @@ INSERT INTO Productos (id_tienda, id_cat, tipo_prod, nombre_prod, imagen_prod, d
             VALUES (v_nuevo_id_producto, p_stock);
 
         WHEN 'DIGITAL' THEN
-            INSERT INTO Licencia_Venta (clave_digital, clave_usada)
-            VALUES (p_clave_digital, FALSE)
-            RETURNING id_lic_vta INTO v_nueva_licencia_id;
-
-            INSERT INTO Productos_Digitales (id_producto, id_lic_vta, archivo_prod)
-            VALUES (v_nuevo_id_producto, v_nueva_licencia_id, p_archivo_prod);
+            INSERT INTO Productos_Digitales(id_producto, archivo_prod, usa_licencia)
+            VALUES (v_nuevo_id_producto, p_archivo_prod, p_usa_licencia);
     END CASE;
 END;
 $$;
@@ -56,7 +52,7 @@ CREATE PROCEDURE spu_modificar_producto(
     p_precio NUMERIC(18,2),
     p_stock INT DEFAULT NULL,
     p_archivo_prod TEXT DEFAULT NULL,
-    p_clave_digital VARCHAR(100) DEFAULT NULL
+    p_usa_licencia BOOLEAN DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$
@@ -64,8 +60,8 @@ DECLARE
     v_tipo_actual VARCHAR(7);
     v_id_lic_vta INT;
 BEGIN
-SELECT tipo_prod INTO v_tipo_actual 
-    FROM Productos 
+    SELECT tipo_prod INTO v_tipo_actual
+    FROM Productos
     WHERE id_tienda = p_id_tienda AND id_producto = p_id_producto;
 
     UPDATE Productos SET
@@ -76,22 +72,26 @@ SELECT tipo_prod INTO v_tipo_actual
         precio = COALESCE(p_precio, precio)
     WHERE id_tienda = p_id_tienda AND id_producto = p_id_producto;
 
-    CASE v_tipo_actual 
+    CASE v_tipo_actual
         WHEN 'FISICO' THEN
             UPDATE Productos_Fisicos SET
                 stock = COALESCE(p_stock, stock)
             WHERE id_producto = p_id_producto;
 
         WHEN 'DIGITAL' THEN
-            UPDATE Productos_Digitales SET 
-                archivo_prod = COALESCE(p_archivo_prod, archivo_prod)
-            WHERE id_producto = p_id_producto
-            RETURNING id_lic_vta INTO v_id_lic_vta;
-            
-            IF p_clave_digital IS NOT NULL AND v_id_lic_vta IS NOT NULL THEN
-                UPDATE Licencia_Venta SET
-                    clave_digital = p_clave_digital
-                WHERE id_lic_vta = v_id_lic_vta;
+            UPDATE Productos_Digitales SET
+                archivo_prod = COALESCE(p_archivo_prod, archivo_prod),
+                usa_licencia = COALESCE(p_usa_licencia, usa_licencia)
+            WHERE id_producto = p_id_producto;
+
+            SELECT id_lic_vta INTO v_id_lic_vta
+            FROM Licencia_Venta
+            WHERE id_producto = p_id_producto;
+
+            IF p_usa_licencia IS FALSE THEN
+                DELETE FROM Licencia_Venta
+                WHERE id_producto = p_id_producto
+                AND clave_usada = FALSE;
             END IF;
     END CASE;
 END;
@@ -185,4 +185,6 @@ BEGIN
 END;
 $$;
 
-SELECT * FROM Productos
+SELECT * FROM Productos;
+SELECT * FROM productos_digitales;
+SELECT * FROM productos_fisicos;

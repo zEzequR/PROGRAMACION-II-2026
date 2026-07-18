@@ -18,7 +18,7 @@ export async function crearProductoService(Producto, idCat, idTienda)
         Producto.activo,
         Producto.stock || null,
         Producto.archivoProd || null,
-        null
+        Producto.usaLicencia !== undefined ? Producto.usaLicencia : null,
     ];
     
     try
@@ -50,7 +50,7 @@ export async function modificarProductoService(Producto, idCat, idProd, idTienda
         Producto.precio !== undefined ? Producto.precio : null,
         Producto.stock !== undefined ? Producto.stock : null,
         Producto.archivoProd || null,
-        null
+        Producto.usaLicencia !== undefined ? Producto.usaLicencia : null,
     ];
     
     try
@@ -112,11 +112,10 @@ export async function verProductosService(filtrers, viewType)
 {
     switch (viewType)
     {
-        case '1':
+        case 1:
             {
-                const query = + `
+                const query = `
                     SELECT * FROM vw_obtener_productos
-                    RETURNING *
                 `
                 const values = [];
                 
@@ -132,10 +131,9 @@ export async function verProductosService(filtrers, viewType)
             }
         case 2:
             {
-                const query = + `
+                const query = `
                     CALL fn_ver_productos_por_filtros(
                     $1, $2, $3, $4, $5, $6, $7, $8)
-                    RETURNING *
                 `
                 const values = [];
                 
