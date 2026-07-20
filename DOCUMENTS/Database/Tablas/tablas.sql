@@ -224,10 +224,10 @@ CREATE TABLE tarjetas_pagos
     id_tarjeta INT GENERATED ALWAYS AS IDENTITY,
     id_cliente INT,
     servicio VARCHAR(20) NOT NULL,
-    servicio_cliente_id VARCHAR(255) NOT NULL,     -- ID del cliente en MP/Stripe
-    servicio_tarjeta_id TEXT NOT NULL,             -- ID de la tarjeta en MP/Stripe
-    ult_digitos_tarjeta CHAR(4),                   -- para mostrar "terminada en 3704"
-    marca_tarjeta VARCHAR(12),                     -- 'visa', 'mastercard'
+    servicio_cliente_id VARCHAR(255) NOT NULL,
+    servicio_tarjeta_id TEXT NOT NULL,
+    ult_digitos_tarjeta CHAR(4),
+    marca_tarjeta VARCHAR(12),
     expira_mes INT,
     expira_ano INT,
     por_defecto BOOLEAN,
