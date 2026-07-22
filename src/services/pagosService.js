@@ -2,9 +2,7 @@ import pool from '../config/conexion.js'
 
 export async function crearPagoService(Pago)
 {
-    const query = `
-    CALL spu_crear_pago($1, $2, $3, $4)
-    `
+    const query = `SELECT fn_crear_pago($1, $2, $3, $4) AS id_pago`;
     const values =
     [
         Pago.idTransaccion,
@@ -16,7 +14,7 @@ export async function crearPagoService(Pago)
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado
+        return resultado.rows[0].id_pago;
     }
     catch(err)
     {
@@ -46,3 +44,4 @@ export async function actualizarPagoService(Pago)
         throw new Error(err.message)
     }
 }
+
