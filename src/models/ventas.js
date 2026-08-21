@@ -1,4 +1,4 @@
-export default class Ventas
+export class Ventas
 {
     constructor(idTienda, idCliente)
     {

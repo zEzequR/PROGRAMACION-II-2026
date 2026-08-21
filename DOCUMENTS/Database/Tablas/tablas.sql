@@ -171,7 +171,7 @@ CREATE TABLE Productos_Digitales (
 CREATE TABLE Detalles_Pago
 (
     id_det_pago INT GENERATED ALWAYS AS IDENTITY,
-    id_transaccion INT UNIQUE,
+    id_transaccion BIGINT UNIQUE,
     estado VARCHAR(60),
     metodo_pago VARCHAR(60),
     monto NUMERIC(18,2),

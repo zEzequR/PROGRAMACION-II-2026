@@ -222,11 +222,7 @@ export async function obtenerProductos(req, res)
     }
     catch(err)
     {
-        return res.status(500).json(
-            {
-                estado: "ERROR",
-                mensaje: "No se pudo obtener el/los productos"
-            });
+        return res.status(500).json({ mensaje: `No se pudieron obtener los productos: ${err.message}` });
     }
 }
 

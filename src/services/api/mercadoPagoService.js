@@ -3,7 +3,6 @@ import mpClient from '../../config/mercadopago.js';
 import crypto from 'crypto'
 
 
-
 export async function procesarPagoBrickService(formData, datosExtra)
 {
     const payment = new Payment(mpClient);
@@ -11,6 +10,7 @@ export async function procesarPagoBrickService(formData, datosExtra)
     const body =
     {
         ...formData,
+        transaction_amount: Number(datosExtra.monto),
         description: datosExtra.descripcion,
         external_reference: String(datosExtra.idVenta),
         notification_url: process.env.MP_WEBHOOK_URL
@@ -18,59 +18,17 @@ export async function procesarPagoBrickService(formData, datosExtra)
 
     const requestOptions = { idempotencyKey: crypto.randomUUID() };
 
-    const resultado = await payment.create({ body, requestOptions });
-    return resultado;
-}
-
-export async function obtenerOCrearCustomerMP(email, customerIdExistente)
-{
-    if (customerIdExistente) return customerIdExistente;
-
-    const customer = new Customer(mpClient);
-    const resultado = await customer.create({ body: { email } });
-    return resultado.id;
-}
-
-export async function guardarTarjetaMP(customerId, token)
-{
-    const customerCard = new CustomerCard(mpClient);
-    const resultado = await customerCard.create({ customerId, body: { token } });
-    return resultado;
-}
-
-
-
-
-
-/////////////////////////
-export async function procesarPagoTarjetaGuardadaService(datos)
-{
-    const payment = new Payment(mpClient);
-
-    const body =
+    try
     {
-        transaction_amount: Number(datos.monto),
-        token: datos.token,
-        description: datos.descripcion,
-        installments: Number(datos.cuotas) || 1,
-        payment_method_id: datos.paymentMethodId,
-        issuer_id: datos.issuerId,
-        payer:
-        {
-            type: "customer",
-            id: datos.customerId
-        },
-        external_reference: String(datos.idVenta),
-        notification_url: process.env.MP_WEBHOOK_URL
-    };
-
-    console.log("BODY QUE SE MANDA A MP:", body);
-
-    const requestOptions = { idempotencyKey: crypto.randomUUID() };
-
-    const resultado = await payment.create({ body, requestOptions });
-    return resultado;
+        const resultado = await payment.create({ body, requestOptions });
+        return resultado;
+    }
+    catch(err)
+    {
+        throw new Error(err.message);
+    }
 }
+
 
 export async function crearPreferenciaService(venta)
 {
@@ -97,8 +55,15 @@ export async function crearPreferenciaService(venta)
             pending: process.env.MP_BACK_PENDING
         },
         auto_return: "approved"
-    }
+    };
 
-    const resultado = await preference.create({ body });
-    return resultado;
+    try
+    {
+        const resultado = await preference.create({ body });
+        return resultado;
+    }
+    catch(err)
+    {
+        throw new Error(err.message);
+    }
 }

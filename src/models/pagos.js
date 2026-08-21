@@ -1,4 +1,4 @@
-class Pagos
+export default class Pagos
 {
     constructor(
         idTransaccion,
@@ -13,5 +13,3 @@ class Pagos
         this.monto = monto;
     }
 }
-
-export default Pagos;

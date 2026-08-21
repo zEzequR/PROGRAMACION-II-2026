@@ -1,269 +1,404 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Prueba de pago — Payment Brick</title>
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <style>
-        body { font-family: sans-serif; max-width: 480px; margin: 40px auto; padding: 0 20px; }
-        #resultado { margin-top: 16px; font-weight: bold; }
-        .aprobado { color: green; }
-        .rechazado { color: red; }
-        .pendiente { color: orange; }
-        label.guardar { display: block; margin-top: 12px; font-size: 14px; }
-        hr { margin: 32px 0; }
-        #tarjetaGuardadaForm { display: flex; flex-direction: column; gap: 10px; }
-        .container { height: 18px; display: inline-block; border: 1px solid rgb(118, 118, 118); border-radius: 4px; padding: 6px 8px; }
-        select { padding: 8px; border-radius: 4px; border: 1px solid rgb(118, 118, 118); }
-        button { padding: 10px; border-radius: 4px; border: none; background: #009ee3; color: white; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagar — Localia</title>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script src="/carrito.js"></script>
+  <style>
+    :root {
+      --bg: #07070c;
+      --bg-soft: #0d0d16;
+      --fg: #f4f4f8;
+      --muted: #9aa0b4;
+      --brand: #6d8bff;
+      --brand-2: #a06bff;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-brd: rgba(255, 255, 255, 0.12);
+      --ok: #4ade80;
+      --bad: #f87171;
+      --warn: #fbbf24;
+      --radius: 18px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: var(--bg); }
+    body { font-family: "Space Grotesk", system-ui, sans-serif; background: var(--bg); color: var(--fg); min-height: 100vh; position: relative; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Fondo con manchas */
+    .backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.4; }
+    .blob.one { width: 460px; height: 460px; background: #3b6cff; top: -140px; right: -80px; }
+    .blob.two { width: 380px; height: 380px; background: #7b3bff; bottom: -160px; left: -60px; }
+
+    /* NAVBAR (compartido) */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(10,10,18,0.6);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border-bottom: 1px solid var(--glass-brd);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; }
+    .logo-dot { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 0 18px rgba(109,139,255,0.55); }
+    .nav-links { display: flex; gap: 26px; }
+    .nav-links a { color: var(--muted); font-size: 15px; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--fg); }
+    .btn { font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; padding: 10px 20px; border-radius: 999px; border: 1px solid transparent; transition: transform .15s; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { color: #07070c; background: linear-gradient(135deg, #ffffff, #d8dcff); box-shadow: 0 6px 24px rgba(109,139,255,0.35); }
+
+    /* LAYOUT */
+    .checkout {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px;
+      padding: 44px 0 80px; align-items: start;
+    }
+    .page-head { grid-column: 1 / -1; margin-bottom: 4px; }
+    .page-head h1 { font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -0.02em; margin-bottom: 6px; }
+    .page-head p { color: var(--muted); font-size: 15px; }
+
+    /* Tarjeta de vidrio genérica */
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--glass-brd);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.14);
+    }
+    .panel { padding: 26px; }
+    .panel h2 { font-size: 18px; margin-bottom: 4px; }
+    .panel .hint { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+    /* Resumen de compra */
+    .summary-item { display: flex; gap: 14px; align-items: center; padding-bottom: 18px; border-bottom: 1px solid var(--glass-brd); margin-bottom: 18px; }
+    .summary-item img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-brd); }
+    .summary-item .info { flex: 1; }
+    .summary-item .info .t { font-size: 15px; font-weight: 600; }
+    .summary-item .info .s { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .summary-line { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+    .summary-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--glass-brd); }
+    .summary-total .lbl { font-size: 15px; font-weight: 600; }
+    .summary-total .amount { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, var(--brand), var(--brand-2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .secure-note { display: flex; align-items: center; gap: 8px; margin-top: 18px; font-size: 12px; color: var(--muted); }
+    .secure-note .lock { width: 16px; height: 16px; display: grid; place-items: center; color: var(--ok); }
+
+    /* Contenedor del brick — MP inyecta su propio iframe */
+    #paymentBrick_container { min-height: 120px; }
+
+    /* Guardar tarjeta */
+    .save-card { display: flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 14px; color: var(--muted); cursor: pointer; }
+    .save-card input { accent-color: var(--brand); width: 16px; height: 16px; }
+
+    /* Resultado */
+    #resultado { margin-top: 18px; font-weight: 600; font-size: 15px; text-align: center; padding: 12px; border-radius: 12px; display: none; }
+    #resultado.show { display: block; }
+    #resultado.aprobado { color: var(--ok); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); }
+    #resultado.rechazado { color: var(--bad); background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+    #resultado.pendiente { color: var(--warn); background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); }
+    #resultado.info { color: var(--muted); background: rgba(255,255,255,0.05); border: 1px solid var(--glass-brd); }
+
+    /* Tarjetas guardadas */
+    #seccionTarjetasGuardadas { margin-top: 26px; }
+    #tarjetaGuardadaForm { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+    #selectTarjetaGuardada {
+      padding: 13px 16px; border-radius: 14px; font-family: inherit; font-size: 14px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--glass-brd); color: var(--fg); outline: none;
+    }
+    #selectTarjetaGuardada option { background: var(--bg-soft); color: var(--fg); }
+    .cvv-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .cvv-wrap label { font-size: 13px; color: var(--muted); }
+    #securityCodeContainer {
+      height: 46px; border-radius: 14px; padding: 12px 16px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--glass-brd);
+    }
+    .btn-pay {
+      width: 100%; padding: 14px; font-size: 15px; font-weight: 600; color: #fff;
+      border: none; border-radius: 14px; cursor: pointer;
+      background: linear-gradient(100deg, var(--brand), var(--brand-2));
+      box-shadow: 0 10px 30px rgba(109,139,255,0.35);
+      transition: transform 0.15s, filter 0.2s;
+    }
+    .btn-pay:hover { transform: translateY(-1px); filter: brightness(1.05); }
+
+    @media (max-width: 880px) { .checkout { grid-template-columns: 1fr; } .nav-links { display: none; } }
+  </style>
 </head>
 <body>
-    <h1>Prueba de pago</h1>
-    <p>Payment Brick — venta de prueba</p>
- 
-    <div id="paymentBrick_container"></div>
- 
-    <label class="guardar">
-        <input type="checkbox" id="guardarTarjeta">
-        Guardar esta tarjeta para futuras compras
-    </label>
- 
-    <p id="resultado"></p>
- 
-    <hr>
- 
-    <div id="seccionTarjetasGuardadas" style="display:none">
-        <h2>Pagar con una tarjeta guardada</h2>
-        <form id="tarjetaGuardadaForm">
-            <select id="selectTarjetaGuardada"></select>
-            <div id="securityCodeContainer" class="container"></div>
-            <button type="submit">Pagar con esta tarjeta</button>
-        </form>
+  <div class="backdrop" aria-hidden="true">
+    <div class="blob one"></div>
+    <div class="blob two"></div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="nav">
+    <a href="index.html" class="brand"><span class="logo-dot"></span> Localia</a>
+    <div class="nav-links">
+      <a href="index.html">Inicio</a>
+      <a href="feed.html">Explorar</a>
+      <a href="tienda.html">Tiendas</a>
+      <a href="dashboard.html">Panel</a>
     </div>
- 
-    <script>
-        const PUBLIC_KEY = "TEST-a07ff4ee-2169-4eed-bb8d-c75d1605b606";
-        const API_URL = "http://localhost:3000";
- 
-        const params = new URLSearchParams(window.location.search);
-        const ID_VENTA = Number(params.get('idVenta')) || 2;
-        const ID_CLIENTE = Number(params.get('idCliente')) || 1;
+    <a href="login.html" class="btn btn-primary">Mi cuenta</a>
+  </nav>
 
-        let MONTO = 0;
-        let DESCRIPCION = "Compra en tienda";
- 
-        const mp = new MercadoPago(PUBLIC_KEY, { locale: "es-AR" });
-        const bricksBuilder = mp.bricks();
+  <main class="wrap">
+    <div class="checkout">
+      <div class="page-head">
+        <h1>Finalizá tu compra</h1>
+        <p>Pagá de forma segura con Mercado Pago. Tus datos están protegidos.</p>
+      </div>
 
-        const mpTarjetaGuardada = new MercadoPago(PUBLIC_KEY, { locale: "es-AR" });
- 
-        let TARJETAS_GUARDADAS = [];
-        let CUSTOMER_ID = null;
- 
-        function mostrarResultado(data)
-        {
-            const el = document.getElementById("resultado");
- 
-            if (data.status === "approved")
-            {
-                el.textContent = "Pago aprobado ✅";
-                el.className = "aprobado";
-            }
-            else if (data.status === "rejected")
-            {
-                el.textContent = `Pago rechazado ❌ (${data.status_detail})`;
-                el.className = "rechazado";
-            }
-            else if (data.status === "in_process")
-            {
-                el.textContent = "Pago pendiente ⏳";
-                el.className = "pendiente";
-            }
-            else
-            {
-                el.textContent = `Error: ${data.mensaje || "desconocido"}`;
-                el.className = "rechazado";
-            }
-        }
- 
-        async function obtenerTarjetasGuardadas()
-        {
-            try
-            {
-                const res = await fetch(`${API_URL}/pagos/tarjetas/${ID_CLIENTE}`);
-                const data = await res.json();
-                return data;
-            }
-            catch(err)
-            {
-                console.error("No se pudieron obtener tarjetas guardadas:", err);
-                return { customerId: null, tarjetas: [] };
-            }
-        }
- 
-        function renderSelectorTarjetasGuardadas()
-        {
-            if (TARJETAS_GUARDADAS.length === 0) return;
+      <!-- Columna izquierda: método de pago -->
+      <section class="glass panel">
+        <h2>Método de pago</h2>
+        <p class="hint">Elegí cómo querés pagar. Aceptamos tarjetas de crédito, débito y dinero en cuenta.</p>
 
-            document.getElementById("seccionTarjetasGuardadas").style.display = "block";
+        <div id="paymentBrick_container"></div>
 
-            const select = document.getElementById("selectTarjetaGuardada");
-            select.innerHTML = "";
 
-            TARJETAS_GUARDADAS.forEach(t =>
-            {
-                const option = document.createElement("option");
-                option.value = t.cardId;
-                option.dataset.marca = t.marca;
-                option.dataset.issuerId = t.issuerId; // NUEVO
-                option.textContent = `${t.marca.toUpperCase()} terminada en ${t.ultimosDigitos}`;
-                select.appendChild(option);
-            });
+        <p id="resultado"></p>
 
-            mpTarjetaGuardada.fields.create('securityCode', { placeholder: "CVV" })
-                .mount('securityCodeContainer');
+        
+      </section>
 
-            document.getElementById("tarjetaGuardadaForm").addEventListener("submit", async (event) =>
-            {
-                event.preventDefault();
+      <!-- Columna derecha: resumen -->
+      <aside class="glass panel">
+        <h2>Resumen de compra</h2>
+        <p class="hint">Revisá el detalle antes de pagar.</p>
 
-                const resultadoEl = document.getElementById("resultado");
-                resultadoEl.textContent = "Procesando pago...";
-                resultadoEl.className = "";
+        <div class="summary-item">
+          <img src="/images/prod-sneakers.png" alt="Producto" id="sumImg" />
+          <div class="info">
+            <div class="t" id="sumTitle">Cargando producto...</div>
+            <div class="s" id="sumStore">Tienda · Localia</div>
+          </div>
+        </div>
 
-                try
-                {
-                    const cardIdSeleccionado = select.value;
-                    const marcaSeleccionada = select.selectedOptions[0].dataset.marca;
-                    const issuerIdSeleccionado = select.selectedOptions[0].dataset.issuerId;
+        <div class="summary-line"><span>Subtotal</span><span id="sumSubtotal">—</span></div>
+        <div class="summary-line"><span>Envío</span><span>Gratis</span></div>
+        <div class="summary-line"><span>Comisión servicio</span><span>$0</span></div>
 
-                    const token = await mpTarjetaGuardada.fields.createCardToken({ cardId: cardIdSeleccionado });
+        <div class="summary-total">
+          <span class="lbl">Total</span>
+          <span class="amount" id="sumTotal">—</span>
+        </div>
 
-                    const res = await fetch(`${API_URL}/pagos/tarjeta-guardada`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(
-                    {
-                        token: token.id,
-                        paymentMethodId: marcaSeleccionada,
-                        issuerId: issuerIdSeleccionado,
-                        customerId: CUSTOMER_ID,
-                        idVenta: ID_VENTA,
-                        descripcion: DESCRIPCION,
-                        monto: MONTO,
-                        cuotas: 1
-                    })
-                    });
+        <div class="secure-note">
+          <span class="lock">🔒</span>
+          Pago protegido por Mercado Pago. No almacenamos los datos de tu tarjeta.
+        </div>
+      </aside>
+    </div>
+  </main>
 
-                    const data = await res.json();
-                    mostrarResultado(data);
+  <script>
+
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    //
+    // ====== Configuración (tu integración de Mercado Pago) ======
+    var PUBLIC_KEY = "APP_USR-dbffc63f-426b-4b50-9abe-cef3e6be6db9";
+    var API_URL = "http://localhost:3000";
+
+    var params = new URLSearchParams(window.location.search);
+    var ID_VENTA = null;
+    var ID_CLIENTE = Number(params.get('idCliente')) || 1;
+    var ID_TIENDA = Number(params.get('idTienda')) || 1;
+    var MONTO = 0;
+    var DESCRIPCION = "Compra en tienda";
+
+    var mp = new MercadoPago(PUBLIC_KEY, { locale: "es-AR" });
+    var bricksBuilder = mp.bricks();
+
+    function fmt(n) {
+      try { return "$" + Number(n).toLocaleString("es-AR"); }
+      catch (e) { return "$" + n; }
+    }
+
+    function mostrarResultado(data) {
+      var el = document.getElementById("resultado");
+      el.classList.add("show");
+      if (data.status === "approved") {
+        el.textContent = "Pago aprobado ✓";
+        el.className = "show aprobado";
+      } else if (data.status === "rejected") {
+        el.textContent = "Pago rechazado (" + data.status_detail + ")";
+        el.className = "show rechazado";
+      } else if (data.status === "in_process") {
+        el.textContent = "Pago pendiente de acreditación";
+        el.className = "show pendiente";
+      } else {
+        el.textContent = "Error: " + (data.mensaje || "desconocido");
+        el.className = "show rechazado";
+      }
+    }
+
+
+    function pintarResumen() {
+      document.getElementById("sumTitle").textContent = DESCRIPCION;
+      document.getElementById("sumSubtotal").textContent = fmt(MONTO);
+      document.getElementById("sumTotal").textContent = fmt(MONTO);
+    }
+
+  async function renderPaymentBrick() {
+    try {
+        ID_VENTA = await finalizarCompra(ID_TIENDA, ID_CLIENTE);
+
+      const ventaRes = await fetch(API_URL + "/ventas/" + ID_VENTA);
+      const ventaData = await ventaRes.json();
+
+      if (!ventaRes.ok)
+      {
+          var el = document.getElementById("resultado");
+          el.className = "show rechazado";
+          el.textContent = ventaData.mensaje || "No se encontró la venta";
+          return;
+      }
+
+      MONTO = Number(ventaData[0]?.precio_final) || 0;
+
+        DESCRIPCION = "Compra #" + ID_VENTA;
+    } catch (err) {
+        console.error("[v0] No se pudo finalizar la compra:", err);
+        var el = document.getElementById("resultado");
+        el.className = "show rechazado";
+        el.textContent = "No se pudo armar el carrito. " + err.message;
+        return;
+    }
+
+      pintarResumen();
+
+
+      var preferenceId;
+      try {
+        var prefRes = await fetch(API_URL + "/pagos/preferencia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idVenta: ID_VENTA, nombreProd: DESCRIPCION, precioFinal: MONTO })
+        });
+        var prefData = await prefRes.json();
+        preferenceId = prefData.preferenceId;
+      } catch (err) {
+        console.error("[v0] No se pudo crear la preferencia:", err);
+      }
+
+      try {
+        await bricksBuilder.create("payment", "paymentBrick_container", {
+          initialization: { amount: MONTO, preferenceId: preferenceId },
+          customization: {
+            visual: {
+              style: {
+                theme: "dark",
+                customVariables: {
+                  baseColor: "#6d8bff",
+                  baseColorFirstVariant: "#8b5bff",
+                  formBackgroundColor: "rgba(255,255,255,0.03)",
+                  inputBackgroundColor: "rgba(255,255,255,0.05)",
+                  borderRadiusMedium: "14px",
+                  borderRadiusLarge: "18px",
+                  fontSizeMedium: "14px"
                 }
-                catch(err)
-                {
-                    console.error("error creando token de tarjeta guardada:", err);
-                    resultadoEl.textContent = "No se pudo procesar el pago con la tarjeta guardada";
-                    resultadoEl.className = "rechazado";
-                }
-            });
-        }
- 
-        async function renderPaymentBrick()
-        {
-            const ventaRes = await fetch(`${API_URL}/ventas/${ID_VENTA}`);
-            const ventaData = await ventaRes.json();
-
-            if (ventaData.estado !== "EXITO")
-            {
-                document.getElementById("resultado").textContent = "No se encontró la venta";
-                document.getElementById("resultado").className = "rechazado";
-                return;
+              }
+            },
+            paymentMethods: {
+              creditCard: "all",
+              debitCard: "all",
+              prepaidCard: "all",
+              mercadoPago: "all"
             }
+          },
+          callbacks: {
+            onReady: function () {
+              console.log("[v0] Payment Brick listo");
+            },
+            onSubmit: function (obj) {
+              try {
+                var formData = obj.formData;
+                var selectedPaymentMethod = obj.selectedPaymentMethod;
+                var el = document.getElementById("resultado");
 
-            MONTO = Number(ventaData.venta[0].precio_final);
-            DESCRIPCION = `Venta #${ID_VENTA}`;
+                console.log("[v0] onSubmit disparado", selectedPaymentMethod, formData);
 
-            const { customerId, tarjetas } = await obtenerTarjetasGuardadas();
-            CUSTOMER_ID = customerId;
-            TARJETAS_GUARDADAS = tarjetas;
+                if (selectedPaymentMethod === "wallet_purchase") {
+                  el.className = "show info";
+                  el.textContent = "Redirigiendo a Mercado Pago...";
+                  return Promise.resolve();
+                }
 
-            const prefRes = await fetch(`${API_URL}/pagos/preferencia`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(
-                {
+                el.className = "show info";
+                el.textContent = "Procesando pago...";
+
+                return fetch(API_URL + "/pagos/procesar-pago", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(Object.assign({}, formData, {
                     idVenta: ID_VENTA,
-                    nombreProd: DESCRIPCION,
-                    precioFinal: MONTO
+                    descripcion: DESCRIPCION,
+                    monto: MONTO
+                  }))
                 })
-            });
-            const prefData = await prefRes.json();
+                .then(function (res) { return res.json(); })
+                .then(function (data) { mostrarResultado(data); })
+                .catch(function (err) {
+                  console.error("[v0] fetch falló", err);
+                  var e2 = document.getElementById("resultado");
+                  e2.className = "show rechazado";
+                  e2.textContent = "No se pudo conectar con el servidor";
+                });
+              }
+              catch (errSync) {
+                console.error("[v0] ERROR SINCRÓNICO EN onSubmit:", errSync);
+                return Promise.reject(errSync);
+              }
+            },
+            onError: function (error) { console.error("[v0]", error); }
+          }
+        });
+      } catch (err) {
+        console.error("[v0] No se pudo renderizar el Payment Brick:", err);
+        var box = document.getElementById("resultado");
+        box.className = "show info";
+        box.textContent = "Vista previa del diseño. Conectá el backend en " + API_URL + " para procesar pagos reales.";
+      }
+    }
 
-            await bricksBuilder.create("payment", "paymentBrick_container",
-            {
-                initialization:
-                {
-                    amount: MONTO,
-                    preferenceId: prefData.preferenceId
-                },
-                customization:
-                {
-                    paymentMethods:
-                    {
-                        creditCard: "all",
-                        debitCard: "all",
-                        prepaidCard: "all",
-                        mercadoPago: "all"
-                    }
-                },
-                callbacks:
-                {
-                    onReady: () =>
-                    {
-                        renderSelectorTarjetasGuardadas();
-                    },
+  async function finalizarCompra(idTienda, idCliente)
+  {
+      const items = obtenerCarrito();
 
-                    onSubmit: ({ formData }) =>
-                    {
-                        document.getElementById("resultado").textContent = "Procesando pago...";
-                        document.getElementById("resultado").className = "";
+      const res = await fetch(`${API_URL}/ventas/finalizar`,
+      {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idTienda, idCliente, items })
+      });
 
-                        const guardarTarjeta = document.getElementById("guardarTarjeta").checked;
+      const data = await res.json();
 
-                        return fetch(`${API_URL}/pagos/procesar-pago`,
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(
-                            {
-                                ...formData,
-                                idVenta: ID_VENTA,
-                                idCliente: ID_CLIENTE,
-                                descripcion: DESCRIPCION,
-                                guardarTarjeta
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => mostrarResultado(data))
-                        .catch(err =>
-                        {
-                            console.error(err);
-                            document.getElementById("resultado").textContent = "No se pudo conectar con el servidor";
-                            document.getElementById("resultado").className = "rechazado";
-                        });
-                    },
+      if (!res.ok)
+      {
+          throw new Error(data.mensaje);
+      }
 
-                    onError: (error) =>
-                    {
-                        console.error(error);
-                    }
-                }
-             });
-}
- 
-        renderPaymentBrick();
-    </script>
+      vaciarCarrito();
+      return data.idVenta;
+  }
+
+    renderPaymentBrick();
+
+
+  </script>
 </body>
 </html>
