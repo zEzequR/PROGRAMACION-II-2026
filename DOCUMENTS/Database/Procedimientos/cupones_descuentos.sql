@@ -38,6 +38,15 @@ $$;
 SELECT * FROM cupones_descuentos_productos;
 SELECT * FROM cupones_descuento;
 
+SELECT * FROM cupones_descuentos_productos
+WHERE EXISTS (
+    SELECT *
+    FROM cupones_descuento
+    WHERE cupones_descuento.id_cupon_desc = cupones_descuentos_productos.id_cupon_desc AND
+    cupones_descuento.id_cupon_desc = 6
+    AND cupones_descuento.id_tienda = 13
+);
+
 --Eliminar
 CREATE PROCEDURE spu_eliminar_cupon_descuento
 (

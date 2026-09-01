@@ -1,4 +1,4 @@
-import { cuponesDescuentos } from '../models/cuponesDescuentos.js';
+import { cuponesDescuentos, cuponesDescuentosProductos } from '../models/cuponesDescuentos.js';
 import { crearCuponService, modificarCuponService, eliminarCuponService } from '../services/cuponesDescuentosService.js'
 
 export async function crearCupon(req, res)
@@ -12,18 +12,47 @@ export async function crearCupon(req, res)
             valor,
             fechaExpiracion,
             usosMaximos,
-            usosActuales,
             aplica,
             listaProd
         } = req.body
 
-        const nuevoCupon = new cuponesDescuentos(codigo,
-            tipoDescuento, valor, fechaExpiracion, usosMaximos,
-            0
-        )
+        let nuevoCupon;
+        switch(aplica)
+        {
+            case "TIENDA":
+                {
+                    nuevoCupon = new cuponesDescuentos({
+                        idTienda: req.user.id_tienda,
+                        codigo: codigo,
+                        tipoDescuento: tipoDescuento,
+                        valor: parseFloat(valor),
+                        fechaExpiracion: fechaExpiracion,
+                        usosMaximos: parseInt(usosMaximos),
+                        aplicaTienda: true
+                    });
+                    break; 
+                }
+            case "PRODUCTO":
+                {
+                    listaProd = Array.isArray(listaProd)
+                    ? listaProd.map(id => parseInt(id)) : [];
 
-        const dbRes = await crearCuponService(nuevoCupon, req.user.id_tienda,
-            aplica, listaProd);
+                        nuevoCupon = new cuponesDescuentosProductos({
+                            idTienda: req.user.id_tienda,
+                            codigo: codigo,
+                            tipoDescuento: tipoDescuento,
+                            valor: parseFloat(valor),
+                            fechaExpiracion: fechaExpiracion,
+                            usosMaximos: parseInt(usosMaximos),
+                            usosActuales: 0,
+                            aplicaTienda: false,
+                            idProductos: listaProd
+                        });
+                        break
+                }
+        }
+
+        const dbRes = await crearCuponService(nuevoCupon);
         if(dbRes)
         {
             return res.status(201).json(
@@ -52,7 +81,13 @@ export async function eliminarCupon(req, res)
             idCupon
         } = req.params;
         
-        const dbRes = await eliminarCuponService(idCupon, req.user.id_tienda)
+        const cupon = new cuponesDescuentos({
+            idCuponDesc: parseInt(idCupon),
+            idTienda: req.user.id_tienda
+        });
+
+
+        const dbRes = await eliminarCuponService(cupon);
         if (dbRes)
         {
             return res.status(200).json(
@@ -83,22 +118,54 @@ export async function modificarCupon(req, res)
         } = req.params;
         const
         {
-            idProd,
             codigo,
             tipoDescuento,
             valor,
             fechaExpiracion,
             usosMaximos,
-            usosActuales,
-            aplicaProducto,
+            aplicaTienda,
             listaProd
         } = req.body
 
-        const cupon = new cuponesDescuentos(codigo, tipoDescuento,
-            valor, fechaExpiracion, usosMaximos, usosActuales);
-        
-        const dbRes = await modificarCuponService(idCupon, cupon, req.user.id_tienda,
-            aplicaProducto, listaProd)
+        let cupon;
+
+        switch(aplicaTienda)
+        {
+            case true:
+                {
+                    cupon = new cuponesDescuentos({
+                        idCuponDesc: parseInt(idCupon),
+                        idTienda: req.user.id_tienda,
+                        codigo: codigo,
+                        tipoDescuento: tipoDescuento,
+                        valor: parseFloat(valor),
+                        fechaExpiracion: fechaExpiracion,
+                        usosMaximos: parseInt(usosMaximos),
+                        aplicaTienda: aplicaTienda,
+                    });
+                    break;
+                }
+            case false:
+                {
+                    listaProd = Array.isArray(listaProd)
+                    ? listaProd.map(id => parseInt(id)) : [];
+
+                    cupon = new cuponesDescuentosProductos({
+                        idCuponDesc: parseInt(idCupon),
+                        idTienda: req.user.id_tienda,
+                        codigo: codigo,
+                        tipoDescuento: tipoDescuento,
+                        valor: parseFloat(valor),
+                        fechaExpiracion: fechaExpiracion,
+                        usosMaximos: parseInt(usosMaximos),
+                        aplicaTienda: aplicaTienda,
+                        idProductos: listaProd
+                    });
+                    break;
+                }
+        }
+
+        const dbRes = await modificarCuponService(cupon)
         if (dbRes)
         {
             return res.status(201).json(

@@ -10,6 +10,11 @@ const pool = new Pool
     }
 );
 
+pool.on('error', (err, client) =>
+{
+    console.error('Error en el pool de PostgreSQL:', err);
+});
+
 try
 {
     await pool.query('SELECT 1');

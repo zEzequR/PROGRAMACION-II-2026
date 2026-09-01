@@ -1,3 +1,4 @@
+//VERLO BIEN
 class categoriasProductos
 {
     constructor(

@@ -5,9 +5,9 @@ import { ROLES } from '../config/enums.js'
 
 const router = Router();
 
-router.post('/crear', JWTVerify, verfifyRoles([ROLES.USUARIO]) ,tiendaControlador.crearTienda);
-router.put('/modificar', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), tiendaControlador.modificarTienda);
-router.delete('/eliminar', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), tiendaControlador.eliminarTienda);
-router.put('/reactivar', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), tiendaControlador.reactivarTienda);
+router.post('/', JWTVerify, verfifyRoles([ROLES.USUARIO]) ,tiendaControlador.crearTienda);
+router.put('/', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), tiendaControlador.modificarTienda);
+router.delete('/', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), tiendaControlador.eliminarTienda);
+router.patch('/', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), tiendaControlador.reactivarTienda);
 
 export default router;

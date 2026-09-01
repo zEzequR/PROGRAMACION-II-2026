@@ -71,14 +71,6 @@ AS $$
 DECLARE
     v_ultima_venta DATE;
 BEGIN
-    SELECT MAX(fecha_venta) INTO v_ultima_venta
-    FROM Ventas
-    WHERE id_tienda = p_id_tienda;
-
-    IF v_ultima_venta IS NOT NULL AND v_ultima_venta >= (CURRENT_DATE - make_interval(months => p_meses_inactividad)) THEN
-        RAISE EXCEPTION 'No se puede dar de baja la tienda. Su última venta fue el %, hace menos de % meses.', v_ultima_venta, p_meses_inactividad;
-    END IF;
-
     UPDATE Tiendas 
     SET activo = FALSE
     WHERE id_tienda = p_id_tienda;

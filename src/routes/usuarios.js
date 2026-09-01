@@ -5,11 +5,12 @@ import { ROLES } from '../config/enums.js'
 
 const router = Router();
 
-router.post('/registrarse', usuarioControlador.registrarseManual);
+router.post('/', usuarioControlador.registrarseManual);
 router.post('/login', middleware.basicAuth,
 usuarioControlador.logggearseManual);
-router.put('/modificar', middleware.JWTVerify,
+router.put('/', middleware.JWTVerify,
 middleware.verfifyRoles(ROLES.USUARIO),
 usuarioControlador.modificarDatosUsuario);
+router.put('/password', usuarioControlador.codigoRecuperarPsw);
 
 export default router;

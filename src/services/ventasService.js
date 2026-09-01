@@ -21,13 +21,13 @@ export async function crearVentaService(venta)
 
 async function agregarItem(client, idVenta, idProducto, cantidad)
 {
-    const infoQuery = `
-        SELECT p.precio, p.tipo_prod, p.activo, pf.stock
-        FROM Productos p
-        LEFT JOIN Productos_Fisicos pf ON pf.id_producto = p.id_producto
-        WHERE p.id_producto = $1
-    `;
-    const infoRes = await client.query(infoQuery, [idProducto]);
+    const infoRes = await client.query(
+        `SELECT p.precio, p.tipo_prod, p.activo, pf.stock
+         FROM Productos p
+         LEFT JOIN Productos_Fisicos pf ON pf.id_producto = p.id_producto
+         WHERE p.id_producto = $1`,
+        [idProducto]
+    );
     const info = infoRes.rows[0];
 
     if (!info || !info.activo)
@@ -42,25 +42,25 @@ async function agregarItem(client, idVenta, idProducto, cantidad)
 
     const subtotal = Number(info.precio) * cantidad;
 
-    const insertQuery = `
-        INSERT INTO Detalle_Venta (id_venta, id_producto, precio_unitario, cantidad, subtotal)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (id_venta, id_producto)
-        DO UPDATE SET
-            cantidad = Detalle_Venta.cantidad + EXCLUDED.cantidad,
-            subtotal = Detalle_Venta.subtotal + EXCLUDED.subtotal
-    `;
-    await client.query(insertQuery, [idVenta, idProducto, info.precio, cantidad, subtotal]);
+    await client.query(
+        `INSERT INTO Detalle_Venta (id_venta, id_producto, precio_unitario, cantidad, subtotal)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (id_venta, id_producto)
+         DO UPDATE SET
+             cantidad = Detalle_Venta.cantidad + EXCLUDED.cantidad,
+             subtotal = Detalle_Venta.subtotal + EXCLUDED.subtotal`,
+        [idVenta, idProducto, info.precio, cantidad, subtotal]
+    );
 
-    const totalQuery = `
-        UPDATE Ventas
-        SET precio_final = (SELECT COALESCE(SUM(subtotal), 0) FROM Detalle_Venta WHERE id_venta = $1)
-        WHERE id_venta = $1
-    `;
-    await client.query(totalQuery, [idVenta]);
+    await client.query(
+        `UPDATE Ventas
+         SET precio_final = (SELECT COALESCE(SUM(subtotal), 0) FROM Detalle_Venta WHERE id_venta = $1)
+         WHERE id_venta = $1`,
+        [idVenta]
+    );
 }
 
-export async function finalizarVentaService(idTienda, idCliente, items)
+export async function finalizarVentaService(venta, items)
 {
     const client = await pool.connect();
 
@@ -72,7 +72,7 @@ export async function finalizarVentaService(idTienda, idCliente, items)
             `INSERT INTO Ventas (fecha_venta, id_tienda, id_cliente, precio_final, estado)
              VALUES (CURRENT_DATE, $1, $2, 0, 'ABIERTA')
              RETURNING id_venta`,
-            [idTienda, idCliente]
+            [venta.idTienda, venta.idCliente]
         );
         const idVenta = ventaRes.rows[0].id_venta;
 

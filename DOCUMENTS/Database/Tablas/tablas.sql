@@ -3,6 +3,9 @@
 CREATE TABLE Ubicaciones
 (
     id_ubicacion INT GENERATED ALWAYS AS IDENTITY,
+    direccion VARCHAR(255),  
+    piso VARCHAR(10),       
+    depto VARCHAR(10),
     pais VARCHAR(60),
     provincia VARCHAR(60),
     ciudad VARCHAR(60),

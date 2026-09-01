@@ -1,8 +1,12 @@
-import { registrarseManualService, autenticarUsuarioService, obtenerIdTienda } from "../services/usuarioService.js";
+import { registrarseManualService, autenticarUsuarioService, obtenerIdTienda, cambiarPswUsuario } from "../services/usuarioService.js";
+import { validarDireccion, obtenerPaisesDisponibles } from '../services/api/googleMapsService.js'
+import { guardarUbicacionService, actualizarUbicacionService } from '../services/ubicacionesService.js'
 import { generarToken } from "../utils/generarToken.js";
 import { Usuario } from "../models/usuario.js";
+import  { Ubicaciones } from '../models/ubicaciones.js';
 import { ROLES } from "../config/enums.js";
 import { hashPsw } from '../utils/password.js'
+import { verifyResetCode } from '../utils/generarCodigo.js'
 
 
 export async function registrarseManual(req, res)
@@ -11,42 +15,63 @@ export async function registrarseManual(req, res)
     {
         const
         {
-            id,
             email,
             psw,
             tipoAuth,
             nombre,
             apellido,
-            telefono
-        } = req.body;
-        let usuario = new Usuario
-        (
-            null,
-            email,
-            await hashPsw(psw),
-            tipoAuth,
-            nombre,
-            apellido,
             telefono,
-            true
-        );
-        const dbRes = await registrarseManualService(usuario);
+            direccion,
+            piso,
+            depto,
+            pais,
+            provincia,
+            ciudad,
+            codigo
+        } = req.body;
 
-        if(dbRes)
-        {
-            return res.status(201).json(
-            {
-                estado: "OK",
-                mensaje: "Usuario registrado correctamente",
-                usuario: dbRes
+        const ubicacion = new Ubicaciones({
+            direccion,
+            piso,
+            depto,
+            pais,
+            provincia,
+            ciudad,
+            codigo
+        });
+
+        const googleRes = await validarDireccion(ubicacion);
+
+
+        if (!googleRes.esValida) {
+            return res.status(400).json({
+                estado: "ERROR",
+                mensaje: "La dirección ingresada no es válida",
+                motivo: googleRes.motivo
             });
         }
 
-        return res.status(500).json(
-        {
-            estado: "ERROR",
-            mensaje: "No se pudo registrar al usuario"
-        });
+        ubicacion.placeid = googleRes.datosUbicacion.placeid;
+        ubicacion.codigo = googleRes.datosUbicacion.codigo;
+
+        const dbResUbicaciones = await guardarUbicacionService(ubicacion);
+
+        let usuario = new Usuario(
+            {
+                email,
+                psw: await hashPsw(psw),
+                tipoAuth,
+                nombre,
+                apellido,
+                telefono,
+                idUbicacion: dbResUbicaciones
+            }
+        );
+
+        await registrarseManualService(usuario);
+
+        return res.status(201).end();
+
     }
     catch(err)
     {
@@ -56,24 +81,6 @@ export async function registrarseManual(req, res)
             mensaje: err.message
         });
     }
-}
-
-export async function registrarseGoogle(req, res)
-{
-    try
-    {
-        //const resGoogle = await fetch("API GOOGLE");
-        
-        //resGoogle.json();
-    }
-    catch(err)
-    {
-        return res.status(500).json(
-            {
-                estado: "ERROR",
-                mensaje: err.menssage
-            });
-    };
 }
 
 export async function logggearseManual(req, res)
@@ -86,19 +93,14 @@ export async function logggearseManual(req, res)
         }
         else
         {
-            let usuario = new Usuario
-            (
-                null,
-                req.email,
-                req.psw,
-                null,
-                null,
-                null,
-                null,
-                null
-            );
-
-            const dbRes = await autenticarUsuarioService(usuario.email, usuario.psw);
+            let usuario = new Usuario(
+                {
+                    email: req.email,
+                    psw: req.psw,
+                    tipoAuth: "MANUAL"
+                }
+                );
+            const dbRes = await autenticarUsuarioService(usuario);
             const idTienda = await obtenerIdTienda(dbRes.id_persona);
             
             let tokenPayload = {
@@ -120,56 +122,34 @@ export async function logggearseManual(req, res)
 
             return res.status(200).json(
             {
-                estado: "OK",
-                mensaje: "Loggeado en el sistema correctamente",
-                token
-            })
+                token: token
+            });
         }
     }
     catch(err)
     {
         if (err.message === "Faltan campos obligatorios")
         {
-            return res.status(400).json({
-                estado: "ERROR",
-                mensaje: err.message
-            });
+            return res.status(400).end();
         }
 
         if (err.message === "Credenciales inválidas")
         {
-            return res.status(401).json({
-                estado: "ERROR",
-                mensaje: "Email o contraseña incorrectos"
-            });
+            return res.status(401).json(
+                {
+                    Mensaje: err.message
+                });
         }
 
-        return res.status(500).json({
-            estado: "ERROR",
-            mensaje: "Hubo un error en el servidor: " + err.message
-        });
-    }
-}
-
-export async function loggearseGoogle(req, res)
-{
-    try
-    {
-        //const resGoogle = await fetch("API GOOGLE");
-        
-        //resGoogle.json();
-    }
-    catch(err)
-    {
         return res.status(500).json(
             {
-                estado: "ERROR",
-                mensaje: err.menssage
+                Mensaje: err.message
             });
-    };
+    }
 }
 
 export async function modificarDatosUsuario(req, res)
+//VER ESTO
 {
     try
     {
@@ -182,44 +162,52 @@ export async function modificarDatosUsuario(req, res)
             localidad
         } = req.body
 
-        if (!email)
-        {
-            return res.status(400).json(
-            {
-                estado : "ERROR",
-                mensaje : "El email es obligatorio para identificar al usuario"
-            })
-        }
+        const dbRes = actualizarUbicacionService(ubicacion);
 
-        if (!nombre && !apellido && !telefono && !localidad)
-        {
-            return res.status(400).json(
-            {
-                estado : "ERROR",
-                mensaje : "Debe modificar al menos un campo"
-            });
-        }
-
-        return res.status(200).json(
-        {
-            estado : "OK",
-            mensaje : "Datos del usuario modificados con éxito",
-            cliente :
-            {
-                email,
-                nombre,
-                apellido,
-                telefono,
-                localidad
-            }
-        });
+        return res.status(200).end();
     }
     catch(err)
     {
-        return res.status(500).json(
-        {
-            estado : "ERROR",
-            mensaje : err.message
-        });
+        return res.status(500).end();
     };
+}
+
+export async function codigoRecuperarPsw(req, res)
+{
+    const 
+    {
+        email,
+        codigo,
+        psw
+    } = req.body;
+
+    try
+    {
+        let usuario = new Usuario(
+        {
+            email: email,
+        }
+        );
+
+        const esValido = verifyResetCode(usuario, codigo);
+
+        if (!esValido) {
+            return res.status(400).json({
+                ok: false,
+                message: 'El código es incorrecto o ya expiró'
+            });
+        }
+
+        usuario.id_persona = await obtenerIDUsuario(usuario.email);
+        usuario.psw = await hashPsw(psw);
+        await cambiarPswUsuario(usuario);
+        
+        return res.status(200).json({
+            message: "Funcionó paaa"
+        })
+    }
+    catch(err)
+    {
+        return res.status(500).end();
+    }
 }

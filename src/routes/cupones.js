@@ -5,8 +5,8 @@ import { ROLES } from '../config/enums.js'
 
 const router = Router();
 
-router.post('/crear', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), cuponesControlador.crearCupon);
-router.put('/modificar/:idCupon', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), cuponesControlador.modificarCupon);
-router.delete('/eliminar/:idCupon', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), cuponesControlador.eliminarCupon);
+router.post('/', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), cuponesControlador.crearCupon);
+router.put('/:idCupon', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), cuponesControlador.modificarCupon);
+router.delete('/:idCupon', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), cuponesControlador.eliminarCupon);
 
 export default router;

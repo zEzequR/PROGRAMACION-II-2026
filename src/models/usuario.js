@@ -1,84 +1,51 @@
-class Usuario
-{
-    constructor(idPersona,
-    email,
-    psw,
-    tipo_auth,
-    nombre,
-    apellido,
-    telefono,
-    activo,
-    fecha_creacion)
-    {
-        this.idPersona = idPersona;
-        this.email = email;
-        this.psw = psw;
-        this.tipo_auth = tipo_auth;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.telefono = telefono;
-        this.activo = true;
+import { z } from 'zod';
+
+class Usuario {
+    static propiedades = z.object({
+        idPersona: z.number().optional(),
+        email: z.email().optional(),
+        psw: z.string().optional(),
+        tipoAuth: z.string().optional(),
+        nombre: z.string().optional(),
+        apellido: z.string().optional(),
+        telefono: z.string().optional(),
+        idUbicacion: z.number().optional(),
+        idCat: z.number().optional(),
+        activo: z.boolean().default(true),
+        fechaBaja: z.date().optional(),
+        fechaCreacion: z.date().optional()
+    });
+
+    constructor(datos) {
+        const datosValidados = this.constructor.propiedades.parse(datos);
+        Object.assign(this, datosValidados);
     }
 }
 
-class Emprendedor extends Usuario
-{
-    constructor(
-        idPersona,
-        idEmprendedor,
-        email,
-        psw,
-        tipo_auth,
-        nombre, 
-        apellido, 
-        telefono, 
-        cuit, 
-        mpAccessToken)
-    {
-        super(
-            idPersona,
-            email,
-            psw,
-            tipo_auth, 
-            nombre, 
-            apellido, 
-            telefono);
-        
-        this.idEmprendedor = idEmprendedor
-        this.cuit = cuit;
-        this.mpAccessToken = mpAccessToken;
+class Emprendedor extends Usuario {
+    static propiedades = Usuario.propiedades.extend({
+        idEmprendedor: z.number().optional(),
+        cuit: z.string().optional(),
+        mpAccessToken: z.string().optional()
+    });
+
+    constructor(datos) {
+        super(datos);
     }
 }
 
 class Cliente extends Usuario {
-    constructor(
-        idPersona,
-        idCliente, 
-        email, 
-        psw, 
-        tipo_auth, 
-        nombre, 
-        apellido, 
-        telefono, 
-        id_tienda, 
-        suscripcion,
-        resendContactID
-    )
-    {
-        
-        super(
-            idPersona, 
-            email, 
-            psw, 
-            tipo_auth, 
-            nombre, 
-            apellido, 
-            telefono);
-        this.idCliente = idCliente;
-        this.id_tienda = id_tienda;
-        this.suscripcion = suscripcion;
-        this.resendContactID = resendContactID;
+    static propiedades = Usuario.propiedades.extend({
+        idCliente: z.number().optional(),
+        id_tienda: z.number().optional(),
+        suscripcion: z.boolean().optional(),
+        resendContactID: z.string().optional()
+    });
+
+    constructor(datos) {
+        super(datos);
     }
 }
+
 
 export { Usuario, Emprendedor, Cliente };

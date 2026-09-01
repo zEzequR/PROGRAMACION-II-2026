@@ -1,12 +1,14 @@
 import pool from '../config/conexion.js'
 
-export async function crearTiendaService(tienda, emprendedor)
+export async function crearTiendaService(tienda)
 {
     const query = `
-        SELECT fn_crear_tienda($1, $2, $3, $4, $5, $6)
+        INSERT INTO Tiendas(id_emprendedor, id_plantilla,
+        nombre_tienda, logo_tienda, personalizacion_tienda)
+        VALUES($1, $2, $3, $4, $5)
+        RETURNING id_tienda;
         `
-    const values = [emprendedor.idPersona,
-        emprendedor.cuit,
+    const values = [tienda.idEmprendedor,
         tienda.idPlantilla,
         tienda.nombreTienda,
         tienda.logoTienda,
@@ -15,7 +17,7 @@ export async function crearTiendaService(tienda, emprendedor)
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0].fn_crear_tienda
+        return resultado.rows[0].id_tienda
     }
     catch(err)
     {
@@ -23,19 +25,24 @@ export async function crearTiendaService(tienda, emprendedor)
     }
 }
 
-export async function modificarTiendaService(tienda, idTienda)
+export async function modificarTiendaService(tienda)
 {
     const query = `
-        CALL spu_modificar_tienda($1, $2, $3, $4, $5)
+        UPDATE Tiendas SET
+        id_plantilla = COALESCE($2, id_plantilla),
+        nombre_tienda = COALESCE($3, nombre_tienda),
+        logo_tienda = COALESCE($4, logo_tienda),
+        personalizacion_tienda = COALESCE($5, personalizacion_tienda)
+        WHERE id_tienda = $1;
         `
-    const values = [idTienda,
+    const values = [tienda.idTienda,
         tienda.idPlantilla,
         tienda.nombreTienda,
         tienda.logoTienda,
         tienda.personalizacionTienda];
     try
     {
-        const resultado = await pool.query(query, values);
+        await pool.query(query, values);
         return true
     }
     catch(err)
@@ -44,20 +51,21 @@ export async function modificarTiendaService(tienda, idTienda)
     }
 }
 
-export async function eliminarTiendaService(idTienda)
+export async function eliminarTiendaService(tienda)
 {
     const query = `
-    CALL spu_eliminar_tienda($1, $2)
+        UPDATE Tiendas 
+        SET activo = FALSE
+        WHERE id_tienda = $1;
     `
 
     const values = [
-        idTienda,
-        1
+        tienda.idTienda
     ];
 
     try
     {
-        const resultado = await pool.query(query, values);
+        await pool.query(query, values);
         return true
     }
     catch(err)
@@ -66,19 +74,21 @@ export async function eliminarTiendaService(idTienda)
     }
 }
 
-export async function reactivarTiendaService(idTienda)
+export async function reactivarTiendaService(tienda)
 {
     const query = `
-    CALL spu_reactivar_tienda($1)
+    UPDATE Tiendas
+    SET activo = TRUE
+    WHERE id_tienda = $1;
     `
 
     const values = [
-        idTienda
+        tienda.idTienda
     ];
 
     try
     {
-        const resultado = await pool.query(query, values);
+        await pool.query(query, values);
         return true
     }
     catch(err)

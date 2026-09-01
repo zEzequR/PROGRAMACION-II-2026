@@ -1,6 +1,7 @@
 import { Tiendas } from '../models/tiendas.js'
 import { Emprendedor } from '../models/usuario.js'
 import { crearTiendaService, modificarTiendaService, eliminarTiendaService, reactivarTiendaService } from '../services/tiendasService.js'
+import { crearEmprendedorService } from '../services/emprendedorService.js'
 import { ROLES } from '../config/enums.js'
 import { generarToken } from '../utils/generarToken.js'
 
@@ -16,54 +17,54 @@ export async function crearTienda(req, res)
             cuit 
         } = req.body;
 
-        const tienda = new Tiendas(
-            parseInt(idPlantilla),
+        const emprendedor = new Emprendedor({
+            idPersona: parseInt(req.user.id),
+            email: req.user.email,
+            nombre: req.user.nombre,
+            apellido: req.user.apellido,
+            telefono: req.user.telefono,
+            cuit
+        });
+
+        let idEmprendedor = await crearEmprendedorService(emprendedor)
+
+        console.log("ID EMPRENDEDOR: " + idEmprendedor)
+
+        const tienda = new Tiendas({
+            idEmprendedor,
+            idPlantilla: parseInt(idPlantilla),
             nombreTienda,
             logoTienda,
-            personalizacionTienda,
-        )
-        
-        const emprendedor = new Emprendedor(
-            parseInt(req.user.id),    
-            null,
-            null,       
-            null,     
-            null,           
-            null,        
-            null,          
-            null,          
-            cuit,          
-            null            
-        );
+            personalizacionTienda
+        });
 
-        let dbRes = await crearTiendaService(tienda, emprendedor)
+
+        let dbRes = await crearTiendaService(tienda)
+
         if(dbRes)
         {
-            const nuevoToken = generarToken(
-                {
-                    id: req.id_persona,
-                    email: req.email,
-                    nombre: req.nombre,
-                    apellido: req.apellido,
-                    telefono: req.telefono,
-                    rol: ROLES.EMPRENDEDOR,
-                    id_tienda: dbRes
-                });
-            return res.status(201).json(
-            {
-                estado: "OK",
-                mensaje: "Tienda creada correctamente",
-                token: nuevoToken
+            const nuevoToken = generarToken({
+                id: req.user.id,
+                email: req.user.email,
+                nombre: req.user.nombre,
+                apellido: req.user.apellido,
+                telefono: req.user.telefono,
+                rol: ROLES.EMPRENDEDOR,
+                id_tienda: dbRes
             });
+            return res.status(201).json(
+                {
+                    token: nuevoToken,
+                    idEmprendedor: idEmprendedor
+                });
         }
     }
     catch(err)
     {
         return res.status(500).json(
-        {
-            estado: "ERROR",
-            mensaje: `No se pudo crear la tienda: ${err.message}`
-        });
+            {
+                error: err.message
+            });
     }
 }
 
@@ -78,33 +79,26 @@ export async function modificarTienda(req, res)
             personalizacionTienda,
         } = req.body;
 
-        const nuevaTienda = new Tiendas(
-            idPlantilla,
+        const tienda = new Tiendas({
+            idTienda: req.user.id_tienda,
+            idEmprendedor: req.user.id,
+            idPlantilla: parseInt(idPlantilla),
             nombreTienda,
             logoTienda,
             personalizacionTienda
-        );
+        });
 
-        const dbRes = await modificarTiendaService(nuevaTienda,
-            req.user.id_tienda
-        )
+
+        const dbRes = await modificarTiendaService(tienda)
 
         if(dbRes)
             {
-            return res.status(200).json({
-                estado: "OK",
-                mensaje: "Tienda modificada correctamente",
-            });
+            return res.status(200).end();
             }
-        
-
     }
     catch(err)
     {
-        return res.status(500).json({
-            estado: "ERROR",
-            mensaje: `No se pudo modificar la tienda: ${err.message}`
-        });
+        return res.status(500).end();
     }
 }
 
@@ -112,24 +106,23 @@ export async function eliminarTienda(req, res)
 {
     try
     {
-        const dbRes = await eliminarTiendaService(
-        req.user.id_tienda
-        );
+        const tienda = new Tiendas({
+            idTienda: req.user.id_tienda
+        });
+
+        const dbRes = await eliminarTiendaService(tienda);
 
         if(dbRes)
             {
-            return res.status(200).json({
-                estado: "OK",
-                mensaje: "Tienda eliminada correctamente",
-            });
+            return res.status(200).end();
             }
     }
     catch(err)
     {
-        return res.status(500).json({
-            estado: "ERROR",
-            mensaje: `No se pudo eliminar la tienda: ${err.message}`
-        });
+        return res.status(500).json(
+            {
+                error: err.message
+            });
     }
 }
 
@@ -137,23 +130,21 @@ export async function reactivarTienda(req, res)
 {
     try
     {
+        const tienda = new Tiendas({
+            idTienda: req.user.id_tienda
+        });
+
         const dbRes = await reactivarTiendaService(
-        req.user.id_tienda
+            tienda
         );
 
         if(dbRes)
             {
-            return res.status(200).json({
-                estado: "OK",
-                mensaje: "Tienda activada correctamente",
-            });
+            return res.status(200).end();
             }
     }
     catch(err)
     {
-        return res.status(500).json({
-            estado: "ERROR",
-            mensaje: `No se pudo activar la tienda: ${err.message}`
-        });
+        return res.status(500).end();
     }
 }

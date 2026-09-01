@@ -1,13 +1,6 @@
 import bcrypt from "bcrypt";
 import keygen from "keygen"
 
-const venta = { 
-    idVta: 30, 
-    emailCliente: "ezequiel2013@gmail.com", 
-    nombreCliente: "Eze", 
-    apellidoCliente: "Ramos" 
-};
-
 export async function crearKeyHash(venta)
 {
     let key = keygen.hex(keygen.large);
@@ -21,8 +14,3 @@ export async function validarKey(key, dbKey)
 {
     return bcrypt.compare(key, dbKey);
 }
-
-let resultado = await crearKeyHash(venta);
-
-console.log("Hash", resultado[0]);
-console.log("Sólo key", resultado[1]);

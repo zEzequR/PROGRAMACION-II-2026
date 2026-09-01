@@ -4,7 +4,7 @@ import {Payment} from 'mercadopago'
 import mpClient from '../config/mercadopago.js'
 import { procesarPagoBrickService, crearPreferenciaService } from '../services/api/mercadoPagoService.js'
 import { cerrarVentaService, cancelarVentaService } from '../services/ventasService.js'
-
+import { z } from 'zod';
 
 export async function crearPago(req, res)
 {
@@ -12,7 +12,7 @@ export async function crearPago(req, res)
     {
         const { idTransaccion, estado, metodoPago, monto } = req.body;
 
-        const pago = new Pagos(idTransaccion, estado, metodoPago, monto);
+        const pago = new Pagos({idTransaccion, estado, metodoPago, monto});
 
         const idPago = await crearPagoService(pago);
 
@@ -32,8 +32,7 @@ export async function actualizarPago(req, res)
     {
         const { idDetPago, idTransaccion, estado } = req.body;
 
-        const pago = new Pagos(idTransaccion, estado);
-        pago.idDetPago = idDetPago;
+        const pago = new Pagos({idTransaccion, estado});
 
         await actualizarPagoService(pago);
 
@@ -58,7 +57,12 @@ export async function webhookMercadoPago(req, res)
             const payment = new Payment(mpClient);
             const info = await payment.get({ id: dataId });
 
-            const pago = new Pagos(Number(info.id), info.status, info.payment_method_id, Number(info.transaction_amount));
+            const pago = new Pagos({
+                idTransaccion: Number(info.id),
+                estado: info.status,
+                metodoPago: info.payment_method_id,
+                monto: Number(info.transaction_amount)
+            });
             const idPago = await crearPagoService(pago);
 
             const idVenta = info.external_reference;
