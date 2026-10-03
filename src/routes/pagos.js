@@ -1,13 +1,15 @@
 import { Router } from "express";
-import * as pagosControlador from '../controllers/pagosController.js';
-
+import * as mercadoPagoControlador from '../controllers/mercadoPagoController.js';
+import { JWTVerify } from '../middlewares/auth.js';
+import { validateSchemas } from '../middlewares/validators.js';
+import * as pagoSchemas from '../schemas/pagos.js';
+import { Ventas } from '../models/ventas.js';
+import { Usuario } from '../models/usuario.js';
 
 const router = Router();
 
-router.post('/crear', pagosControlador.crearPago);
-router.put('/actualizar', pagosControlador.actualizarPago);
-router.post('/webhook', pagosControlador.webhookMercadoPago);
-router.post('/procesar-pago', pagosControlador.procesarPagoBrick);
-router.post('/preferencia', pagosControlador.crearPreferencia);
+router.post('/webhook', mercadoPagoControlador.webhookMercadoPago);
+router.post('/procesar-pago', JWTVerify, validateSchemas(pagoSchemas.procesarPago, [Ventas, Usuario]),
+mercadoPagoControlador.crearOrden);
 
 export default router;

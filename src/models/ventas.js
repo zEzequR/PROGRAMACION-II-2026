@@ -5,11 +5,12 @@ class Ventas {
     static propiedades = z.object({
         idVenta: z.number().optional(),
         fechaVenta: z.date().optional(),
-        idTienda: z.number(),
-        idCliente: z.number(),
+        idTienda: z.number().optional(),
+        idCliente: z.number().optional(),
         precioFinal: z.number().optional(),
         estado: z.string().optional(),
-        idPago: z.number().optional()
+        idPago: z.number().optional(),
+        idCuponDesc: z.number().optional()
     })
 
     constructor(datos) {
@@ -21,7 +22,7 @@ class Ventas {
 
 class DetalleVenta {
     static propiedades = z.object({
-        idVenta: z.number(),
+        idVenta: z.number().optional(),
         idProducto: z.number(),
         precioUnitario: z.number().positive().optional(),
         cantidad: z.number().int().positive().default(1),

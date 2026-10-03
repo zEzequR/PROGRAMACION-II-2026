@@ -5,7 +5,7 @@ class Ubicaciones{
         {
             idUbicacion: z.number().optional(),
             direccion: z.string().optional(),  
-            piso: z.number().optional(),
+            piso: z.string().optional(),
             depto: z.string().optional(),
             pais: z.string().optional(),
             provincia: z.string().optional(),

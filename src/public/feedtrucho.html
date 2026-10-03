@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Explorar — Localia</title>
+<style>
+  :root {
+    --bg: #07070c;
+    --bg-soft: #0d0d16;
+    --fg: #f4f4f8;
+    --muted: #9aa0b4;
+    --brand: #6d8bff;
+    --brand-2: #a06bff;
+    --glass: rgba(255, 255, 255, 0.06);
+    --glass-brd: rgba(255, 255, 255, 0.12);
+    --radius: 18px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { font-family: "Space Grotesk", system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAVBAR (compartido) */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(10,10,18,0.6);
+    backdrop-filter: blur(18px) saturate(160%);
+    border-bottom: 1px solid var(--glass-brd);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; }
+  .logo-dot { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 0 18px rgba(109,139,255,0.55); }
+  .nav-links { display: flex; gap: 26px; }
+  .nav-links a { color: var(--muted); font-size: 15px; transition: color .2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--fg); }
+  .btn { font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; padding: 10px 20px; border-radius: 999px; border: 1px solid transparent; transition: transform .15s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { color: #07070c; background: linear-gradient(135deg, #ffffff, #d8dcff); box-shadow: 0 6px 24px rgba(109,139,255,0.35); }
+
+  /* HEADER FEED */
+  .feed-head { padding: 40px 0 10px; text-align: center; }
+  .feed-head h1 { font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.02em; margin-bottom: 8px; }
+  .feed-head p { color: var(--muted); margin-bottom: 26px; }
+  .search {
+    max-width: 620px; margin: 0 auto 24px; display: flex; align-items: center; gap: 12px;
+    background: var(--glass); border: 1px solid var(--glass-brd); border-radius: 999px;
+    padding: 13px 20px; backdrop-filter: blur(14px);
+  }
+  .search input { flex: 1; background: transparent; border: none; outline: none; color: var(--fg); font-family: inherit; font-size: 16px; }
+  .search input::placeholder { color: var(--muted); }
+  .search .ico { color: var(--muted); }
+
+  /* FILTROS */
+  .chips { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 34px; }
+  .chip { padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--glass); border: 1px solid var(--glass-brd); color: var(--muted); transition: all .2s; }
+  .chip:hover { color: var(--fg); }
+  .chip.active { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #07070c; border-color: transparent; font-weight: 600; }
+
+  /* GRID FEED */
+  .feed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding-bottom: 70px; }
+  .post {
+    position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer;
+    border: 1px solid var(--glass-brd); background: var(--bg-soft);
+    aspect-ratio: 3/4; transition: transform .25s, box-shadow .25s;
+  }
+  .post:hover { transform: translateY(-4px); box-shadow: 0 18px 44px rgba(0,0,0,0.55); }
+  .post img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+  .post:hover img { transform: scale(1.06); }
+  .post .type-ico { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 8px; background: rgba(7,7,12,0.6); backdrop-filter: blur(8px); display: grid; place-items: center; font-size: 14px; }
+  .post .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 16px; gap: 4px;
+    background: linear-gradient(to top, rgba(7,7,12,0.92) 8%, rgba(7,7,12,0.25) 55%, transparent);
+  }
+  .post .store { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #cfd4ea; }
+  .post .store .dot { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand-2)); }
+  .post .title { font-size: 15px; font-weight: 600; line-height: 1.25; }
+  .post .price { font-size: 15px; font-weight: 700; color: var(--brand); }
+  .post .meta { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  @media (max-width: 1000px) { .feed-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 720px) { .feed-grid { grid-template-columns: repeat(2, 1fr); } .nav-links { display: none; } }
+</style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="nav">
+    <a href="index.html" class="brand"><span class="logo-dot"></span> Localia</a>
+    <div class="nav-links">
+      <a href="index.html">Inicio</a>
+      <a href="feed.html" class="active">Explorar</a>
+      <a href="tienda.html">Tiendas</a>
+      <a href="dashboard.html">Panel</a>
+      <a href="conectar-mp.html" id="linkConectarMp" style="display:none;">Conectar Mercado Pago</a>
+    </div>
+    <a href="login.html" class="btn btn-primary">Comienza gratis</a>
+  </nav>
+
+  <!-- HEADER -->
+  <section class="feed-head wrap">
+    <h1>Descubrí productos de emprendedores</h1>
+    <p>Explorá lo que venden miles de tiendas locales. Comprá directo y apoyá lo hecho a mano.</p>
+    <div class="search">
+      <span class="ico">🔍</span>
+      <input type="text" placeholder="Buscar productos, tiendas o categorías..." />
+    </div>
+    <div class="chips">
+      <span class="chip active">Todo</span>
+      <span class="chip">Indumentaria</span>
+      <span class="chip">Hogar</span>
+      <span class="chip">Accesorios</span>
+      <span class="chip">Digital</span>
+      <span class="chip">Belleza</span>
+      <span class="chip">Arte</span>
+    </div>
+  </section>
+
+  <!-- GRID -->
+  <section class="wrap">
+    <div class="feed-grid" id="grid"></div>
+  </section>
+
+  <script>
+    function obtenerRolDelToken() {
+      var token = localStorage.getItem('token');
+
+      if (!token) {
+        return null;
+      }
+
+      try {
+        var partePayload = token.split('.')[1];
+        var base64 = partePayload.replace(/-/g, '+').replace(/_/g, '/');
+        var payload = JSON.parse(atob(base64));
+        return payload.rol || null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    if (obtenerRolDelToken() === 'EMPRENDEDOR') {
+      document.getElementById('linkConectarMp').style.display = '';
+    }
+
+    var posts = [
+      { img: "/images/prod-sneakers.png", store: "NÖ Studio", title: "Zapatillas urbanas edición azul", price: "$89.900", likes: "1.2k", type: "▶" },
+      { img: "/images/prod-hoodie.png", store: "Runaway Co.", title: "Buzo oversize premium", price: "$42.500", likes: "980", type: "▦" },
+      { img: "/images/prod-candle.png", store: "Luz Tienda", title: "Vela aromática artesanal", price: "$12.900", likes: "756", type: "▶" },
+      { img: "/images/prod-jewelry.png", store: "Bordó", title: "Aros minimalistas dorados", price: "$18.400", likes: "2.1k", type: "▦" },
+      { img: "/images/prod-bag.png", store: "Pampa Co.", title: "Tote de cuero hecho a mano", price: "$56.000", likes: "1.5k", type: "▶" },
+      { img: "/images/prod-mug.png", store: "Barro Taller", title: "Taza de cerámica esmaltada", price: "$9.800", likes: "634", type: "▦" },
+      { img: "/images/prod-ebook.png", store: "MateStore", title: "Curso: vendé online desde cero", price: "$24.900", likes: "3.4k", type: "▶" },
+      { img: "/images/prod-sneakers.png", store: "NÖ Studio", title: "Edición limitada primavera", price: "$94.900", likes: "870", type: "▶" },
+      { img: "/images/prod-candle.png", store: "Luz Tienda", title: "Set de 3 velas de soja", price: "$29.900", likes: "1.1k", type: "▦" },
+      { img: "/images/prod-hoodie.png", store: "Runaway Co.", title: "Hoodie negro clásico", price: "$39.900", likes: "540", type: "▶" },
+      { img: "/images/prod-jewelry.png", store: "Bordó", title: "Colección oro rosa", price: "$21.000", likes: "1.8k", type: "▦" },
+      { img: "/images/prod-bag.png", store: "Pampa Co.", title: "Mochila de lona resistente", price: "$48.500", likes: "690", type: "▶" }
+    ];
+    var grid = document.getElementById("grid");
+    posts.forEach(function (p) {
+      var el = document.createElement("a");
+      el.href = "tienda.html";
+      el.className = "post";
+      el.innerHTML =
+        '<div class="type-ico">' + p.type + '</div>' +
+        '<img src="' + p.img + '" alt="' + p.title + '" />' +
+        '<div class="overlay">' +
+          '<div class="store"><span class="dot"></span>' + p.store + '</div>' +
+          '<div class="title">' + p.title + '</div>' +
+          '<div class="price">' + p.price + '</div>' +
+          '<div class="meta"><span>♥ ' + p.likes + '</span><span>Ver tienda →</span></div>' +
+        '</div>';
+      grid.appendChild(el);
+    });
+
+    // filtros visuales
+    document.querySelectorAll(".chip").forEach(function (c) {
+      c.addEventListener("click", function () {
+        document.querySelector(".chip.active").classList.remove("active");
+        c.classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>

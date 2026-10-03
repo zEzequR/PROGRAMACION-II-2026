@@ -1,28 +1,17 @@
-//VERLO BIEN
-class categoriasProductos
-{
-    constructor(
-        categoria
-    )
+import { z } from 'zod';
+
+class Categoria{
+    static propiedades = z.object({
+        idCategoria: z.number().optional(),
+        categoria: z.string().optional()
+    });
+
+    
+    constructor(datos)
     {
-        this.categoria = categoria;
+        const datosValidados = Categoria.propiedades.parse(datos);
+        Object.assign(this, datosValidados);
     }
 }
 
-class atributosCategoria extends categoriasProductos {
-    constructor(categoria, nombreAtributo)
-    {
-        super(categoria);
-        this.nombreAtributo = nombreAtributo;
-    }
-}
-
-class especificacionesProducto extends atributosCategoria {
-    constructor(categoria, nombreAtributo, valor)
-    {
-        super(categoria, nombreAtributo);
-        this.valor = valor;
-    }
-}
-
-export { categoriasProductos, atributosCategoria, especificacionesProducto }
+export { Categoria };

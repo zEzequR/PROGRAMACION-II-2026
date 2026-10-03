@@ -75,11 +75,15 @@ export async function validarDireccion(ubicacion) {
                 esValida: true,
                 datosUbicacion: {
                     direccion : `${calle} ${numero}`,
+                    calle: calle,
+                    numero: numero,
                     pais: pais,
                     provincia: provincia,
                     ciudad: ciudad,
                     codigo: codigo,
-                    placeid: resultado.place_id
+                    placeid: resultado.place_id,
+                    latitud: resultado.geometry.location.lat,
+                    longitud: resultado.geometry.location.lng
                 }
             };
         }

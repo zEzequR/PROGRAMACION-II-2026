@@ -1,47 +1,81 @@
-import { registrarseManualService, autenticarUsuarioService, obtenerIdTienda, cambiarPswUsuario } from "../services/usuarioService.js";
-import { validarDireccion, obtenerPaisesDisponibles } from '../services/api/googleMapsService.js'
-import { guardarUbicacionService, actualizarUbicacionService } from '../services/ubicacionesService.js'
+import { registrarseManualService, autenticarUsuarioService,
+    buscarUsuarioPorEmail, buscarUsuarioPorId,
+    cambiarPswUsuario,
+    cambiarActivoUsuarioService, modificarUsuarioService } from "../services/usuarioService.js";
+import { buscarTiendaPorPersona } from "../services/tiendasService.js";
+import { validarDireccion } from '../services/api/googleMapsService.js'
+import { obtenerInteresesService } from "../services/interesesService.js";
 import { generarToken } from "../utils/generarToken.js";
-import { Usuario } from "../models/usuario.js";
-import  { Ubicaciones } from '../models/ubicaciones.js';
 import { ROLES } from "../config/enums.js";
 import { hashPsw } from '../utils/password.js'
 import { verifyResetCode } from '../utils/generarCodigo.js'
 
+export async function loggearseGoogle(req, res) {
+    try
+    {
+        const [GUsuario] = req.models;
 
-export async function registrarseManual(req, res)
+        let usuario = await buscarUsuarioPorEmail(GUsuario);
+
+        if (!usuario)
+        {
+            return res.status(200).json({ necesitaRegistro: true })
+        }
+
+        if (usuario.tipo_auth !== "GOOGLE")
+        {
+            return res.status(409).json({
+                estado: "ERROR",
+                mensaje: "Este email ya tiene una cuenta con contraseña. Iniciá sesión con tu contraseña en vez de Google."
+            });
+        }
+
+        GUsuario.idPersona = usuario.id_persona
+
+
+        const tokenPayload = {
+            idPersona: usuario.id_persona,
+            email: usuario.email,
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            telefono: usuario.telefono,
+            rol: ROLES.USUARIO,
+            activo: usuario.activo
+        };
+
+        const tiendaPersona = await buscarTiendaPorPersona(GUsuario);
+
+        if (tiendaPersona && tiendaPersona.activo)
+        {
+            tokenPayload.rol = ROLES.EMPRENDEDOR;
+            tokenPayload.id_tienda = tiendaPersona.id_tienda;
+        }
+
+
+        const token = generarToken(tokenPayload);
+
+        return res.status(200).json({
+            necesitaRegistro: false,
+            token
+        });
+
+    }
+    catch (err)
+    {
+        return res.status(500).json({
+            estado: "ERROR",
+            mensaje: err.message
+        });
+    }
+}
+
+export async function registrarseGoogle(req, res)
 {
     try
     {
-        const
-        {
-            email,
-            psw,
-            tipoAuth,
-            nombre,
-            apellido,
-            telefono,
-            direccion,
-            piso,
-            depto,
-            pais,
-            provincia,
-            ciudad,
-            codigo
-        } = req.body;
-
-        const ubicacion = new Ubicaciones({
-            direccion,
-            piso,
-            depto,
-            pais,
-            provincia,
-            ciudad,
-            codigo
-        });
+        const [GUsuario, ubicacion, categorias] = req.models;
 
         const googleRes = await validarDireccion(ubicacion);
-
 
         if (!googleRes.esValida) {
             return res.status(400).json({
@@ -54,27 +88,64 @@ export async function registrarseManual(req, res)
         ubicacion.placeid = googleRes.datosUbicacion.placeid;
         ubicacion.codigo = googleRes.datosUbicacion.codigo;
 
-        const dbResUbicaciones = await guardarUbicacionService(ubicacion);
 
-        let usuario = new Usuario(
-            {
-                email,
-                psw: await hashPsw(psw),
-                tipoAuth,
-                nombre,
-                apellido,
-                telefono,
-                idUbicacion: dbResUbicaciones
-            }
-        );
+        const nuevaPersona = await registrarseManualService(GUsuario, ubicacion, categorias);
 
-        await registrarseManualService(usuario);
+        const token = generarToken({
+            idPersona: nuevaPersona.id_persona,
+            email: nuevaPersona.email,
+            nombre: nuevaPersona.nombre,
+            apellido: nuevaPersona.apellido,
+            telefono: nuevaPersona.telefono,
+            rol: ROLES.USUARIO,
+            activo: nuevaPersona.activo
+        });
 
-        return res.status(201).end();
-
+        return res.status(201).json({
+            estado: "OK",
+            mensaje: "Usuario registrado con éxito",
+            token
+        });
     }
     catch(err)
     {
+        return res.status(500).json(
+            {
+                message: err.message
+            })
+    }
+}
+
+export async function registrarseManual(req, res)
+{
+    try
+    {
+        const [usuario, ubicacion, categorias] = req.models;
+
+        const googleRes = await validarDireccion(ubicacion);
+
+        if (!googleRes.esValida) {
+            return res.status(400).json({
+                estado: "ERROR",
+                mensaje: "La dirección ingresada no es válida",
+                motivo: googleRes.motivo
+            });
+        }
+
+        ubicacion.placeid = googleRes.datosUbicacion.placeid;
+        ubicacion.codigo = googleRes.datosUbicacion.codigo;
+        usuario.psw = await hashPsw(usuario.psw);
+
+        await registrarseManualService(usuario, ubicacion, categorias);
+
+        return res.status(201).end();
+    }
+    catch(err)
+    {
+        if (err.message === "El email ya está registrado")
+        {
+            return res.status(409).json({ mensaje: err.message });
+        }
         return res.status(500).json(
         {
             estado: "ERROR",
@@ -87,52 +158,43 @@ export async function logggearseManual(req, res)
 {
     try
     {
-        if (!req.email || !req.psw)
+        const [usuario] = req.models;
+
+        console.log(usuario.psw);
+
+        const dbRes = await autenticarUsuarioService(usuario);
+
+        usuario.idPersona = dbRes.id_persona;
+
+        let tokenPayload = {
+            idPersona: dbRes.id_persona,
+            email: usuario.email,
+            nombre: dbRes.nombre,
+            apellido: dbRes.apellido,
+            telefono: dbRes.telefono,
+            rol: ROLES.USUARIO,
+            activo: dbRes.activo
+        };
+
+        const tiendaPersona = await buscarTiendaPorPersona(usuario);
+
+
+        if (tiendaPersona && tiendaPersona.activo)
         {
-            throw new Error("Faltan campos obligatorios");
+            tokenPayload.rol = ROLES.EMPRENDEDOR;
+            tokenPayload.id_tienda = tiendaPersona.id_tienda;
         }
-        else
+
+
+        const token = generarToken(tokenPayload);
+
+        return res.status(200).json(
         {
-            let usuario = new Usuario(
-                {
-                    email: req.email,
-                    psw: req.psw,
-                    tipoAuth: "MANUAL"
-                }
-                );
-            const dbRes = await autenticarUsuarioService(usuario);
-            const idTienda = await obtenerIdTienda(dbRes.id_persona);
-            
-            let tokenPayload = {
-                id: dbRes.id_persona,
-                email: req.email,
-                nombre: dbRes.nombre,
-                apellido: dbRes.apellido,
-                telefono: dbRes.telefono,
-                rol: ROLES.USUARIO
-            };
-
-            if (idTienda)
-            {
-                tokenPayload.rol = ROLES.EMPRENDEDOR;
-                tokenPayload.id_tienda = idTienda;
-            }
-
-            const token = generarToken(tokenPayload);
-
-            return res.status(200).json(
-            {
-                token: token
-            });
-        }
+            token: token
+        });
     }
     catch(err)
     {
-        if (err.message === "Faltan campos obligatorios")
-        {
-            return res.status(400).end();
-        }
-
         if (err.message === "Credenciales inválidas")
         {
             return res.status(401).json(
@@ -149,45 +211,89 @@ export async function logggearseManual(req, res)
 }
 
 export async function modificarDatosUsuario(req, res)
-//VER ESTO
 {
     try
     {
-        const
+        const [usuario, ubicacionRecibida, categorias] = req.models;
+        let ubicacion;
+
+        if (Object.keys(ubicacionRecibida).length > 0)
         {
-            email,
-            nombre,
-            apellido,
-            telefono,
-            localidad
-        } = req.body
+            ubicacion = ubicacionRecibida;
+        }
 
-        const dbRes = actualizarUbicacionService(ubicacion);
-
+        await modificarUsuarioService(usuario, ubicacion, categorias);
         return res.status(200).end();
     }
     catch(err)
     {
         return res.status(500).end();
-    };
+    }
+}
+
+export async function desactivarCuenta(req, res)
+{
+    try
+    {
+        const [usuario] = req.models;
+        usuario.activo = false;
+
+        await cambiarActivoUsuarioService(usuario);
+
+    }
+    catch (err)
+    {
+        return res.status(500).json({ mensaje: err.message });
+    }
+}
+
+export async function reactivarCuenta(req, res)
+{
+    try
+    {
+        const [usuarioReactivar] = req.models;
+        usuarioReactivar.activo = true;
+
+        const usuario = await cambiarActivoUsuarioService(usuarioReactivar);
+
+
+        let tokenPayload = {
+            idPersona: usuario.id_persona,
+            email: usuario.email,
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            telefono: usuario.telefono,
+            rol: ROLES.USUARIO,
+            activo: true
+        };
+
+        const tiendaPersona = await buscarTiendaPorPersona(usuarioReactivar);
+
+
+        if (tiendaPersona && tiendaPersona.activo)
+        {
+            tokenPayload.rol = ROLES.EMPRENDEDOR;
+            tokenPayload.id_tienda = tiendaPersona.id_tienda;
+        }
+
+
+        return res.status(200).json(
+            {
+                token: generarToken(tokenPayload)
+            });
+    }
+    catch (err)
+    {
+        return res.status(500).json({ mensaje: err.message });
+    }
 }
 
 export async function codigoRecuperarPsw(req, res)
 {
-    const 
-    {
-        email,
-        codigo,
-        psw
-    } = req.body;
-
     try
     {
-        let usuario = new Usuario(
-        {
-            email: email,
-        }
-        );
+        const [usuario] = req.models;
+        const codigo = req.body.codigo;
 
         const esValido = verifyResetCode(usuario, codigo);
 
@@ -198,10 +304,18 @@ export async function codigoRecuperarPsw(req, res)
             });
         }
 
-        usuario.id_persona = await obtenerIDUsuario(usuario.email);
-        usuario.psw = await hashPsw(psw);
+        const usuarioEncontrado = await buscarUsuarioPorEmail(usuario);
+
+        if (!usuarioEncontrado)
+        {
+            return res.status(400).json({ mensaje: 'El código es incorrecto o ya expiró' });
+        }
+
+        usuario.idPersona = usuarioEncontrado.id_persona;
+        usuario.psw = await hashPsw(usuario.psw);
+
         await cambiarPswUsuario(usuario);
-        
+
         return res.status(200).json({
             message: "Funcionó paaa"
         })
@@ -209,5 +323,56 @@ export async function codigoRecuperarPsw(req, res)
     catch(err)
     {
         return res.status(500).end();
+    }
+}
+
+export async function obtenerPerfil(req, res)
+{
+    try
+    {
+        const [usuario] = req.models;
+
+        const datos = await buscarUsuarioPorId(usuario);
+
+        if (!datos)
+        {
+            return res.status(404).json({ mensaje: "Usuario no encontrado" });
+        }
+
+        return res.status(200).json({
+            perfil: {
+                idPersona: datos.id_persona,
+                email: datos.email,
+                nombre: datos.nombre,
+                apellido: datos.apellido,
+                telefono: datos.telefono,
+                direccion: datos.direccion,
+                piso: datos.piso,
+                depto: datos.depto,
+                pais: datos.pais,
+                provincia: datos.provincia,
+                ciudad: datos.ciudad,
+                codigo: datos.codigo
+            }
+        });
+    }
+    catch (err)
+    {
+        return res.status(500).json({ mensaje: err.message });
+    }
+}
+
+export async function obtenerMisIntereses(req, res)
+{
+    try
+    {
+        const [usuario] = req.models;
+
+        const intereses = await obtenerInteresesService(usuario);
+        return res.status(200).json({ intereses });
+    }
+    catch (err)
+    {
+        return res.status(500).json({ mensaje: err.message });
     }
 }

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pagar — Localia</title>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="/carrito.js"></script>
   <style>
     :root {
@@ -91,6 +92,20 @@
     /* Contenedor del brick — MP inyecta su propio iframe */
     #paymentBrick_container { min-height: 120px; }
 
+    /* Tabs de método de pago */
+    .metodo-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .metodo-tab {
+      flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--glass-brd);
+      background: rgba(255,255,255,0.04); color: var(--muted); font-family: inherit;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .metodo-tab.activo { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #07070c; border-color: transparent; }
+    #qrCanvas {
+      display: inline-block; margin-top: 12px; padding: 16px;
+      background: #ffffff; border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
     /* Guardar tarjeta */
     .save-card { display: flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 14px; color: var(--muted); cursor: pointer; }
     .save-card input { accent-color: var(--brand); width: 16px; height: 16px; }
@@ -159,8 +174,18 @@
         <h2>Método de pago</h2>
         <p class="hint">Elegí cómo querés pagar. Aceptamos tarjetas de crédito, débito y dinero en cuenta.</p>
 
-        <div id="paymentBrick_container"></div>
+        <div class="metodo-tabs">
+          <button type="button" id="tabQr" class="metodo-tab activo">QR</button>
+          <button type="button" id="tabTarjeta" class="metodo-tab">Tarjeta</button>
+        </div>
 
+        <div id="paymentBrick_container" style="display:none;"></div>
+
+        <div id="qrContainer" style="text-align:center;">
+          <p class="hint">Escaneá este código con la app de Mercado Pago para pagar.</p>
+          <div id="qrCanvas"></div>
+          <p id="qrEstado" class="hint"></p>
+        </div>
 
         <p id="resultado"></p>
 
@@ -199,44 +224,59 @@
 
   <script>
 
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    // ====== Configuración (tu integración de Mercado Pago) ======
-    var PUBLIC_KEY = "APP_USR-dbffc63f-426b-4b50-9abe-cef3e6be6db9";
-    var API_URL = "http://localhost:3000";
+    // ============================================================
+    // CONFIGURACIÓN Y ESTADO GLOBAL
+    // Variables que usan varias funciones de este archivo.
+    // ============================================================
+
+    var API_URL = "https://localiapp.shop";
 
     var params = new URLSearchParams(window.location.search);
-    var ID_VENTA = null;
-    var ID_CLIENTE = Number(params.get('idCliente')) || 1;
-    var ID_TIENDA = Number(params.get('idTienda')) || 1;
-    var MONTO = 0;
+    var ID_TIENDA = Number(params.get('idTienda')) || 1; // qué tienda es el dueño de la venta (viene en la URL: ?idTienda=10)
+    var TOKEN = localStorage.getItem('token'); // JWT del comprador logueado (lo guarda index.html al loguearse)
+
+    var ID_VENTA = null;       // se completa cuando se crea la venta en finalizarCompra()
+    var MONTO = 0;             // precio final de la venta
     var DESCRIPCION = "Compra en tienda";
 
-    var mp = new MercadoPago(PUBLIC_KEY, { locale: "es-AR" });
-    var bricksBuilder = mp.bricks();
+    var mp = null;             // instancia del SDK de Mercado Pago (frontend), se crea con la public key de la tienda
+    var bricksBuilder = null;  // builder que usa el SDK para dibujar el formulario de tarjeta
 
+    // ============================================================
+    // FUNCIONES DE AYUDA (helpers chicos, sin lógica de pago)
+    // ============================================================
+
+    // Le pregunta a nuestro backend cuál es la public key de Mercado Pago
+    // de esta tienda puntual (cada emprendedor tiene la suya, conectada por OAuth).
+    async function obtenerPublicKeyTienda(idTienda) {
+      var res = await fetch(API_URL + "/tiendas/" + idTienda + "/mp-public-key");
+      var data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.mensaje || "No se pudo obtener la configuración de pago de esta tienda");
+      }
+
+      return data.publicKey;
+    }
+
+    // Formatea un número como pesos argentinos: 20000 -> "$20.000"
     function fmt(n) {
       try { return "$" + Number(n).toLocaleString("es-AR"); }
       catch (e) { return "$" + n; }
     }
 
+    // Pinta el cartel de resultado (aprobado / rechazado / pendiente) debajo
+    // del método de pago. La usan tanto el pago con tarjeta como el QR.
     function mostrarResultado(data) {
       var el = document.getElementById("resultado");
       el.classList.add("show");
-      if (data.status === "approved") {
+      if (data.status === "processed") {
         el.textContent = "Pago aprobado ✓";
         el.className = "show aprobado";
-      } else if (data.status === "rejected") {
+      } else if (data.status === "canceled" || data.status === "failed" || data.status === "expired") {
         el.textContent = "Pago rechazado (" + data.status_detail + ")";
         el.className = "show rechazado";
-      } else if (data.status === "in_process") {
+      } else if (data.status === "action_required" || data.status === "processing") {
         el.textContent = "Pago pendiente de acreditación";
         el.className = "show pendiente";
       } else {
@@ -245,58 +285,90 @@
       }
     }
 
-
+    // Llena el resumen de compra de la columna derecha (título, subtotal, total).
     function pintarResumen() {
       document.getElementById("sumTitle").textContent = DESCRIPCION;
       document.getElementById("sumSubtotal").textContent = fmt(MONTO);
       document.getElementById("sumTotal").textContent = fmt(MONTO);
     }
 
-  async function renderPaymentBrick() {
-    try {
-        ID_VENTA = await finalizarCompra(ID_TIENDA, ID_CLIENTE);
-
-      const ventaRes = await fetch(API_URL + "/ventas/" + ID_VENTA);
-      const ventaData = await ventaRes.json();
-
-      if (!ventaRes.ok)
-      {
-          var el = document.getElementById("resultado");
-          el.className = "show rechazado";
-          el.textContent = ventaData.mensaje || "No se encontró la venta";
-          return;
+    // ============================================================
+    // PASO 1: ARRANQUE DE LA PÁGINA
+    // Se ejecuta una sola vez al cargar. Arma la venta, pinta el
+    // resumen, y deja todo listo para poder pagar (por QR, que es
+    // la pestaña que se ve de entrada, o por tarjeta si el usuario
+    // cambia de pestaña).
+    // ============================================================
+    async function iniciarCheckout() {
+      if (!TOKEN) {
+        var elLogin = document.getElementById("resultado");
+        elLogin.className = "show rechazado";
+        elLogin.textContent = "Necesitás iniciar sesión para comprar.";
+        elLogin.innerHTML += ' <a href="index.html" style="color:inherit;text-decoration:underline;">Iniciar sesión</a>';
+        return;
       }
 
-      MONTO = Number(ventaData[0]?.precio_final) || 0;
-
+      // 1a. Convertir el carrito (localStorage) en una venta real en la base de datos.
+      try {
+        var venta = await finalizarCompra(ID_TIENDA);
+        ID_VENTA = venta.idVenta;
+        MONTO = Number(venta.precioFinal) || 0;
         DESCRIPCION = "Compra #" + ID_VENTA;
-    } catch (err) {
+      } catch (err) {
         console.error("[v0] No se pudo finalizar la compra:", err);
         var el = document.getElementById("resultado");
         el.className = "show rechazado";
         el.textContent = "No se pudo armar el carrito. " + err.message;
         return;
-    }
+      }
 
       pintarResumen();
 
-
-      var preferenceId;
+      // 1b. Inicializar el SDK de Mercado Pago con la public key de ESTA tienda
+      // (necesario para poder tokenizar tarjetas más adelante, si el usuario elige pagar así).
       try {
-        var prefRes = await fetch(API_URL + "/pagos/preferencia", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idVenta: ID_VENTA, nombreProd: DESCRIPCION, precioFinal: MONTO })
-        });
-        var prefData = await prefRes.json();
-        preferenceId = prefData.preferenceId;
+        var publicKey = await obtenerPublicKeyTienda(ID_TIENDA);
+        mp = new MercadoPago(publicKey, { locale: "es-AR" });
+        bricksBuilder = mp.bricks();
       } catch (err) {
-        console.error("[v0] No se pudo crear la preferencia:", err);
+        console.error("[v0] No se pudo obtener la public key de la tienda:", err);
+        var elPk = document.getElementById("resultado");
+        elPk.className = "show rechazado";
+        elPk.textContent = "Esta tienda todavía no conectó Mercado Pago. " + err.message;
+        return;
       }
 
+      // 1c. Como la pestaña QR es la que se ve de entrada, generamos el QR ya mismo.
+      generarQr();
+    }
+
+    // ============================================================
+    // PAGO CON TARJETA
+    // Esto NO se ejecuta al cargar la página: se crea recién la
+    // primera vez que el usuario toca la pestaña "Tarjeta" (más
+    // liviano que armarlo siempre de entrada).
+    // ============================================================
+    var cardBrickYaCreado = false;
+
+    async function crearCardBrick() {
+      if (cardBrickYaCreado) {
+        return; // ya está armado, no hacer nada
+      }
+
+      if (!bricksBuilder) {
+        // iniciarCheckout() todavía no terminó de preparar el SDK, reintentamos enseguida
+        setTimeout(crearCardBrick, 300);
+        return;
+      }
+
+      cardBrickYaCreado = true;
+
       try {
-        await bricksBuilder.create("payment", "paymentBrick_container", {
-          initialization: { amount: MONTO, preferenceId: preferenceId },
+        // "Card Payment Brick" es un formulario que dibuja Mercado Pago (no nosotros).
+        // Captura los datos de la tarjeta y los tokeniza del lado del navegador,
+        // así el número de tarjeta nunca pasa por nuestro servidor.
+        await bricksBuilder.create("cardPayment", "paymentBrick_container", {
+          initialization: { amount: MONTO },
           customization: {
             visual: {
               style: {
@@ -311,43 +383,40 @@
                   fontSizeMedium: "14px"
                 }
               }
-            },
-            paymentMethods: {
-              creditCard: "all",
-              debitCard: "all",
-              prepaidCard: "all",
-              mercadoPago: "all"
             }
           },
           callbacks: {
             onReady: function () {
-              console.log("[v0] Payment Brick listo");
+              console.log("[v0] Card Payment Brick listo");
             },
-            onSubmit: function (obj) {
-              try {
-                var formData = obj.formData;
-                var selectedPaymentMethod = obj.selectedPaymentMethod;
-                var el = document.getElementById("resultado");
+            // Se dispara cuando el usuario completa el formulario y toca "Pagar".
+            // cardFormData trae el token de la tarjeta (nunca el número real).
+            onSubmit: function (cardFormData, additionalData) {
+              var el = document.getElementById("resultado");
 
-                console.log("[v0] onSubmit disparado", selectedPaymentMethod, formData);
+              console.log("[v0] onSubmit disparado", cardFormData, additionalData);
 
-                if (selectedPaymentMethod === "wallet_purchase") {
-                  el.className = "show info";
-                  el.textContent = "Redirigiendo a Mercado Pago...";
-                  return Promise.resolve();
-                }
+              el.className = "show info";
+              el.textContent = "Procesando pago...";
 
-                el.className = "show info";
-                el.textContent = "Procesando pago...";
+              // Con el BIN (primeros dígitos) de additionalData, le preguntamos a
+              // Mercado Pago si la tarjeta es de crédito, débito o prepaga.
+              return mp.getPaymentMethods({ bin: additionalData.bin })
+                .then(function (resultado) {
+                  var metodoPago = resultado.results[0];
 
-                return fetch(API_URL + "/pagos/procesar-pago", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(Object.assign({}, formData, {
-                    idVenta: ID_VENTA,
-                    descripcion: DESCRIPCION,
-                    monto: MONTO
-                  }))
+                  // Mandamos el token + el tipo de tarjeta a NUESTRO backend,
+                  // que es quien realmente le cobra a Mercado Pago.
+                  return fetch(API_URL + "/pagos/procesar-pago", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(Object.assign({}, cardFormData, {
+                      payment_type_id: metodoPago.payment_type_id,
+                      idVenta: ID_VENTA,
+                      descripcion: DESCRIPCION,
+                      monto: MONTO
+                    }))
+                  });
                 })
                 .then(function (res) { return res.json(); })
                 .then(function (data) { mostrarResultado(data); })
@@ -355,49 +424,160 @@
                   console.error("[v0] fetch falló", err);
                   var e2 = document.getElementById("resultado");
                   e2.className = "show rechazado";
-                  e2.textContent = "No se pudo conectar con el servidor";
+                  e2.textContent = "No se pudo procesar el pago: " + err.message;
                 });
-              }
-              catch (errSync) {
-                console.error("[v0] ERROR SINCRÓNICO EN onSubmit:", errSync);
-                return Promise.reject(errSync);
-              }
             },
             onError: function (error) { console.error("[v0]", error); }
           }
         });
       } catch (err) {
-        console.error("[v0] No se pudo renderizar el Payment Brick:", err);
+        console.error("[v0] No se pudo renderizar el Card Payment Brick:", err);
         var box = document.getElementById("resultado");
         box.className = "show info";
         box.textContent = "Vista previa del diseño. Conectá el backend en " + API_URL + " para procesar pagos reales.";
       }
     }
 
-  async function finalizarCompra(idTienda, idCliente)
-  {
-      const items = obtenerCarrito();
+    // Toma lo que hay en el carrito (localStorage) y le pide a nuestro backend
+    // que arme la venta de verdad en la base de datos. Devuelve {idVenta, precioFinal}.
+    async function finalizarCompra(idTienda)
+    {
+        var items = obtenerCarrito().map(function (item) {
+          return Object.assign({}, item, { idTienda: idTienda });
+        });
 
-      const res = await fetch(`${API_URL}/ventas/finalizar`,
-      {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idTienda, idCliente, items })
-      });
+        var res = await fetch(API_URL + "/ventas/crear",
+        {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + TOKEN
+            },
+            body: JSON.stringify({ suscripcion: false, items: items })
+        });
 
-      const data = await res.json();
+        var data = await res.json();
 
-      if (!res.ok)
-      {
-          throw new Error(data.mensaje);
+        if (!res.ok)
+        {
+            throw new Error("(" + res.status + ") " + (data.mensaje || data.error || JSON.stringify(data)));
+        }
+
+        vaciarCarrito(); // ya está en la base de datos, no hace falta mantenerlo en el navegador
+        return data;
+    }
+
+    // ============================================================
+    // PAGO CON QR
+    // ============================================================
+    var qrYaGenerado = false;
+
+    // Le pide a nuestro backend que cree una Order de tipo QR en Mercado Pago,
+    // y dibuja el código QR en pantalla con lo que devuelve.
+    function generarQr() {
+      if (qrYaGenerado) {
+        return; // ya se generó, no pedir otro
       }
 
-      vaciarCarrito();
-      return data.idVenta;
-  }
+      var qrEstado = document.getElementById("qrEstado");
 
-    renderPaymentBrick();
+      if (!ID_VENTA) {
+        // iniciarCheckout() todavía no terminó de crear la venta, reintentamos enseguida
+        qrEstado.textContent = "Esperá un momento, todavía se está armando tu compra...";
+        setTimeout(generarQr, 500);
+        return;
+      }
 
+      qrYaGenerado = true;
+      qrEstado.textContent = "Generando QR...";
+
+      fetch(API_URL + "/pagos/procesar-pago-qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idVenta: ID_VENTA, descripcion: DESCRIPCION, monto: MONTO })
+      })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: res.ok, data: data };
+        });
+      })
+      .then(function (resultado) {
+        if (!resultado.ok || !resultado.data.qrData) {
+          qrEstado.textContent = resultado.data.mensaje || "No se pudo generar el QR.";
+          return;
+        }
+        try {
+          // qrData es un texto plano (no una imagen). La librería QRCode
+          // lo dibuja como imagen dentro del <div id="qrCanvas">.
+          document.getElementById("qrCanvas").innerHTML = "";
+          new QRCode(document.getElementById("qrCanvas"), {
+            text: resultado.data.qrData,
+            width: 220,
+            height: 220
+          });
+          qrEstado.textContent = "Esperando el pago...";
+          iniciarPollingEstadoVenta(); // empezar a preguntar si ya pagaron
+        } catch (err) {
+          qrEstado.textContent = "No se pudo dibujar el QR: " + err.message;
+        }
+      })
+      .catch(function (err) {
+        qrEstado.textContent = "No se pudo generar el QR: " + err.message;
+      });
+    }
+
+    // El QR no avisa solo cuando lo escanean: el que confirma el pago es el
+    // webhook del backend (en otro servidor, lo recibe Mercado Pago). Por eso
+    // acá preguntamos cada 3 segundos si la venta ya quedó cerrada.
+    function iniciarPollingEstadoVenta() {
+      var qrEstado = document.getElementById("qrEstado");
+
+      var intervalo = setInterval(function () {
+        fetch(API_URL + "/ventas/" + ID_VENTA + "/estado", {
+          headers: { "Authorization": "Bearer " + TOKEN }
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data.estado === "CERRADA") {
+            clearInterval(intervalo); // dejar de preguntar
+            qrEstado.textContent = "";
+            mostrarResultado({ status: "processed" });
+          } else if (data.estado === "CANCELADA") {
+            clearInterval(intervalo);
+            qrEstado.textContent = "";
+            mostrarResultado({ status: "failed", status_detail: "El pago no se acreditó" });
+          }
+          // si sigue "ABIERTA", no hacemos nada y se vuelve a preguntar en 3 segundos
+        })
+        .catch(function (err) {
+          console.error("[v0] Error consultando estado de la venta:", err);
+        });
+      }, 3000);
+    }
+
+    // ============================================================
+    // PESTAÑAS "QR" / "Tarjeta"
+    // Solo cambian qué panel se ve, y arman ese método de pago la
+    // primera vez que se necesita (ver crearCardBrick/generarQr).
+    // ============================================================
+    document.getElementById("tabTarjeta").addEventListener("click", function () {
+      document.getElementById("tabTarjeta").classList.add("activo");
+      document.getElementById("tabQr").classList.remove("activo");
+      document.getElementById("paymentBrick_container").style.display = "";
+      document.getElementById("qrContainer").style.display = "none";
+      crearCardBrick();
+    });
+
+    document.getElementById("tabQr").addEventListener("click", function () {
+      document.getElementById("tabQr").classList.add("activo");
+      document.getElementById("tabTarjeta").classList.remove("activo");
+      document.getElementById("paymentBrick_container").style.display = "none";
+      document.getElementById("qrContainer").style.display = "";
+      generarQr();
+    });
+
+    // Arranca todo apenas carga la página.
+    iniciarCheckout();
 
   </script>
 </body>

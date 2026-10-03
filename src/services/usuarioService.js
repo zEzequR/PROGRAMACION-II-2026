@@ -1,7 +1,12 @@
 import pool from '../config/conexion.js'
 import { comparePsw } from '../utils/password.js'
+import { guardarUbicacionService, actualizarUbicacionService,
+    ubicacionCompartidaService, copiarUbicacionService } from './ubicacionesService.js'
+import { guardarInteresesService } from './interesesService.js'
+import { cambiarActivoTiendaService, buscarTiendaPorPersona } from './tiendasService.js'
+import { Tiendas } from '../models/tiendas.js'
 
-export async function registrarseManualService(user)
+export async function registrarseManualService(user, ubicacion, categorias)
 {
     const query = `
         INSERT INTO Personas(
@@ -16,13 +21,29 @@ export async function registrarseManualService(user)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
     `
-    const values = [user.email, user.psw, user.tipoAuth,
-        user.nombre, user.apellido, user.telefono, user.idUbicacion , user.activo]
 
     try
     {
+        const existente = await buscarUsuarioPorEmail(user);
+
+        if (existente)
+        {
+            throw new Error("El email ya está registrado");
+        }
+        
+        const idUbicacion = await guardarUbicacionService(ubicacion);
+        user.idUbicacion = idUbicacion;
+
+        const values = [user.email, user.psw, user.tipoAuth,
+        user.nombre, user.apellido, user.telefono, user.idUbicacion, user.activo];
+        
         const resultado = await pool.query(query, values);
-        return resultado.rows[0]
+        const nuevaPersona = resultado.rows[0];
+
+        user.idPersona = nuevaPersona.id_persona
+        await guardarInteresesService(user, categorias)
+
+        return nuevaPersona;
     }
     catch(err)
     {
@@ -32,32 +53,29 @@ export async function registrarseManualService(user)
 
 export async function autenticarUsuarioService(user)
 {
-    const query = `
-        SELECT * FROM Personas WHERE email = $1
-    `
-
     try
     {
-        const resultado = await pool.query(query, [user.email]);
+        const usuarioEncontrado = await buscarUsuarioPorEmail(user);
 
-        if (resultado.rows.length === 0)
+        if (!usuarioEncontrado || usuarioEncontrado.psw === null)
+        {
+            throw new Error("Credenciales inválidas");
+        }
+        if (!await comparePsw(user.psw, usuarioEncontrado.psw))
         {
             throw new Error("Credenciales inválidas");
         }
 
-        if (!await comparePsw(user.psw, resultado.rows[0].psw))
-            {
-                throw new Error("Credenciales inválidas");
-            }
-        return resultado.rows[0]
+        return usuarioEncontrado;
     }
     catch(err)
     {
         throw new Error(err.message)
-    }   
+    }
 }
 
-export async function modificarUsuarioService(usuario) {
+
+export async function modificarUsuarioService(usuario, ubicacion, categorias) {
     const query = `
         UPDATE Personas
         SET
@@ -76,42 +94,90 @@ export async function modificarUsuarioService(usuario) {
     ];
 
     try {
-        const resultado = await pool.query(query, values);
-        if (resultado.rowCount === 0) {
-            throw new Error("Usuario no encontrado");
-        }
-        return resultado.rows[0];
-    } catch (err) {
+            if (categorias !== undefined)
+            {
+                await guardarInteresesService(usuario, categorias);
+            }
+
+            if (ubicacion !== undefined)
+            {
+                const usuarioActual = await buscarUsuarioPorId(usuario);
+
+                if (usuarioActual && usuarioActual.id_ubicacion)
+                {
+                    ubicacion.idUbicacion = usuarioActual.id_ubicacion;
+                    const compartida = await ubicacionCompartidaService(usuario, ubicacion);
+
+                    if (compartida)
+                    {
+                        const queryCambiarUbicacion = `UPDATE Personas SET id_ubicacion = $2 WHERE id_persona = $1`;
+                        const idNueva = await copiarUbicacionService(ubicacion);
+                        await pool.query(queryCambiarUbicacion, [usuario.idPersona, idNueva]);
+                    }
+                    else
+                    {
+                        await actualizarUbicacionService(ubicacion);
+                    }
+                }
+            }
+
+            const resultado = await pool.query(query, values);
+            if (resultado.rowCount === 0)
+            {
+                throw new Error("Usuario no encontrado");
+            }
+            return resultado.rows[0];
+    }
+    catch (err)
+    {
         throw new Error(err.message);
     }
 }
 
-export async function obtenerIdTienda(idPersona) {
-    const query = `
-        SELECT tiendas.id_tienda
-        FROM tiendas
-        JOIN emprendedores ON tiendas.id_emprendedor = emprendedores.id_emprendedor
-        WHERE emprendedores.id_persona = $1 AND tiendas.activo = TRUE
-    `;
-    
-    try {
-        const resultado = await pool.query(query, [idPersona]);
-        
-        if (resultado.rowCount > 0) {
-            return resultado.rows[0].id_tienda;
-        }
-        return null;
-        
-    } catch(err) {
-        throw new Error(err.message);
-    }
-}
-
-export async function obtenerIDUsuario(user)
+export async function cambiarActivoUsuarioService(user)
 {
     const query = `
-        SELECT * FROM Personas WHERE email = $1
-    `
+        UPDATE Personas SET activo = $2
+        WHERE id_persona = $1
+        RETURNING id_persona, email, nombre, apellido, telefono
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [user.idPersona, user.activo]);
+
+        if (resultado.rowCount === 0)
+        {
+            throw new Error("Usuario no encontrado");
+        }
+
+        const tiendaPersona = await buscarTiendaPorPersona(user);
+        if (tiendaPersona && tiendaPersona.id_tienda)
+        {
+            const tienda = new Tiendas(
+                { 
+                    idTienda: tiendaPersona.id_tienda,
+                    activo: user.activo
+                });
+            await cambiarActivoTiendaService(tienda);
+        }
+
+        return resultado.rows[0];
+    }
+    catch (err)
+    {
+        throw new Error(err.message);
+    }
+}
+
+
+export async function buscarUsuarioPorEmail(user)
+{
+    const query = `
+        SELECT id_persona, email, psw, tipo_auth, nombre, apellido, telefono, id_ubicacion, activo
+        FROM Personas
+        WHERE email = $1
+    `;
 
     try
     {
@@ -119,18 +185,46 @@ export async function obtenerIDUsuario(user)
 
         if (resultado.rows.length === 0)
         {
-            throw new Error("Credenciales inválidas");
+            return null;
         }
-        else
-        {
-            return resultado.rows[0]
-        }
+
+        return resultado.rows[0];
     }
-    catch(err)
+    catch (err)
     {
-        throw new Error(err.message)
-    }   
+        throw new Error(err.message);
+    }
 }
+
+export async function buscarUsuarioPorId(user)
+{
+    const query = `
+        SELECT Personas.id_persona, Personas.email, Personas.tipo_auth, Personas.nombre, Personas.apellido,
+            Personas.telefono, Personas.activo, Personas.id_ubicacion,
+            Ubicaciones.direccion, Ubicaciones.piso, Ubicaciones.depto, Ubicaciones.pais,
+            Ubicaciones.provincia, Ubicaciones.ciudad, Ubicaciones.codigo
+        FROM Personas
+        LEFT JOIN Ubicaciones ON Ubicaciones.id_ubicacion = Personas.id_ubicacion
+        WHERE Personas.id_persona = $1
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [user.idPersona]);
+
+        if (resultado.rows.length === 0)
+        {
+            return null;
+        }
+
+        return resultado.rows[0];
+    }
+    catch (err)
+    {
+        throw new Error(err.message);
+    }
+}
+
 
 
 export async function cambiarPswUsuario(user)
@@ -143,14 +237,12 @@ export async function cambiarPswUsuario(user)
     {
         const resultado = await pool.query(query, [user.idPersona, user.email, user.psw]);
 
-        if (resultado.rows.length === 0)
+        if (resultado.rowCount === 0)
         {
-            throw new Error("Credenciales inválidas");
+            throw new Error("Usuario no encontrado");
         }
-        else
-        {
-            return resultado.rows[0]
-        }
+
+        return true;
     }
     catch(err)
     {

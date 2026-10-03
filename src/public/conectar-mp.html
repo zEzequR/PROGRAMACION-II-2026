@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conectar Mercado Pago</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #009ee3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        button:hover {
+            background-color: #007eb5;
+        }
+        #estado {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+        .separador {
+            margin: 26px 0;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Conectar Mercado Pago</h2>
+        <p>Vinculá tu cuenta de Mercado Pago para poder cobrar las ventas de tu tienda.</p>
+        <button id="btnConectar">Conectar con Mercado Pago</button>
+        <p id="estado"></p>
+    </div>
+
+    <div class="container">
+        <h2>Cobrar con QR</h2>
+        <p>Además de tarjeta, podés habilitar el cobro presencial por QR (se abre en la app de Mercado Pago del comprador). Necesitamos la dirección real de tu local para dar de alta la sucursal.</p>
+
+        <input type="text" id="direccionQr" placeholder="Calle y altura (ej: Castellanos 3973)">
+        <input type="text" id="ciudadQr" placeholder="Ciudad (ej: Rosario)">
+        <input type="text" id="provinciaQr" placeholder="Provincia (ej: Santa Fe)">
+
+        <button id="btnConectarQr">Conectar QR</button>
+        <p id="estadoQr"></p>
+    </div>
+
+    <script>
+        var API_URL = window.location.origin;
+        var estado = document.getElementById('estado');
+        var estadoQr = document.getElementById('estadoQr');
+
+        document.getElementById('btnConectar').addEventListener('click', function () {
+            var token = localStorage.getItem('token');
+
+            if (!token) {
+                estado.textContent = "Necesitás iniciar sesión primero.";
+                return;
+            }
+
+            estado.textContent = "Conectando...";
+
+            fetch(API_URL + "/mercadopago/conectar", {
+                headers: { "Authorization": "Bearer " + token }
+            })
+            .then(function (res) {
+                return res.json().then(function (data) {
+                    return { ok: res.ok, data: data };
+                });
+            })
+            .then(function (resultado) {
+                if (!resultado.ok) {
+                    estado.textContent = resultado.data.mensaje || resultado.data.error || "No se pudo iniciar la conexión.";
+                    return;
+                }
+                window.location.href = resultado.data.url;
+            })
+            .catch(function (err) {
+                estado.textContent = "Error de conexión: " + err.message;
+            });
+        });
+
+        document.getElementById('btnConectarQr').addEventListener('click', function () {
+            var token = localStorage.getItem('token');
+
+            if (!token) {
+                estadoQr.textContent = "Necesitás iniciar sesión primero.";
+                return;
+            }
+
+            var direccion = document.getElementById('direccionQr').value;
+            var ciudad = document.getElementById('ciudadQr').value;
+            var provincia = document.getElementById('provinciaQr').value;
+
+            if (!direccion || !ciudad || !provincia) {
+                estadoQr.textContent = "Completá dirección, ciudad y provincia.";
+                return;
+            }
+
+            estadoQr.textContent = "Conectando...";
+
+            var params = new URLSearchParams({ direccion: direccion, ciudad: ciudad, provincia: provincia });
+
+            fetch(API_URL + "/mercadopago/conectar-qr?" + params.toString(), {
+                headers: { "Authorization": "Bearer " + token }
+            })
+            .then(function (res) {
+                return res.json().then(function (data) {
+                    return { ok: res.ok, data: data };
+                });
+            })
+            .then(function (resultado) {
+                if (!resultado.ok) {
+                    estadoQr.textContent = resultado.data.mensaje || resultado.data.error || "No se pudo iniciar la conexión QR.";
+                    return;
+                }
+                window.location.href = resultado.data.url;
+            })
+            .catch(function (err) {
+                estadoQr.textContent = "Error de conexión: " + err.message;
+            });
+        });
+    </script>
+</body>
+</html>

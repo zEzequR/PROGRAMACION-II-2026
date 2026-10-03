@@ -10,7 +10,11 @@ class Productos {
         imagenProd: z.string().optional(),
         descripProd: z.string().optional(),
         precio: z.number().optional(),
-        activo: z.boolean().default(true)
+        activo: z.boolean().optional(),
+        categoria: z.string().optional(),
+        nombreTienda: z.string().optional(),
+        logoTienda: z.string().optional(),
+        stock: z.number().optional()
     });
 
     constructor(datos) {

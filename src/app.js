@@ -7,6 +7,11 @@ import rutaCupones from './routes/cupones.js'
 import rutaVentas from './routes/ventas.js'
 import rutaUbicaciones from './routes/ubicaciones.js'
 import rutaEmails from './routes/emails.js';
+import rutaCategorias from './routes/categorias.js';
+import rutaLicencias from './routes/licencias.js';
+import rutaMercadoPago from './routes/mercadopago.js';
+import rutaFeed from './routes/feed.js';
+import rutaTracking from './routes/tracking.js';
 
 const app = express();
 
@@ -21,5 +26,10 @@ app.use('/cupones', rutaCupones);
 app.use('/ventas', rutaVentas);
 app.use('/ubicaciones', rutaUbicaciones);
 app.use('/emails', rutaEmails);
+app.use('/categorias', rutaCategorias);
+app.use('/licencias', rutaLicencias);
+app.use('/mercadopago', rutaMercadoPago);
+app.use('/feed', rutaFeed);
+app.use('/tracking', rutaTracking);
 
 export default app;

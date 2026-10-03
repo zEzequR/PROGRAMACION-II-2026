@@ -1,5 +1,4 @@
-import { Ubicaciones } from "../models/ubicaciones.js";
-import { validarDireccion } from "../services/api/googleMapsService.js"
+import { validarDireccion, obtenerPaisesDisponibles } from "../services/api/googleMapsService.js"
 
 export async function obtenerTodosPaises(req, res){
     try
@@ -21,29 +20,9 @@ export async function validarDireccionController(req, res)
 {
     try
     {
-        const
-        {
-            direccion,
-            piso,
-            depto,
-            pais,
-            provincia,
-            ciudad,
-            codigo
-        } = req.body;
-
-        const ubicacion = new Ubicaciones({
-            direccion,
-            piso,
-            depto,
-            pais,
-            provincia,
-            ciudad,
-            codigo
-        });
+        const [ubicacion] = req.models;
 
         const googleRes = await validarDireccion(ubicacion);
-
 
         if (!googleRes.esValida) {
             return res.status(400).json({
@@ -52,9 +31,6 @@ export async function validarDireccionController(req, res)
                 motivo: googleRes.motivo
             });
         }
-
-        ubicacion.placeid = googleRes.datosUbicacion.placeid;
-        ubicacion.codigo = googleRes.datosUbicacion.codigo;
 
         return res.status(200).json({
             resultado: googleRes

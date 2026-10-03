@@ -1,102 +1,72 @@
 import { crearProductoService, modificarProductoService,
-    eliminarProductoService, reactivarProductoService,
-    crearEspecificacionesAtributosService,
-    subirArchivoDigitalS3, editarArchivoDigitalS3, obtenerURLService, buscarProductoPorId } from '../services/productosService.js';
-import { Productos, ProductosDigitales, ProductosFisicos } from '../models/productos.js'
-import { categoriasProductos, atributosCategoria, especificacionesProducto } from '../models/categorias.js';
+    cambiarActivoProductosService,
+    subirArchivoDigitalS3, obtenerURLService, buscarProductoPorId,
+    obtenerProductosTiendaService } from '../services/productosService.js';
 import { ArchivoDigital } from '../models/archivoDigital.js'
-import { Ventas } from '../models/ventas.js';
+import { generarURLPublica } from '../services/api/awsS3Service.js';
+import { Tiendas } from '../models/tiendas.js';
+import { Productos } from '../models/productos.js';
 
 
 export async function crearProducto(req, res)
 {
     try
     {
-        const
+        const [producto, atributo, especificacion] = req.models;
+
+        if (!req.files || !req.files['imagenProd'])
         {
-            tipoProd,
-            idCat,
-            nombreProd,
-            imagenProd,
-            descripProd,
-            precio,
-            activo
-        } = req.body;
-
-        let nuevoProd;
-
-        switch(tipoProd)
-        {
-            case "DIGITAL":
-            {
-                const { usaLicencia } = req.body;
-
-                if (!req.file)
-                {
-                    return res.status(400).json({
-                        estado: "ERROR",
-                        mensaje: "Para productos digitales se requiere subir un archivo"
-                    });
-                }
-
-                const archivo = new ArchivoDigital(
-                    {
-                        originalname: req.file.originalname,
-                        mimetype: req.file.mimetype,
-                        path: req.file.path,
-                        size: req.file.size,
-                        idTienda: req.user.id_tienda
-                    });
-
-                await subirArchivoDigitalS3(archivo);
-
-                nuevoProd = new ProductosDigitales(
-                {
-                    idTienda: req.user.id_tienda,
-                    idCat: Number(idCat),
-                    tipoProd: tipoProd,
-                    nombreProd: nombreProd,
-                    imagenProd: imagenProd,
-                    descripProd: descripProd,
-                    precio: Number(precio),
-                    activo: activo === 'true' || activo === true,
-                    archivoProd: archivo.key,
-                    usaLicencia: usaLicencia === 'true' || usaLicencia === true
-                });
-                break;
-            }
-            case "FISICO":
-            {
-                const
-                {
-                    stock 
-                } = req.body;
-                nuevoProd = new ProductosFisicos(
-                    {
-                        tipoProd: "FISICO",
-                        nombreProd: nombreProd,
-                        imagenProd: imagenProd,
-                        descripProd: descripProd,
-                        precio: precio,
-                        activo: activo,
-                        stock: stock,
-                    }
-                );
-                break;
-            }
-            default:
-                return res.status(400).end();
-        }
-
-        const dbRes = await crearProductoService(nuevoProd);
-
-        if (dbRes)
-        {
-            return res.status(201).json({
-                estado: "EXITO",
-                mensaje: `Producto ${nuevoProd.tipoProd.toLowerCase()} creado correctamente`,
+            return res.status(400).json({
+                estado: "ERROR",
+                mensaje: "Se requiere subir una imagen del producto"
             });
         }
+
+        if (producto.tipoProd === 'DIGITAL' && !req.files['archivoProd'])
+        {
+            return res.status(400).json({
+                estado: "ERROR",
+                mensaje: "Para productos digitales se requiere subir un archivo digital"
+            });
+        }
+
+        const fotoProducto = new ArchivoDigital(
+        {
+            originalname: req.files['imagenProd'][0].originalname,
+            mimetype: req.files['imagenProd'][0].mimetype,
+            path: req.files['imagenProd'][0].path,
+            size: req.files['imagenProd'][0].size,
+            type: 'IMAGEN PRODUCTO',
+            idTienda: req.user.id_tienda
+        });
+        await subirArchivoDigitalS3(fotoProducto);
+
+        producto.imagenProd = generarURLPublica(fotoProducto);
+        producto.idTienda = req.user.id_tienda;
+
+
+        if (producto.tipoProd === 'DIGITAL')
+        {
+            const archivo = new ArchivoDigital(
+                {
+                    originalname: req.files['archivoProd'][0].originalname,
+                    mimetype: req.files['archivoProd'][0].mimetype,
+                    path: req.files['archivoProd'][0].path,
+                    size: req.files['archivoProd'][0].size,
+                    type: 'ARCHIVO',
+                    idTienda: req.user.id_tienda
+                });
+            await subirArchivoDigitalS3(archivo);
+
+            producto.archivoProd = archivo.key;
+        }
+
+        const resultado = await crearProductoService(producto, atributo, especificacion);
+
+        return res.status(201).json({
+            idProducto: resultado.id_producto,
+            imagenProd: producto.imagenProd
+        });
     }
     catch(err)
     {
@@ -112,20 +82,12 @@ export async function modificarProducto(req, res)
 {
     try
     {
-        const { idProd } = req.params
-        const {
-            tipoProd,
-            idCat,
-            nombreProd,
-            imagenProd,
-            descripProd,
-            precio,
-            activo
-        } = req.body;
+        const [producto, atributo, especificacion] = req.models;
 
-        const productoActual = await buscarProductoPorId(idProd);
+        const productoActual = await buscarProductoPorId(producto);
 
-        if (!productoActual)
+        if (!productoActual || productoActual.id_tienda !== req.user.id_tienda
+            || productoActual.tipo_prod !== producto.tipoProd)
         {
             return res.status(404).json({
                 estado: "ERROR",
@@ -133,205 +95,179 @@ export async function modificarProducto(req, res)
             });
         }
 
-        let prodMod;
+        producto.idTienda = req.user.id_tienda;
 
-        switch(productoActual.tipo_prod)
+        if (atributo.idCat === undefined)
         {
-            case "DIGITAL":
-            {
-                const { usaLicencia } = req.body; 
-
-                if (req.file) {
-                    const archivo = new ArchivoDigital({
-                        key: productoActual.archivoProd,
-                        path: req.file.path,
-                        mimetype: req.file.mimetype,
-                        key: productoActual.archivo_prod,
-                        idTienda: req.user.id_tienda
-                        });
-
-                    await editarArchivoDigitalS3(archivo);
-                }
-
-                prodMod = new ProductosDigitales({
-                    idProducto: Number(idProd),
-                    idTienda: req.user.id_tienda,
-                    idCat: Number(idCat),
-                    tipoProd: tipoProd || productoActual.tipo_prod,
-                    nombreProd: nombreProd,
-                    imagenProd: imagenProd,
-                    descripProd: descripProd,
-                    precio: Number(precio),
-                    activo: activo === "true" || activo === true,
-                    archivoProd: productoActual.archivo_prod,
-                    usaLicencia: usaLicencia === "true" || usaLicencia === true
-                });
-
-                break;
-            }
-            case "FISICO":
-            {
-                const { stock } = req.body;
-                prodMod = new ProductosFisicos(
-                    {
-                        idProducto: idProd,
-                        idTienda: req.user.id_tienda,
-                        idCat: idCat,
-                        tipoProd: tipoProd,
-                        nombreProd: nombreProd,
-                        imagenProd: imagenProd,
-                        descripProd: descripProd,
-                        precio: precio,
-                        activo: activo,
-                        stock: stock
-                    }
-                );
-                break;
-            }
-            default:
-                return res.status(400).json({
-                    estado: "ERROR",
-                    mensaje: "El tipo de producto no es válido"
-                });
+            atributo.idCat = productoActual.id_cat;
         }
 
-        const dbRes = await modificarProductoService(prodMod);
-
-        if (dbRes)
+        if (producto.tipoProd === 'DIGITAL' && req.file)
         {
-            return res.status(200).json(
-            {
-                estado: "EXITO",
-                mensaje: `Producto ${prodMod.tipoProd.toLowerCase()} modificado correctamente`
-            });
+            const archivo = new ArchivoDigital(
+                {
+                    key: productoActual.archivo_prod,
+                    path: req.file.path,
+                    mimetype: req.file.mimetype,
+                    type: 'ARCHIVO',
+                    idTienda: req.user.id_tienda
+                });
+
+            await subirArchivoDigitalS3(archivo);
+
         }
 
-        return res.status(500).json({
-            estado: "ERROR",
-            mensaje: "No se pudo modificar el producto"
+        await modificarProductoService(producto, atributo, especificacion);
+
+        return res.status(200).json({
+            estado: "EXITO",
+            mensaje: `Producto ${producto.tipoProd.toLowerCase()} modificado correctamente`,
         });
+
     }
     catch(err)
     {
-        return res.status(500).json(
-        {
+        console.error(err);
+        return res.status(500).json({
             estado: "ERROR",
             mensaje: `No se pudo modificar el producto: ${err.message}`
         });
     }
 }
 
-export async function eliminarProducto(req, res) {
-    try {
-        const { listaProductos } = req.body;
-
-        const prodsEliminar = listaProductos.map(prod => new Productos(
-            {
-                idProducto: prod.idProducto,
-                idTienda: req.user.id_tienda
-            }
-        ));
-
-        const dbRes = await eliminarProductoService(prodsEliminar);
-
-        return res.status(200).json({ 
-            mensaje: "Productos eliminados con éxito", 
-            resultado: dbRes 
-        });
-
-    }
-    catch (error)
+export async function eliminarProducto(req, res)
+{
+    try
     {
-        return res.status(400).json({ 
-            error: "La lista de productos es inválida o faltan datos obligatorios." 
-        });
+        const [productos] = req.models;
+
+        for (let i = 0; i < productos.length; i++)
+        {
+            productos[i].idTienda = req.user.id_tienda;
+            productos[i].activo = false;
+        }
+
+        await cambiarActivoProductosService(productos);
+
+
+        return res.status(200).end();
+    }
+    catch (err)
+    {
+        switch (err.message)
+        {
+            case "Hay productos que no existen o no son de tu tienda":
+                return res.status(404).json({ mensaje: err.message });
+
+            default:
+                console.error(err);
+                return res.status(500).json({ mensaje: "No se pudieron dar de baja los productos" });
+        }
     }
 }
+
 
 export async function reactivarProducto(req, res)
 {
     try
     {
-        const
+        const [productos] = req.models;
+
+        for (let i = 0; i < productos.length; i++)
         {
-            listaProductos
-        } = req.body
-
-        const prodsReactivar = listaProductos.map(prod =>
-            new Productos(
-                {
-                    idProducto: prod.idProducto,
-                    idTienda: req.user.id_tienda
-                })
-        );
-
-        const dbRes = await reactivarProductoService(prodsReactivar);
-
-        if(dbRes)
-        {
-            return res.status(200).json(
-            {
-                estado: "EXITO",
-                mensaje: "Producto reactivado correctamente"
-            });
+            productos[i].idTienda = req.user.id_tienda;
+            productos[i].activo = true;
         }
-    }
-    catch(err)
-    {
-        return res.status(500).json(
-            {
-                estado: "ERROR",
-                mensaje: "No se pudo reactivar el producto"
-            });
-    }
-}
 
-export async function crearEspecificacionesAtributos(req, res)
-{
-    try
-    {
-        const
-        {
-            idProd
-        } = req.params
-        const
-        {
-            idCat,
-            nombreAtributo,
-            valor
-        } = req.body;
+        await cambiarActivoProductosService(productos);
 
-        const especificacionesProd = new especificacionesProducto(null,
-            nombreAtributo, valor
-        )
-
-        const dbRes = await crearEspecificacionesAtributosService(especificacionesProd, idCat ,idProd);
-
-        if (dbRes)
-        {
-            return res.status(201).json(
-            {
-                estado: "EXITO",
-                mensaje: "Especificaciones del producto creado correctamente"
-            });
-        }
-        else
-            {
-                return res.status(500).json(
-                {
-                    estado: "ERROR",
-                    mensaje: "No se pudo modificar crear las especificaciones del producto"
-                });
-            }
-        
+        return res.status(200).end();
     }
     catch (err)
     {
-        return res.status(500).json(
+        switch (err.message)
         {
-            estado: "ERROR",
-            mensaje: `Error al crear las especificaciones del producto: ${err.message}`
+            case "Hay productos que no existen o no son de tu tienda":
+                return res.status(404).json({ mensaje: err.message });
+
+            default:
+                console.error(err);
+                return res.status(500).json({ mensaje: "No se pudieron reactivar los productos" });
+        }
+    }
+}
+
+
+export async function obtenerProducto(req, res)
+{
+    try
+    {
+        const [productoBuscado] = req.models;
+
+        const producto = await buscarProductoPorId(productoBuscado);
+
+        if (!producto || !producto.activo || !producto.tienda_activa)
+        {
+            return res.status(404).json({ mensaje: "Producto no encontrado" });
+        }
+
+        return res.status(200).json({
+            producto: {
+                idProducto: producto.id_producto,
+                idTienda: producto.id_tienda,
+                nombreTienda: producto.nombre_tienda,
+                logoTienda: producto.logo_tienda,
+                idCat: producto.id_cat,
+                categoria: producto.categoria,
+                tipoProd: producto.tipo_prod,
+                nombreProd: producto.nombre_prod,
+                imagenProd: producto.imagen_prod,
+                descripProd: producto.descrip_prod,
+                precio: Number(producto.precio),
+                stock: producto.stock,
+                usaLicencia: producto.usa_licencia
+            }
         });
+
+    }
+    catch (err)
+    {
+        return res.status(500).json({
+            estado: "ERROR",
+            mensaje: `No se pudo obtener el producto: ${err.message}`
+        });
+    }
+}
+
+export async function obtenerProductosTienda(req, res)
+{
+    try
+    {
+        const [tienda] = req.models;
+
+        const productos = await obtenerProductosTiendaService(tienda, true);
+
+        return res.status(200).json({ productos });
+    }
+    catch (err)
+    {
+        return res.status(500).json({ mensaje: `No se pudieron obtener los productos: ${err.message}` });
+    }
+}
+
+export async function obtenerMisProductos(req, res)
+{
+    try
+    {
+        const tienda = new Tiendas({ idTienda: req.user.id_tienda });
+
+        const productos = await obtenerProductosTiendaService(tienda, false);
+
+        return res.status(200).json({ productos });
+    }
+    catch (err)
+    {
+        return res.status(500).json({ mensaje: `No se pudieron obtener tus productos: ${err.message}` });
     }
 }
 
@@ -339,16 +275,14 @@ export async function descargarProducto(req, res)
 {
     try
     {
-        const { idVenta, idProducto } = req.params
+        const [detalle, usuario] = req.models;
 
-        const venta = new Ventas(
-            {
-                idVenta: Number(idVenta),
-                idTienda: req.id_tienda,
-                idCliente: req.user.id,
-            })
+        const url = await obtenerURLService(detalle, usuario)
 
-        const url = await obtenerURLService(venta)
+        if (!url)
+        {
+            return res.status(403).json({ mensaje: "No tenés acceso a este archivo o la compra todavía no está pagada" });
+        }
 
         return res.status(200).json({ estado: 'EXITO', downloadUrl: url })
     }

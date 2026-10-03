@@ -1,5 +1,10 @@
 node_modules/
+certs/
 .env
 .vscode
+feed-service/target/
+feed-service/.env
+feed-service/data/*.sqlite*
 uploads/*
 !uploads/.gitkeep
+feed-service/sql/*.db

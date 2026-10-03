@@ -7,14 +7,31 @@ export async function subirArchivo(archivo)
 {
     try
     {
-        const fileStream = fs.createReadStream(archivo.path)
+        const fileStream = fs.readFileSync(archivo.path);
+        switch (archivo.type)
+        {
+            case 'ARCHIVO':
+                await s3.send(new PutObjectCommand({
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: archivo.key,
+                    Body: fileStream,
+                    ContentType: archivo.mimetype,
+                    ContentDisposition: "attachment"
+                }));
+                break;
 
-        await s3.send(new PutObjectCommand({
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: archivo.key,
-            Body: fileStream,
-            ContentType: archivo.mimetype
-        }))
+            case 'IMAGEN PRODUCTO':
+                await s3.send(new PutObjectCommand({
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: archivo.key,
+                    Body: fileStream,
+                    ContentType: archivo.mimetype,
+                    ContentDisposition: "inline"
+                }));
+
+                break;
+        }
+
 
         return true
     }
@@ -34,23 +51,7 @@ export async function generarUrlDescarga(archivo)
     return url
 }
 
-export async function reemplazarArchivo(archivo)
+export function generarURLPublica(archivo)
 {
-    try
-    {
-        const fileStream = fs.createReadStream(archivo.path)
-
-        await s3.send(new PutObjectCommand({
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: archivo.key,
-            Body: fileStream,
-            ContentType: archivo.mimetype
-        }))
-
-        return true
-    }
-    catch (err)
-    {
-        throw new Error(`Error al reemplazar archivo: ${err.message}`)
-    }
+    return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${archivo.key}`
 }

@@ -10,7 +10,6 @@ class Usuario {
         apellido: z.string().optional(),
         telefono: z.string().optional(),
         idUbicacion: z.number().optional(),
-        idCat: z.number().optional(),
         activo: z.boolean().default(true),
         fechaBaja: z.date().optional(),
         fechaCreacion: z.date().optional()
@@ -26,7 +25,17 @@ class Emprendedor extends Usuario {
     static propiedades = Usuario.propiedades.extend({
         idEmprendedor: z.number().optional(),
         cuit: z.string().optional(),
-        mpAccessToken: z.string().optional()
+        mpAccessToken: z.string().optional(),
+        mpRefreshToken: z.string().optional(),
+        mpUserId: z.string().optional(),
+        mpPublicKey: z.string().optional(),
+        mpTokenExpiresAt: z.date().optional(),
+        mpQrAccessToken: z.string().optional(),
+        mpQrRefreshToken: z.string().optional(),
+        mpQrUserId: z.string().optional(),
+        mpQrTokenExpiresAt: z.date().optional(),
+        mpQrStoreId: z.string().optional(),
+        mpQrPosId: z.string().optional()
     });
 
     constructor(datos) {

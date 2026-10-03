@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear cuenta · Localia</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #05060a;
+      --text: #f5f7ff;
+      --muted: #9aa3b8;
+      --accent: #5b8cff;
+      --accent-2: #8b5bff;
+      --glass-border: rgba(255, 255, 255, 0.14);
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --radius: 22px;
+    }
+
+    html, body { min-height: 100%; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Fondo con manchas de color */
+    .backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; }
+    .blob.one   { width: 480px; height: 480px; background: #3b6cff; top: -120px; left: -80px; }
+    .blob.two   { width: 420px; height: 420px; background: #7b3bff; bottom: -140px; right: -60px; }
+    .blob.three { width: 360px; height: 360px; background: #12c7c7; bottom: 40px; left: 30%; opacity: 0.35; }
+
+    /* Tarjeta de vidrio */
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 42px 38px;
+      border-radius: var(--radius);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: -60%;
+      width: 60%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.14), transparent);
+      transform: skewX(-18deg);
+      animation: sweep 4.5s ease-in-out 0.6s infinite;
+    }
+
+    @keyframes rise { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes sweep { 0% { left: -60%; } 45% { left: 130%; } 100% { left: 130%; } }
+
+    .brand { display: flex; align-items: center; gap: 10px; font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 22px; }
+    .logo-dot { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 0 18px rgba(91,140,255,0.55); }
+
+    h1 {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-size: 27px; font-weight: 700; line-height: 1.2;
+      margin-bottom: 8px; letter-spacing: -0.01em;
+    }
+    .subtitle { color: var(--muted); font-size: 14px; line-height: 1.5; margin-bottom: 28px; }
+
+    /* Campos */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%;
+      padding: 13px 44px 13px 16px;
+      font-size: 14px; color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .input-wrap input::placeholder { color: rgba(154, 163, 184, 0.6); }
+    .input-wrap input:focus {
+      border-color: rgba(91, 140, 255, 0.7);
+      background: rgba(91, 140, 255, 0.08);
+      box-shadow: 0 0 0 4px rgba(91, 140, 255, 0.15);
+    }
+    .toggle-pass {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 4px 6px;
+    }
+    .toggle-pass:hover { color: var(--text); }
+
+    .terms { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0 24px; font-size: 13px; color: var(--muted); cursor: pointer; line-height: 1.5; }
+    .terms input { accent-color: var(--accent); width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+    .link { color: var(--accent); text-decoration: none; }
+    .link:hover { text-decoration: underline; }
+
+    .btn-primary {
+      width: 100%; padding: 14px;
+      font-size: 14px; font-weight: 600; color: #fff;
+      border: none; border-radius: 14px; cursor: pointer;
+      background: linear-gradient(100deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 30px rgba(91, 140, 255, 0.35);
+      transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .signin { text-align: center; margin-top: 24px; font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 520px) { .grid-2 { grid-template-columns: 1fr; } .card { padding: 34px 26px; } }
+  </style>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true">
+    <div class="blob one"></div>
+    <div class="blob two"></div>
+    <div class="blob three"></div>
+  </div>
+
+  <main class="card">
+    <a href="index.html" class="brand"><span class="logo-dot"></span> Localia</a>
+    <h1>Creá tu cuenta</h1>
+    <p class="subtitle">Registrate y empezá a vender online en minutos.</p>
+
+    <form id="registerForm" novalidate>
+      <div class="grid-2">
+        <div class="field">
+          <label for="nombre">Nombre</label>
+          <div class="input-wrap">
+            <input type="text" id="nombre" name="nombre" placeholder="Juan" autocomplete="given-name" required />
+          </div>
+        </div>
+        <div class="field">
+          <label for="apellido">Apellido</label>
+          <div class="input-wrap">
+            <input type="text" id="apellido" name="apellido" placeholder="Pérez" autocomplete="family-name" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <div class="input-wrap">
+          <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="telefono">Teléfono</label>
+        <div class="input-wrap">
+          <input type="tel" id="telefono" name="telefono" placeholder="+54 11 2345 6789" autocomplete="tel" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <div class="input-wrap">
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="new-password" required />
+          <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">Ver</button>
+        </div>
+      </div>
+
+      <label class="terms">
+        <input type="checkbox" id="terms" name="terms" required />
+        <span>Acepto los <a href="#" class="link">Términos y Condiciones</a> y la <a href="#" class="link">Política de Privacidad</a> de Localia.</span>
+      </label>
+
+      <button type="submit" class="btn-primary">Crear cuenta</button>
+
+      <p class="signin">¿Ya tenés cuenta? <a href="login.html" class="link">Iniciá sesión</a></p>
+    </form>
+  </main>
+
+  <script>
+    var toggle = document.getElementById('togglePass');
+    var pass = document.getElementById('password');
+    toggle.addEventListener('click', function () {
+      var isPass = pass.type === 'password';
+      pass.type = isPass ? 'text' : 'password';
+      toggle.textContent = isPass ? 'Ocultar' : 'Ver';
+      toggle.setAttribute('aria-label', isPass ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    });
+
+    var API_URL = window.location.origin;
+
+
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var nombre = document.getElementById('nombre').value.trim();
+        var apellido = document.getElementById('apellido').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var telefono = document.getElementById('telefono').value.trim();
+        var password = document.getElementById('password').value;
+        var terms = document.getElementById('terms').checked;
+    if (!nombre || !apellido || !email || !telefono || !password) {
+        alert('Por favor completá todos los campos.');
+        return;
+      }
+    if (!terms) {
+        alert('Debés aceptar los Términos y Condiciones.');
+        return;
+      }
+
+    var btn = document.querySelector('.btn-primary');
+    btn.disabled = true;
+    
+    try {
+        var res = await fetch(API_URL + '/usuarios/registrarse', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                email:email,
+                psw:password,
+                tipoAuth:'MANUAL',
+                nombre:nombre,
+                apellido:apellido,
+                telefono:telefono
+            })
+        });
+        var data = await res.json();
+        if(!res.ok){
+            throw new Error(data.mensaje || 'No se pudo crear la cuenta');
+        }
+        alert('Cuenta creada correctamente.');
+        //window.location.href = '/login.html';
+
+    }
+        catch(err){
+            alert('Error: ' + err.message);
+            btn.disabled=false;
+        }
+    
+    });
+
+  </script>
+</body>
+</html>

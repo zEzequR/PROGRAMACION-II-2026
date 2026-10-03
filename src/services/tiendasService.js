@@ -1,21 +1,40 @@
 import pool from '../config/conexion.js'
+import { crearEmprendedorService } from './emprendedorService.js';
 
-export async function crearTiendaService(tienda)
+
+export async function crearTiendaService(emprendedor, tienda)
 {
+
     const query = `
-        INSERT INTO Tiendas(id_emprendedor, id_plantilla,
-        nombre_tienda, logo_tienda, personalizacion_tienda)
-        VALUES($1, $2, $3, $4, $5)
+        INSERT INTO Tiendas(id_emprendedor,
+        nombre_tienda, logo_tienda)
+        VALUES($1, $2, $3)
         RETURNING id_tienda;
         `
-    const values = [tienda.idEmprendedor,
-        tienda.idPlantilla,
-        tienda.nombreTienda,
-        tienda.logoTienda,
-        tienda.personalizacionTienda];
 
     try
     {
+        const tiendaPersona = await buscarTiendaPorPersona(emprendedor);
+
+        if (tiendaPersona && tiendaPersona.id_tienda)
+        {
+            throw new Error("Ya tenés una tienda");
+        }
+
+        if (tiendaPersona)
+        {
+            tienda.idEmprendedor = tiendaPersona.id_emprendedor;
+        }
+        else
+        {
+            tienda.idEmprendedor = await crearEmprendedorService(emprendedor);
+        }
+
+        const values = [tienda.idEmprendedor,
+        tienda.nombreTienda,
+        tienda.logoTienda
+        ];
+
         const resultado = await pool.query(query, values);
         return resultado.rows[0].id_tienda
     }
@@ -29,17 +48,12 @@ export async function modificarTiendaService(tienda)
 {
     const query = `
         UPDATE Tiendas SET
-        id_plantilla = COALESCE($2, id_plantilla),
-        nombre_tienda = COALESCE($3, nombre_tienda),
-        logo_tienda = COALESCE($4, logo_tienda),
-        personalizacion_tienda = COALESCE($5, personalizacion_tienda)
+        nombre_tienda = COALESCE($2, nombre_tienda),
+        logo_tienda = COALESCE($3, logo_tienda)
         WHERE id_tienda = $1;
         `
-    const values = [tienda.idTienda,
-        tienda.idPlantilla,
-        tienda.nombreTienda,
-        tienda.logoTienda,
-        tienda.personalizacionTienda];
+    const values = [tienda.idTienda, tienda.nombreTienda, tienda.logoTienda];
+
     try
     {
         await pool.query(query, values);
@@ -51,47 +65,70 @@ export async function modificarTiendaService(tienda)
     }
 }
 
-export async function eliminarTiendaService(tienda)
+export async function cambiarActivoTiendaService(tienda)
 {
-    const query = `
-        UPDATE Tiendas 
-        SET activo = FALSE
-        WHERE id_tienda = $1;
-    `
-
-    const values = [
-        tienda.idTienda
-    ];
+    const query = `UPDATE Tiendas SET activo = $2 WHERE id_tienda = $1`;
 
     try
     {
-        await pool.query(query, values);
-        return true
+        await pool.query(query, [tienda.idTienda, tienda.activo]);
+        return true;
     }
-    catch(err)
+    catch (err)
     {
         throw new Error(err.message);
     }
 }
 
-export async function reactivarTiendaService(tienda)
+
+
+export async function buscarTiendaPorId(tienda)
 {
     const query = `
-    UPDATE Tiendas
-    SET activo = TRUE
-    WHERE id_tienda = $1;
-    `
-
-    const values = [
-        tienda.idTienda
-    ];
+        SELECT id_tienda, id_emprendedor, nombre_tienda, logo_tienda, fecha_creacion, activo
+        FROM Tiendas
+        WHERE id_tienda = $1
+    `;
 
     try
     {
-        await pool.query(query, values);
-        return true
+        const resultado = await pool.query(query, [tienda.idTienda]);
+
+        if (resultado.rows.length === 0)
+        {
+            return null;
+        }
+
+        return resultado.rows[0];
     }
-    catch(err)
+    catch (err)
+    {
+        throw new Error(err.message);
+    }
+}
+
+export async function buscarTiendaPorPersona(user)
+{
+    const query = `
+        SELECT Emprendedores.id_emprendedor, Tiendas.id_tienda, Tiendas.activo
+        FROM Emprendedores
+        LEFT JOIN Tiendas ON Tiendas.id_emprendedor = Emprendedores.id_emprendedor
+        WHERE Emprendedores.id_persona = $1
+        ORDER BY Tiendas.id_tienda
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [user.idPersona]);
+
+        if (resultado.rows.length === 0)
+        {
+            return null;
+        }
+
+        return resultado.rows[0];
+    }
+    catch (err)
     {
         throw new Error(err.message);
     }

@@ -1,8 +1,45 @@
 import pool from '../config/conexion.js'
 import fs from 'fs'
-import { subirArchivo, reemplazarArchivo , generarUrlDescarga } from '../services/api/awsS3Service.js'
+import { subirArchivo, generarUrlDescarga } from '../services/api/awsS3Service.js'
+import { guardarCategoriaService } from './categoriasService.js'
+import { SyncProductoEvento } from '../models/eventos.js';
+import { publicarEvento } from './api/kafkaService.js';
+import { ArchivoDigital } from '../models/archivoDigital.js';
+import { Productos } from '../models/productos.js';
 
-export async function crearProductoService(Producto)
+async function publicarSyncProducto(fila)
+{
+    if (fila.id_cat === null || fila.id_tienda === null)
+    {
+        return;
+    }
+
+    try
+    {
+        const evento = new SyncProductoEvento({
+            tipo: 'producto',
+            idProducto: fila.id_producto,
+            idCat: fila.id_cat,
+            idTienda: fila.id_tienda,
+            activo: fila.activo === true
+        });
+
+        await publicarEvento('sync_postgres_feed', {
+            tipo: evento.tipo,
+            id_producto: evento.idProducto,
+            id_cat: evento.idCat,
+            id_tienda: evento.idTienda,
+            activo: evento.activo
+        });
+    }
+    catch (errEvento)
+    {
+        console.error(`No se pudo publicar el sync del producto ${fila.id_producto}: ${errEvento.message}`);
+    }
+}
+
+
+export async function crearProductoService(Producto, atributos, especificacionObj)
 {
     const query = `
     INSERT INTO Productos (id_tienda, id_cat, tipo_prod, nombre_prod, imagen_prod, descrip_prod, precio, activo)
@@ -51,7 +88,21 @@ export async function crearProductoService(Producto)
                 break;
             }
         }
-        return true
+
+        if (atributos && atributos.nombreAtributo)
+        {
+            especificacionObj.idProducto = idProducto;
+            await guardarCategoriaService(atributos, especificacionObj);
+        }
+
+        await publicarSyncProducto({
+            id_producto: idProducto,
+            id_cat: Producto.idCat,
+            id_tienda: Producto.idTienda,
+            activo: Producto.activo
+        });
+
+        return {id_producto: idProducto};
     }
     catch(err)
     {
@@ -59,7 +110,7 @@ export async function crearProductoService(Producto)
     }
 }
 
-export async function modificarProductoService(Productos)
+export async function modificarProductoService(Productos, atributos, especificacionObj)
 {
     const query = `
         UPDATE Productos SET
@@ -71,6 +122,18 @@ export async function modificarProductoService(Productos)
             activo = COALESCE($8, activo)
         WHERE id_tienda = $1 AND id_producto = $2;
     `
+    const queryDigital = `
+        UPDATE Productos_Digitales SET
+            archivo_prod = COALESCE($2, archivo_prod),
+            usa_licencia = COALESCE($3, usa_licencia)
+        WHERE id_producto = $1;
+    `;
+
+    const queryFisico = `
+        UPDATE Productos_Fisicos SET
+            stock = COALESCE($2, stock)
+        WHERE id_producto = $1;
+    `;
 
     
     const values = [
@@ -91,11 +154,7 @@ export async function modificarProductoService(Productos)
             case "DIGITAL":
             {
                 await pool.query(
-                    `UPDATE Productos_Digitales SET
-                        archivo_prod = $2,
-                        usa_licencia = $3
-                    WHERE id_producto = $1;
-                    `,
+                    queryDigital,
                     [Productos.idProducto, Productos.archivoProd,
                     Productos.usaLicencia]
                 );
@@ -104,40 +163,15 @@ export async function modificarProductoService(Productos)
             case "FISICO":
             {
                 await pool.query(
-                    `UPDATE Productos_Fisicos SET
-                    stock = $2
-                    WHERE id_producto = $1;
-                    `,
+                    queryFisico,
                     [Productos.idProducto, Productos.stock]
                 );
                 break;
             }
         }
-        return true
-    }
-    catch(err)
-    {
-        throw new Error(err.message)
-    }
-}
-
-export async function eliminarProductoService(Productos)
-{
-    const query = `
-        UPDATE Productos SET
-        activo = false
-        WHERE id_tienda = $1
-        AND id_producto = $2;
-    `
-    
-    try
-    {
-        for (const Producto of Productos)
+        if (atributos && atributos.nombreAtributo)
         {
-            await pool.query(query, [
-                Producto.idTienda,
-                Producto.idProducto
-            ]);
+            await guardarCategoriaService(atributos, especificacionObj);
         }
         return true
     }
@@ -147,93 +181,76 @@ export async function eliminarProductoService(Productos)
     }
 }
 
-export async function reactivarProductoService(Productos)
+export async function cambiarActivoProductosService(Productos)
 {
     const query = `
-        UPDATE Productos SET
-        activo = TRUE
-        WHERE id_tienda = $1
-        AND id_producto = $2;
-    `
-    
-    try
+        UPDATE Productos SET activo = $3
+        WHERE id_tienda = $1 AND id_producto = $2
+        RETURNING id_producto, id_cat, id_tienda, activo
+    `;
+
+    for (const Producto of Productos)
     {
-        for (const Producto of Productos)
-            {
-                await pool.query(query, [
-                    Producto.idTienda,
-                    Producto.idProducto
-                ]);
-            }
-        return true
-    }
-    catch(err)
-    {
-        throw new Error(err.message)
-    }
-}
-
-export async function buscarProductoPorId(idProducto) {
-    try {
-        const resTipo = await pool.query(
-            `SELECT tipo_prod FROM Productos WHERE id_producto = $1;`,
-            [idProducto]
-        );
-        
-        let query;
-
-        switch (resTipo.rows[0].tipo_prod) {
-            case 'DIGITAL':
-                query = `
-                    SELECT 
-                        Productos.id_producto,
-                        Productos.id_tienda,
-                        Productos.id_cat,
-                        Productos.tipo_prod,
-                        Productos.nombre_prod,
-                        Productos.imagen_prod,
-                        Productos.descrip_prod,
-                        Productos.precio,
-                        Productos.activo,
-                        Productos_Digitales.archivo_prod,
-                        Productos_Digitales.usa_licencia
-                    FROM Productos
-                    INNER JOIN Productos_Digitales 
-                    ON Productos.id_producto = Productos_Digitales.id_producto
-                    WHERE Productos.id_producto = $1;
-                `;
-                break;
-            case 'FISICO':
-                query = `
-                    SELECT 
-                        Productos.id_producto,
-                        Productos.id_tienda,
-                        Productos.id_cat,
-                        Productos.tipo_prod,
-                        Productos.nombre_prod,
-                        Productos.imagen_prod,
-                        Productos.descrip_prod,
-                        Productos.precio,
-                        Productos.activo,
-                        Productos_Fisicos.stock
-                    FROM Productos
-                    INNER JOIN Productos_Fisicos 
-                    ON Productos.id_producto = Productos_Fisicos.id_producto
-                    WHERE Productos.id_producto = $1;
-                `;
-                break;
-
-            default:
-                return null;
+        if (Producto.activo !== true && Producto.activo !== false)
+        {
+            throw new Error("Falta indicar si el producto se da de baja o se reactiva");
         }
 
-        const resultado = await pool.query(query, [idProducto]);
-        return resultado.rows[0];
+        const productoActual = await buscarProductoPorId(Producto);
 
-    } catch (err) {
+        if (!productoActual || productoActual.id_tienda !== Producto.idTienda)
+        {
+            throw new Error("Hay productos que no existen o no son de tu tienda");
+        }
+    }
+
+    for (const Producto of Productos)
+    {
+        const resultado = await pool.query(query, [Producto.idTienda, Producto.idProducto, Producto.activo]);
+        await publicarSyncProducto(resultado.rows[0]);
+    }
+
+    return true;
+}
+
+
+
+export async function buscarProductoPorId(producto)
+{
+    const query = `
+        SELECT Productos.id_producto, Productos.id_tienda, Productos.id_cat, Categorias_Productos.categoria,
+            Productos.tipo_prod, Productos.nombre_prod, Productos.imagen_prod,
+            COALESCE(Productos.descrip_prod, '') AS descrip_prod,
+            Productos.precio, Productos.activo,
+            Productos_Fisicos.stock,
+            Productos_Digitales.archivo_prod,
+            COALESCE(Productos_Digitales.usa_licencia, FALSE) AS usa_licencia,
+            Tiendas.nombre_tienda, Tiendas.logo_tienda, Tiendas.activo AS tienda_activa
+        FROM Productos
+        JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
+        LEFT JOIN Categorias_Productos ON Categorias_Productos.id_cat = Productos.id_cat
+        LEFT JOIN Productos_Fisicos ON Productos_Fisicos.id_producto = Productos.id_producto
+        LEFT JOIN Productos_Digitales ON Productos_Digitales.id_producto = Productos.id_producto
+        WHERE Productos.id_producto = $1
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [producto.idProducto]);
+
+        if (resultado.rows.length === 0)
+        {
+            return null;
+        }
+
+        return resultado.rows[0];
+    }
+    catch (err)
+    {
         throw new Error(`Error al buscar producto por ID: ${err.message}`);
     }
 }
+
 
 export async function subirArchivoDigitalS3(archivo)
 {
@@ -249,67 +266,164 @@ export async function subirArchivoDigitalS3(archivo)
     }
 }
 
-
-export async function editarArchivoDigitalS3(archivo)
-{
-    try
-    {
-        return await reemplazarArchivo(archivo)
-    }
-    finally
-    {
-        fs.unlink(archivo.path, (err) => {
-            if (err) console.error('No se pudo borrar el archivo temporal:', archivo.path, err)
-        })
-    }
-}
-
-export async function obtenerURLService(venta)
-{
-    const res = await pool.query(
-        `SELECT Detalle_Venta.id_lic_vta, Productos_Digitales.archivo_prod, Ventas.id_cliente, Ventas.estado
-            FROM Detalle_Venta
-            JOIN Ventas ON Ventas.id_venta = Detalle_Venta.id_venta
-            JOIN Productos_Digitales ON Productos_Digitales.id_producto = Detalle_Venta.id_producto
-            WHERE Detalle_Venta.id_venta = $1 AND Detalle_Venta.id_producto = $2 AND Ventas.id_cliente = $3`,
-        [venta.idVenta, venta.idProducto, venta.idCliente]
-    )
-
-    const estadoVta = res.rows[0].estado
-
-    if (res.rows.length === 0) return false;
-
-    const estadoVenta = res.rows[0].estado;
-    let urlGen = false;
-
-    if (estadoVenta === "CERRADA")
-    {
-        urlGen = await generarUrlDescarga(row.archivo_prod);
-    }
-
-    return urlGen;
-}
-
-export async function crearEspecificacionesAtributosService(especificaciones, idCat, idProd)
+export async function obtenerURLService(detalle, usuario)
 {
     const query = `
-        CALL spu_crear_especificaciones_producto(
-        $1, $2, $3, $4)
-    `
-    const values = [
-        idCat,
-        especificaciones.nombreAtributo,
-        especificaciones.valor,
-        idProd
-    ];
-    
+        SELECT Productos_Digitales.archivo_prod, Ventas.estado
+        FROM Detalle_Venta
+        JOIN Ventas ON Ventas.id_venta = Detalle_Venta.id_venta
+        JOIN Clientes ON Clientes.id_cliente = Ventas.id_cliente
+        JOIN Productos_Digitales ON Productos_Digitales.id_producto = Detalle_Venta.id_producto
+        WHERE Detalle_Venta.id_venta = $1
+        AND Detalle_Venta.id_producto = $2
+        AND Clientes.id_persona = $3
+    `;
+
     try
     {
-        const resultado = await pool.query(query, values);
-        return true
+        const resultado = await pool.query(query, [detalle.idVenta,
+            detalle.idProducto, usuario.idPersona]);
+        
+        if (resultado.rows.length === 0)
+        {
+            return false;
+        }
+
+        if (resultado.rows[0].estado !== 'CERRADA')
+        {
+            return false;
+        }
+
+        const archivo = new ArchivoDigital(
+            {
+                key: resultado.rows[0].archivo_prod
+            });
+
+        return await generarUrlDescarga(archivo);
     }
-    catch(err)
+    catch (err)
     {
-        throw new Error(err.message)
+        throw new Error(err.message);
+    }
+}
+
+function nuloAIndefinido(valor)
+{
+    if (valor === null)
+    {
+        return undefined;
+    }
+    return valor;
+}
+
+export function filaAProducto(fila)
+{
+    return new Productos({
+        idProducto: fila.id_producto,
+        idTienda: fila.id_tienda,
+        idCat: nuloAIndefinido(fila.id_cat),
+        categoria: nuloAIndefinido(fila.categoria),
+        tipoProd: fila.tipo_prod,
+        nombreProd: fila.nombre_prod,
+        imagenProd: fila.imagen_prod,
+        descripProd: fila.descrip_prod,
+        precio: Number(fila.precio),
+        activo: fila.activo,
+        nombreTienda: nuloAIndefinido(fila.nombre_tienda),
+        logoTienda: nuloAIndefinido(fila.logo_tienda),
+        stock: nuloAIndefinido(fila.stock)
+    });
+}
+
+// soloActivos = true: página pública de la tienda. false/undefined: dashboard del dueño (incluye inactivos)
+export async function obtenerProductosTiendaService(tienda, soloActivos)
+{
+    let filtroActivo = '';
+    if (soloActivos)
+    {
+        filtroActivo = 'AND Productos.activo = TRUE AND Tiendas.activo = TRUE';
+    }
+
+    const query = `
+        SELECT Productos.id_producto, Productos.id_tienda, Productos.id_cat, Categorias_Productos.categoria,
+            Productos.tipo_prod, Productos.nombre_prod, Productos.imagen_prod,
+            COALESCE(Productos.descrip_prod, '') AS descrip_prod,
+            Productos.precio, Productos.activo,
+            Productos_Fisicos.stock,
+            Tiendas.nombre_tienda, Tiendas.logo_tienda
+        FROM Productos
+        JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
+        LEFT JOIN Categorias_Productos ON Categorias_Productos.id_cat = Productos.id_cat
+        LEFT JOIN Productos_Fisicos ON Productos_Fisicos.id_producto = Productos.id_producto
+        WHERE Productos.id_tienda = $1
+        ${filtroActivo}
+        ORDER BY Productos.nombre_prod
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [tienda.idTienda]);
+        return resultado.rows.map(filaAProducto);
+    }
+    catch (err)
+    {
+        throw new Error(err.message);
+    }
+}
+
+// Búsqueda de catálogo por nombre y/o categoría, para el buscador del feed (no pasa por el ranking del MCP)
+export async function buscarProductosService(filtros)
+{
+    let total = filtros.total || 20;
+    if (total < 1) { total = 1; }
+    if (total > 100) { total = 100; }
+
+    let offset = filtros.offset || 0;
+    if (offset < 0) { offset = 0; }
+
+    const condiciones = ['Productos.activo = TRUE', 'Tiendas.activo = TRUE'];
+    const valores = [];
+
+    if (filtros.idCat !== undefined)
+    {
+        valores.push(filtros.idCat);
+        condiciones.push(`Productos.id_cat = $${valores.length}`);
+    }
+
+    if (filtros.busqueda !== undefined)
+    {
+        valores.push(`%${filtros.busqueda}%`);
+        condiciones.push(`Productos.nombre_prod ILIKE $${valores.length}`);
+    }
+
+    valores.push(total);
+    const parametroTotal = `$${valores.length}`;
+    valores.push(offset);
+    const parametroOffset = `$${valores.length}`;
+
+    const query = `
+        SELECT Productos.id_producto, Productos.id_tienda, Productos.id_cat, Categorias_Productos.categoria,
+            Productos.tipo_prod, Productos.nombre_prod, Productos.imagen_prod,
+            COALESCE(Productos.descrip_prod, '') AS descrip_prod,
+            Productos.precio, Productos.activo,
+            Productos_Fisicos.stock,
+            Tiendas.nombre_tienda, Tiendas.logo_tienda
+        FROM Productos
+        JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
+        LEFT JOIN Categorias_Productos ON Categorias_Productos.id_cat = Productos.id_cat
+        LEFT JOIN Productos_Fisicos ON Productos_Fisicos.id_producto = Productos.id_producto
+        WHERE ${condiciones.join(' AND ')}
+        ORDER BY Productos.nombre_prod
+        LIMIT ${parametroTotal} OFFSET ${parametroOffset}
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, valores);
+        return resultado.rows.map(filaAProducto);
+    }
+    catch (err)
+    {
+        throw new Error(err.message);
     }
 }

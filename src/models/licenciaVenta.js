@@ -3,8 +3,8 @@ import { z } from 'zod';
 class licenciaVenta{
     static propiedades = z.object({
         idLicVta: z.number().optional(),
-        idProd: z.number().optional(),
-        claveDigital: z.number().optional(),
+        idProducto: z.number().optional(),
+        claveDigital: z.string().optional(),
         claveUsada: z.boolean().default(false)
     })
     constructor(datos){
