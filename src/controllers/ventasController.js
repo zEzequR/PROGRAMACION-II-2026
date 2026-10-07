@@ -1,7 +1,7 @@
 import
 {
     crearVentaService,
-    obtenerVentaService,
+    obtenerDetalleVentaService,
     obtenerVentasClienteService,
     obtenerVentasPersonaService,
     verificarAccesoVentaService
@@ -58,22 +58,22 @@ export async function obtenerVenta(req, res)
 
         if (!infoVenta)
         {
-            return res.status(404).json({ estado: "ERROR", mensaje: "Venta no encontrada" });
+            return res.status(404).json({ mensaje: "Venta no encontrada" });
         }
 
-        const detalle = await obtenerVentaService(venta);
+        const detalle = await obtenerDetalleVentaService(venta);
 
-        if (detalle.length === 0)
+        if (!detalle)
         {
-            return res.status(404).json({ estado: "ERROR", mensaje: "Venta no encontrada" });
+            return res.status(404).json({ mensaje: "Venta no encontrada" });
         }
 
-        return res.status(200).json({ estado: "EXITO", venta: detalle });
+        return res.status(200).json({ venta: detalle });
     }
     catch(err)
     {
         console.error(err);
-        return res.status(500).json({ estado: "ERROR", mensaje: err.message });
+        return res.status(500).json({ mensaje: err.message });
     }
 }
 
@@ -115,6 +115,7 @@ export async function obtenerEstadoVenta(req, res)
     }
     catch(err)
     {
+        console.error(err);
         return res.status(500).json({ mensaje: err.message });
     }
 }
@@ -134,16 +135,16 @@ export async function obtenerVentasCliente(req, res)
 
         if (!tieneAcceso)
         {
-            return res.status(404).json({ estado: "ERROR", mensaje: "Cliente no encontrado" });
+            return res.status(404).json({ mensaje: "Cliente no encontrado" });
         }
 
         const ventas = await obtenerVentasClienteService(venta);
 
-        return res.status(200).json({ estado: "EXITO", ventas });
+        return res.status(200).json({ ventas });
     }
     catch(err)
     {
         console.error(err);
-        return res.status(500).json({ estado: "ERROR", mensaje: err.message });
+        return res.status(500).json({ mensaje: err.message });
     }
 }

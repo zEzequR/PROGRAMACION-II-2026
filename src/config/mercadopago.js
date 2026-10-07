@@ -28,3 +28,6 @@ export const MP_WEBHOOK_URL = process.env.MP_WEBHOOK_URL;
 export const MP_BACK_SUCCESS = process.env.MP_BACK_SUCCESS;
 export const MP_BACK_FAILURE = process.env.MP_BACK_FAILURE;
 export const MP_BACK_PENDING = process.env.MP_BACK_PENDING;
+
+
+export const MP_CONEXION_RETORNO_URL = process.env.MP_CONEXION_RETORNO_URL;

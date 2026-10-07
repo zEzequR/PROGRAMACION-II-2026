@@ -1,21 +1,31 @@
 import { z } from 'zod';
 
-export const registrarVista = z.object({
+export const registrarDetalle = z.object({
     user: z.object({
         idPersona: z.number()
     }),
     body: z.object({
         idProducto: z.coerce.number().int().positive(),
-        tipoEvento: z.literal('Vista').default('Vista')
+        tipoEvento: z.literal('Detalle').default('Detalle')
     })
 });
 
-export const registrarClick = z.object({
+export const registrarVisitaTienda = z.object({
     user: z.object({
         idPersona: z.number()
     }),
     body: z.object({
         idProducto: z.coerce.number().int().positive(),
-        tipoEvento: z.literal('Click').default('Click')
+        tipoEvento: z.literal('VisitaTienda').default('VisitaTienda')
+    })
+});
+
+export const registrarCarrito = z.object({
+    user: z.object({
+        idPersona: z.number()
+    }),
+    body: z.object({
+        idProducto: z.coerce.number().int().positive(),
+        tipoEvento: z.literal('Carrito').default('Carrito')
     })
 });

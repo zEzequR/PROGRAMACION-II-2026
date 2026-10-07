@@ -5,6 +5,8 @@ import { buscarUsuarioPorEmail } from '../services/usuarioService.js';
 import { generarCodigo } from '../utils/generarCodigo.js';
 import { enviarCorreoIndividual } from '../services/api/resendService.js';
 import { CodigoRecuperacion } from '../emails/CodigoRecuperacion.js';
+import { Promocion } from '../emails/Promocion.js';
+import { Correo } from '../models/correo.js';
 
 export async function enviarPromocion(req, res) {
     try
@@ -12,18 +14,25 @@ export async function enviarPromocion(req, res) {
         const [correo] = req.models;
         correo.idTienda = req.user.id_tienda;
 
+        const elementoCorreo = React.createElement(Promocion, { asunto: correo.subject, contenido: correo.html });
+        correo.html = await render(elementoCorreo);
+        correo.text = await render(elementoCorreo, { plainText: true });
+
         const resultado = await enviarPromocionTiendaService(correo);
 
         return res.status(200).json({
-            estado: "EXITO",
             mensaje: "Promoción enviada correctamente",
             resultado
         });
     }
     catch (err)
     {
+        if (err.message === "La tienda no posee clientes suscriptos para recibir promociones.")
+        {
+            return res.status(409).json({ mensaje: err.message });
+        }
+
         return res.status(500).json({
-            estado: "ERROR",
             mensaje: `No se pudo enviar la promoción: ${err.message}`
         });
     }
@@ -35,31 +44,28 @@ export async function solicitarCodigo(req, res) {
 
         const usuarioEncontrado = await buscarUsuarioPorEmail(usuario);
 
-        // el mail solo sale si la cuenta existe, pero la respuesta es siempre la misma
         if (!usuarioEncontrado)
         {
-            return res.status(200).send("ok");
+            return res.status(200).end();
         }
 
         const codigo = generarCodigo(usuario);
 
-    const elementoCorreo = React.createElement(CodigoRecuperacion, { codigo: codigo });
-    const html = await render(elementoCorreo);
-    const text = await render(elementoCorreo, { plainText: true });
+        const elementoCorreo = React.createElement(CodigoRecuperacion, { codigo: codigo });
+        const html = await render(elementoCorreo);
+        const text = await render(elementoCorreo, { plainText: true });
 
-    await enviarCorreoIndividual({
-        to: usuario.email,
-        subject: "Código para recuperar tu contraseña",
-        html: html,
-        text: text
-    });
+        const correo = new Correo({
+            to: usuario.email,
+            subject: "Código para recuperar tu contraseña",
+            html: html,
+            text: text
+        });
 
-//        return res.status(200).json({
-//            codigoGenerado: codigo
-//        })
-        return res.status(200).send("ok");
+        await enviarCorreoIndividual(correo);
+        return res.status(200).end();
     } catch (err) {
         console.error(err);
-        return res.status(200).send("ok");
+        return res.status(200).end();
     }
 }

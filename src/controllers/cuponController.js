@@ -65,14 +65,12 @@ export async function eliminarCupon(req, res)
         {
             return res.status(200).json(
             {
-                estado: "EXITO",
                 mensaje: "Cupón eliminado correctamente"
             });
         }
 
         return res.status(404).json(
         {
-            estado: "ERROR",
             mensaje: "Cupón no encontrado"
         });
     }
@@ -80,7 +78,6 @@ export async function eliminarCupon(req, res)
     {
         return res.status(500).json(
         {
-            estado: "ERROR",
             mensaje: "No se pudo eliminar el cupón"
         });
     }
@@ -105,14 +102,12 @@ export async function modificarCupon(req, res)
         {
             return res.status(200).json(
             {
-                estado: "EXITO",
                 mensaje: "Cupón modificado correctamente"
             });
         }
 
         return res.status(404).json(
         {
-            estado: "ERROR",
             mensaje: "Cupón no encontrado"
         });
     }

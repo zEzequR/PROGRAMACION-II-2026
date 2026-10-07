@@ -10,7 +10,7 @@ export function basicAuth(req, res, next)
     if (!authHeader || !authHeader.startsWith("Basic "))
     {
         res.set("WWW-Authenticate", 'Basic realm="Restricted Area"')
-        return res.status(401).send("Authentication required")
+        return res.status(401).json({ mensaje: "Se requieren las credenciales (email y contraseña)" })
     }
 
     const base64Credentials = authHeader.split(" ")[1]
@@ -20,7 +20,7 @@ export function basicAuth(req, res, next)
     if (separador === -1)
     {
         res.set("WWW-Authenticate", 'Basic realm="Restricted Area"')
-        return res.status(401).send("Authentication required")
+        return res.status(401).json({ mensaje: "Se requieren las credenciales (email y contraseña)" })
     }
 
     req.credenciales = {
@@ -37,7 +37,7 @@ export async function JWTVerify(req, res, next)
 
     if (!authHeader || !authHeader.startsWith("Bearer "))
     {
-        return res.status(401).json({ error: "Token requerido" })
+        return res.status(401).json({ mensaje: "Token requerido" })
     }
 
     const token = authHeader.split(" ")[1]
@@ -49,7 +49,7 @@ export async function JWTVerify(req, res, next)
 
         if (!usuarioActual || !usuarioActual.activo)
         {
-            return res.status(403).json({ error: "Cuenta desactivada" })
+            return res.status(403).json({ mensaje: "Cuenta desactivada" })
         }
 
         req.user = decoded
@@ -57,7 +57,7 @@ export async function JWTVerify(req, res, next)
     }
     catch(err)
     {
-        return res.status(401).json({ error: "Token inválido o expirado" })
+        return res.status(401).json({ mensaje: "Token inválido o expirado" })
     }
 }
 
@@ -90,7 +90,7 @@ export function JWTVerifySinActivo(req, res, next)
 
     if (!authHeader || !authHeader.startsWith("Bearer "))
     {
-        return res.status(401).json({ error: "Token requerido" })
+        return res.status(401).json({ mensaje: "Token requerido" })
     }
 
     const token = authHeader.split(" ")[1]
@@ -103,7 +103,7 @@ export function JWTVerifySinActivo(req, res, next)
     }
     catch(err)
     {
-        return res.status(401).json({ error: "Token inválido o expirado" })
+        return res.status(401).json({ mensaje: "Token inválido o expirado" })
     }
 }
 
@@ -115,7 +115,7 @@ export function verfifyRoles(allowedRoles)
         if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.rol))
         {
             return res.status(403).json({ 
-                error: "No tenés permisos para realizar esta acción" 
+                mensaje: "No tenés permisos para realizar esta acción" 
             })
         }
         next();
@@ -128,7 +128,6 @@ export async function verificarTokenGoogle(req, res, next) {
 
         if (!idToken) {
             return res.status(400).json({
-                estado: "ERROR",
                 mensaje: "El idToken es obligatorio"
             });
         }
@@ -148,9 +147,7 @@ export async function verificarTokenGoogle(req, res, next) {
         next();
     } catch (error) {
         return res.status(401).json({
-            estado: "ERROR",
             mensaje: "Token de Google inválido o expirado",
-            error: error.message
         });
     }
 }

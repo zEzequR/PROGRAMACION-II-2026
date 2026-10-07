@@ -1,4 +1,6 @@
 import pool from '../config/conexion.js';
+import { Categoria } from '../models/categorias.js';
+import { EspecificacionProducto } from '../models/especificacionProducto.js';
 
 export async function obtenerCategoriasService()
 {
@@ -7,7 +9,11 @@ export async function obtenerCategoriasService()
     try
     {
         const resultado = await pool.query(query);
-        return resultado.rows;
+        return resultado.rows.map(function (fila)
+        {
+            return Categoria.fromRow(fila);
+        });
+
     }
     catch (err)
     {
@@ -60,7 +66,7 @@ export async function guardarCategoriaService(atributos, Especificacion) {
                 idAtributo,
                 Especificacion.valor
             ]);
-            return resInsertEspec.rows[0];
+            return EspecificacionProducto.fromRow(resInsertEspec.rows[0]);
         }
         else
         {
@@ -71,7 +77,7 @@ export async function guardarCategoriaService(atributos, Especificacion) {
                 RETURNING id_espec, id_producto, id_atributo, valor
             `;
             const resUpdate = await pool.query(updateEspec, [Especificacion.valor, resEspec.rows[0].id_espec]);
-            return resUpdate.rows[0];
+            return EspecificacionProducto.fromRow(resUpdate.rows[0]);
         }
     }
     catch (err)

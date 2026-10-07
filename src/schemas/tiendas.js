@@ -31,8 +31,8 @@ export const obtenerEstadisticas = z.object({
         idTienda: z.coerce.number().int().positive().max(2147483647)
     }),
     query: z.object({
-        desde: z.coerce.date().optional(),
-        hasta: z.coerce.date().optional()
+        desde: z.iso.date().optional(),
+        hasta: z.iso.date().optional()
     })
 });
 
@@ -42,7 +42,6 @@ export const obtenerPublicKey = z.object({
     })
 });
 
-// Nuevos: página pública de la tienda y seguir / dejar de seguir
 export const obtenerTienda = z.object({
     params: z.object({
         idTienda: z.coerce.number().int().positive().max(2147483647)

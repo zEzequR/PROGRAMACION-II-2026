@@ -1,30 +1,39 @@
 import * as React from 'react';
 import { render } from 'react-email';
-import { generarUrlDescarga } from '../services/api/awsS3Service.js';
-import { ArchivoDigital } from '../models/archivoDigital.js';
+import { obtenerURLService } from '../services/productosService.js';
+import { DetalleVenta } from '../models/ventas.js';
 import { ConfirmacionVenta } from '../emails/ConfirmacionVenta.js';
 
-export async function generarPlantillaVenta(venta, detallesVenta) {
-    const items = await Promise.all(detallesVenta.map(async function (item) {
+export async function generarPlantillaVenta(venta) {
+    const items = await Promise.all(venta.items.map(async function (item) {
         let urlDescarga = null;
+        let claveDigital = null;
 
-        if (item.archivo_prod) {
-            urlDescarga = await generarUrlDescarga(new ArchivoDigital({ key: item.archivo_prod }));
+        if (item.producto.tipoProd === 'DIGITAL') {
+            const detalle = new DetalleVenta({ idVenta: venta.idVenta, idProducto: item.idProducto });
+            const url = await obtenerURLService(detalle, venta.cliente);
+            if (url) {
+                urlDescarga = url;
+            }
+        }
+
+        if (item.licencia) {
+            claveDigital = item.licencia.claveDigital;
         }
 
         return {
-            nombreProducto: item.nombre_prod,
-            imagen: item.imagen_prod,
+            nombreProducto: item.producto.nombreProd,
+            imagen: item.producto.imagenProd,
             cantidad: item.cantidad,
-            precioUnitario: item.precio_unitario,
-            claveDigital: item.clave_digital || null,
+            precioUnitario: item.precioUnitario.toFixed(2),
+            claveDigital: claveDigital,
             urlDescarga: urlDescarga
         };
     }));
 
     const elemento = React.createElement(ConfirmacionVenta, {
-        nombre: detallesVenta[0].nombre,
-        apellido: detallesVenta[0].apellido,
+        nombre: venta.cliente.nombre,
+        apellido: venta.cliente.apellido,
         items: items
     });
 

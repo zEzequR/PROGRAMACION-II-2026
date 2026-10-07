@@ -1,6 +1,7 @@
 import pool from '../config/conexion.js';
 import { SyncInteresEvento } from '../models/eventos.js';
 import { publicarEvento } from './api/kafkaService.js';
+import { Categoria } from '../models/categorias.js';
 
 export async function obtenerInteresesService(usuario)
 {
@@ -14,7 +15,10 @@ export async function obtenerInteresesService(usuario)
     try
     {
         const resultado = await pool.query(query, [usuario.idPersona]);
-        return resultado.rows;
+        return resultado.rows.map(function (fila)
+        {
+            return Categoria.fromRow(fila);
+        });
     }
     catch (err)
     {

@@ -14,7 +14,7 @@ export async function validarLicencia(req, res)
             return res.status(404).json({ mensaje: "Licencia no válida" });
         }
 
-        return res.status(200).json({ idProducto: resultado.id_producto });
+        return res.status(200).json({ idProducto: resultado.idProducto });
     }
     catch (err)
     {

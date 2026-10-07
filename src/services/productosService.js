@@ -7,6 +7,22 @@ import { publicarEvento } from './api/kafkaService.js';
 import { ArchivoDigital } from '../models/archivoDigital.js';
 import { Productos } from '../models/productos.js';
 
+const queryProductoCompleto = `
+    SELECT Productos.id_producto, Productos.id_tienda, Productos.id_cat, Categorias_Productos.categoria,
+        Productos.tipo_prod, Productos.nombre_prod, Productos.imagen_prod,
+        COALESCE(Productos.descrip_prod, '') AS descrip_prod,
+        Productos.precio, Productos.activo,
+        Productos_Fisicos.stock,
+        Productos_Digitales.archivo_prod,
+        COALESCE(Productos_Digitales.usa_licencia, FALSE) AS usa_licencia,
+        Tiendas.nombre_tienda, Tiendas.logo_tienda, Tiendas.activo AS tienda_activa
+    FROM Productos
+    JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
+    LEFT JOIN Categorias_Productos ON Categorias_Productos.id_cat = Productos.id_cat
+    LEFT JOIN Productos_Fisicos ON Productos_Fisicos.id_producto = Productos.id_producto
+    LEFT JOIN Productos_Digitales ON Productos_Digitales.id_producto = Productos.id_producto
+`;
+
 async function publicarSyncProducto(fila)
 {
     if (fila.id_cat === null || fila.id_tienda === null)
@@ -35,6 +51,31 @@ async function publicarSyncProducto(fila)
     catch (errEvento)
     {
         console.error(`No se pudo publicar el sync del producto ${fila.id_producto}: ${errEvento.message}`);
+    }
+}
+
+export async function sincronizarProductosTiendaFeed(tienda)
+{
+    const query = `
+        SELECT Productos.id_producto, Productos.id_cat, Productos.id_tienda,
+            (COALESCE(Productos.activo, FALSE) AND COALESCE(Tiendas.activo, FALSE)) AS activo
+        FROM Productos
+        JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
+        WHERE Productos.id_tienda = $1
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [tienda.idTienda]);
+
+        for (const fila of resultado.rows)
+        {
+            await publicarSyncProducto(fila);
+        }
+    }
+    catch (err)
+    {
+        console.error(`No se pudo sincronizar con el feed los productos de la tienda ${tienda.idTienda}: ${err.message}`);
     }
 }
 
@@ -102,7 +143,7 @@ export async function crearProductoService(Producto, atributos, especificacionOb
             activo: Producto.activo
         });
 
-        return {id_producto: idProducto};
+        return idProducto;
     }
     catch(err)
     {
@@ -198,7 +239,7 @@ export async function cambiarActivoProductosService(Productos)
 
         const productoActual = await buscarProductoPorId(Producto);
 
-        if (!productoActual || productoActual.id_tienda !== Producto.idTienda)
+        if (!productoActual || productoActual.idTienda !== Producto.idTienda)
         {
             throw new Error("Hay productos que no existen o no son de tu tienda");
         }
@@ -213,26 +254,9 @@ export async function cambiarActivoProductosService(Productos)
     return true;
 }
 
-
-
 export async function buscarProductoPorId(producto)
 {
-    const query = `
-        SELECT Productos.id_producto, Productos.id_tienda, Productos.id_cat, Categorias_Productos.categoria,
-            Productos.tipo_prod, Productos.nombre_prod, Productos.imagen_prod,
-            COALESCE(Productos.descrip_prod, '') AS descrip_prod,
-            Productos.precio, Productos.activo,
-            Productos_Fisicos.stock,
-            Productos_Digitales.archivo_prod,
-            COALESCE(Productos_Digitales.usa_licencia, FALSE) AS usa_licencia,
-            Tiendas.nombre_tienda, Tiendas.logo_tienda, Tiendas.activo AS tienda_activa
-        FROM Productos
-        JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
-        LEFT JOIN Categorias_Productos ON Categorias_Productos.id_cat = Productos.id_cat
-        LEFT JOIN Productos_Fisicos ON Productos_Fisicos.id_producto = Productos.id_producto
-        LEFT JOIN Productos_Digitales ON Productos_Digitales.id_producto = Productos.id_producto
-        WHERE Productos.id_producto = $1
-    `;
+    const query = queryProductoCompleto + ' WHERE Productos.id_producto = $1';
 
     try
     {
@@ -243,7 +267,7 @@ export async function buscarProductoPorId(producto)
             return null;
         }
 
-        return resultado.rows[0];
+        return Productos.fromRow(resultado.rows[0]);
     }
     catch (err)
     {
@@ -251,6 +275,57 @@ export async function buscarProductoPorId(producto)
     }
 }
 
+export async function buscarProductosPorIds(productos)
+{
+    if (productos.length === 0)
+    {
+        return [];
+    }
+
+    const marcadores = [];
+    const ids = [];
+    for (const producto of productos)
+    {
+        ids.push(producto.idProducto);
+        marcadores.push('$' + ids.length);
+    }
+
+    const query = queryProductoCompleto + ' WHERE Productos.id_producto IN (' + marcadores.join(', ') + ')';
+
+    try
+    {
+        const resultado = await pool.query(query, ids);
+        return resultado.rows.map(function (fila)
+        {
+            return Productos.fromRow(fila);
+        });
+    }
+    catch (err)
+    {
+        throw new Error(`Error al buscar productos por ID: ${err.message}`);
+    }
+}
+
+export async function obtenerArchivoProductoService(producto)
+{
+    const query = `SELECT archivo_prod FROM Productos_Digitales WHERE id_producto = $1`;
+
+    try
+    {
+        const resultado = await pool.query(query, [producto.idProducto]);
+
+        if (resultado.rows.length === 0)
+        {
+            return null;
+        }
+
+        return new ArchivoDigital({ key: resultado.rows[0].archivo_prod });
+    }
+    catch (err)
+    {
+        throw new Error(`Error al buscar el archivo del producto: ${err.message}`);
+    }
+}
 
 export async function subirArchivoDigitalS3(archivo)
 {
@@ -307,39 +382,10 @@ export async function obtenerURLService(detalle, usuario)
     }
 }
 
-function nuloAIndefinido(valor)
-{
-    if (valor === null)
-    {
-        return undefined;
-    }
-    return valor;
-}
-
-export function filaAProducto(fila)
-{
-    return new Productos({
-        idProducto: fila.id_producto,
-        idTienda: fila.id_tienda,
-        idCat: nuloAIndefinido(fila.id_cat),
-        categoria: nuloAIndefinido(fila.categoria),
-        tipoProd: fila.tipo_prod,
-        nombreProd: fila.nombre_prod,
-        imagenProd: fila.imagen_prod,
-        descripProd: fila.descrip_prod,
-        precio: Number(fila.precio),
-        activo: fila.activo,
-        nombreTienda: nuloAIndefinido(fila.nombre_tienda),
-        logoTienda: nuloAIndefinido(fila.logo_tienda),
-        stock: nuloAIndefinido(fila.stock)
-    });
-}
-
-// soloActivos = true: página pública de la tienda. false/undefined: dashboard del dueño (incluye inactivos)
-export async function obtenerProductosTiendaService(tienda, soloActivos)
+export async function obtenerProductosTiendaService(tienda)
 {
     let filtroActivo = '';
-    if (soloActivos)
+    if (tienda.activo)
     {
         filtroActivo = 'AND Productos.activo = TRUE AND Tiendas.activo = TRUE';
     }
@@ -350,11 +396,14 @@ export async function obtenerProductosTiendaService(tienda, soloActivos)
             COALESCE(Productos.descrip_prod, '') AS descrip_prod,
             Productos.precio, Productos.activo,
             Productos_Fisicos.stock,
+            Productos_Digitales.usa_licencia,
             Tiendas.nombre_tienda, Tiendas.logo_tienda
         FROM Productos
         JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
         LEFT JOIN Categorias_Productos ON Categorias_Productos.id_cat = Productos.id_cat
         LEFT JOIN Productos_Fisicos ON Productos_Fisicos.id_producto = Productos.id_producto
+        LEFT JOIN Productos_Digitales ON Productos_Digitales.id_producto = Productos.id_producto
+
         WHERE Productos.id_tienda = $1
         ${filtroActivo}
         ORDER BY Productos.nombre_prod
@@ -363,7 +412,11 @@ export async function obtenerProductosTiendaService(tienda, soloActivos)
     try
     {
         const resultado = await pool.query(query, [tienda.idTienda]);
-        return resultado.rows.map(filaAProducto);
+        return resultado.rows.map(function (fila)
+        {
+            return Productos.fromRow(fila);
+        });
+
     }
     catch (err)
     {
@@ -371,7 +424,6 @@ export async function obtenerProductosTiendaService(tienda, soloActivos)
     }
 }
 
-// Búsqueda de catálogo por nombre y/o categoría, para el buscador del feed (no pasa por el ranking del MCP)
 export async function buscarProductosService(filtros)
 {
     let total = filtros.total || 20;
@@ -420,7 +472,11 @@ export async function buscarProductosService(filtros)
     try
     {
         const resultado = await pool.query(query, valores);
-        return resultado.rows.map(filaAProducto);
+        return resultado.rows.map(function (fila)
+        {
+            return Productos.fromRow(fila);
+        });
+
     }
     catch (err)
     {

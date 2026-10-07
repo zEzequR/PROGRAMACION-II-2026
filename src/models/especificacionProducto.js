@@ -14,4 +14,14 @@ export class EspecificacionProducto
         const datosValidados = EspecificacionProducto.propiedades.parse(datos);
         Object.assign(this, datosValidados);
     }
+
+    static fromRow(row)
+    {
+        return new EspecificacionProducto({
+            idEspec: row.id_espec,
+            idProducto: row.id_producto,
+            idAtributo: row.id_atributo,
+            valor: row.valor
+        });
+    }
 }

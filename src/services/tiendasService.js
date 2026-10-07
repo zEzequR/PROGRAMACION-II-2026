@@ -1,5 +1,7 @@
 import pool from '../config/conexion.js'
 import { crearEmprendedorService } from './emprendedorService.js';
+import { sincronizarProductosTiendaFeed } from './productosService.js';
+import { Tiendas } from '../models/tiendas.js';
 
 
 export async function crearTiendaService(emprendedor, tienda)
@@ -16,14 +18,14 @@ export async function crearTiendaService(emprendedor, tienda)
     {
         const tiendaPersona = await buscarTiendaPorPersona(emprendedor);
 
-        if (tiendaPersona && tiendaPersona.id_tienda)
+        if (tiendaPersona && tiendaPersona.idTienda)
         {
             throw new Error("Ya tenés una tienda");
         }
 
         if (tiendaPersona)
         {
-            tienda.idEmprendedor = tiendaPersona.id_emprendedor;
+            tienda.idEmprendedor = tiendaPersona.idEmprendedor;
         }
         else
         {
@@ -72,6 +74,7 @@ export async function cambiarActivoTiendaService(tienda)
     try
     {
         await pool.query(query, [tienda.idTienda, tienda.activo]);
+        await sincronizarProductosTiendaFeed(tienda);
         return true;
     }
     catch (err)
@@ -85,7 +88,7 @@ export async function cambiarActivoTiendaService(tienda)
 export async function buscarTiendaPorId(tienda)
 {
     const query = `
-        SELECT id_tienda, id_emprendedor, nombre_tienda, logo_tienda, fecha_creacion, activo
+        SELECT id_tienda, nombre_tienda, logo_tienda, fecha_creacion, activo
         FROM Tiendas
         WHERE id_tienda = $1
     `;
@@ -99,7 +102,7 @@ export async function buscarTiendaPorId(tienda)
             return null;
         }
 
-        return resultado.rows[0];
+        return Tiendas.fromRow(resultado.rows[0]);
     }
     catch (err)
     {
@@ -126,7 +129,7 @@ export async function buscarTiendaPorPersona(user)
             return null;
         }
 
-        return resultado.rows[0];
+        return Tiendas.fromRow(resultado.rows[0]);
     }
     catch (err)
     {

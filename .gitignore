@@ -5,6 +5,6 @@ certs/
 feed-service/target/
 feed-service/.env
 feed-service/data/*.sqlite*
-uploads/*
-!uploads/.gitkeep
+src/uploads/*
+!src/uploads/.gitkeep
 feed-service/sql/*.db

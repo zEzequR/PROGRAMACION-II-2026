@@ -22,19 +22,19 @@ export async function loggearseGoogle(req, res) {
             return res.status(200).json({ necesitaRegistro: true })
         }
 
-        if (usuario.tipo_auth !== "GOOGLE")
+        if (usuario.tipoAuth !== "GOOGLE")
         {
             return res.status(409).json({
-                estado: "ERROR",
+                
                 mensaje: "Este email ya tiene una cuenta con contraseña. Iniciá sesión con tu contraseña en vez de Google."
             });
         }
 
-        GUsuario.idPersona = usuario.id_persona
+        GUsuario.idPersona = usuario.idPersona
 
 
         const tokenPayload = {
-            idPersona: usuario.id_persona,
+            idPersona: usuario.idPersona,
             email: usuario.email,
             nombre: usuario.nombre,
             apellido: usuario.apellido,
@@ -48,7 +48,7 @@ export async function loggearseGoogle(req, res) {
         if (tiendaPersona && tiendaPersona.activo)
         {
             tokenPayload.rol = ROLES.EMPRENDEDOR;
-            tokenPayload.id_tienda = tiendaPersona.id_tienda;
+            tokenPayload.id_tienda = tiendaPersona.idTienda;
         }
 
 
@@ -63,7 +63,7 @@ export async function loggearseGoogle(req, res) {
     catch (err)
     {
         return res.status(500).json({
-            estado: "ERROR",
+            
             mensaje: err.message
         });
     }
@@ -79,7 +79,7 @@ export async function registrarseGoogle(req, res)
 
         if (!googleRes.esValida) {
             return res.status(400).json({
-                estado: "ERROR",
+                
                 mensaje: "La dirección ingresada no es válida",
                 motivo: googleRes.motivo
             });
@@ -92,7 +92,7 @@ export async function registrarseGoogle(req, res)
         const nuevaPersona = await registrarseManualService(GUsuario, ubicacion, categorias);
 
         const token = generarToken({
-            idPersona: nuevaPersona.id_persona,
+            idPersona: nuevaPersona.idPersona,
             email: nuevaPersona.email,
             nombre: nuevaPersona.nombre,
             apellido: nuevaPersona.apellido,
@@ -102,7 +102,6 @@ export async function registrarseGoogle(req, res)
         });
 
         return res.status(201).json({
-            estado: "OK",
             mensaje: "Usuario registrado con éxito",
             token
         });
@@ -111,7 +110,7 @@ export async function registrarseGoogle(req, res)
     {
         return res.status(500).json(
             {
-                message: err.message
+                mensaje: err.message
             })
     }
 }
@@ -126,7 +125,7 @@ export async function registrarseManual(req, res)
 
         if (!googleRes.esValida) {
             return res.status(400).json({
-                estado: "ERROR",
+                
                 mensaje: "La dirección ingresada no es válida",
                 motivo: googleRes.motivo
             });
@@ -148,7 +147,7 @@ export async function registrarseManual(req, res)
         }
         return res.status(500).json(
         {
-            estado: "ERROR",
+            
             mensaje: err.message
         });
     }
@@ -164,10 +163,10 @@ export async function logggearseManual(req, res)
 
         const dbRes = await autenticarUsuarioService(usuario);
 
-        usuario.idPersona = dbRes.id_persona;
+        usuario.idPersona = dbRes.idPersona;
 
         let tokenPayload = {
-            idPersona: dbRes.id_persona,
+            idPersona: dbRes.idPersona,
             email: usuario.email,
             nombre: dbRes.nombre,
             apellido: dbRes.apellido,
@@ -182,7 +181,7 @@ export async function logggearseManual(req, res)
         if (tiendaPersona && tiendaPersona.activo)
         {
             tokenPayload.rol = ROLES.EMPRENDEDOR;
-            tokenPayload.id_tienda = tiendaPersona.id_tienda;
+            tokenPayload.id_tienda = tiendaPersona.idTienda;
         }
 
 
@@ -199,13 +198,13 @@ export async function logggearseManual(req, res)
         {
             return res.status(401).json(
                 {
-                    Mensaje: err.message
+                    mensaje: err.message
                 });
         }
 
         return res.status(500).json(
             {
-                Mensaje: err.message
+                mensaje: err.message
             });
     }
 }
@@ -240,6 +239,7 @@ export async function desactivarCuenta(req, res)
 
         await cambiarActivoUsuarioService(usuario);
 
+        return res.status(200).end();
     }
     catch (err)
     {
@@ -258,7 +258,7 @@ export async function reactivarCuenta(req, res)
 
 
         let tokenPayload = {
-            idPersona: usuario.id_persona,
+            idPersona: usuario.idPersona,
             email: usuario.email,
             nombre: usuario.nombre,
             apellido: usuario.apellido,
@@ -273,7 +273,7 @@ export async function reactivarCuenta(req, res)
         if (tiendaPersona && tiendaPersona.activo)
         {
             tokenPayload.rol = ROLES.EMPRENDEDOR;
-            tokenPayload.id_tienda = tiendaPersona.id_tienda;
+            tokenPayload.id_tienda = tiendaPersona.idTienda;
         }
 
 
@@ -299,8 +299,7 @@ export async function codigoRecuperarPsw(req, res)
 
         if (!esValido) {
             return res.status(400).json({
-                ok: false,
-                message: 'El código es incorrecto o ya expiró'
+                mensaje: 'El código es incorrecto o ya expiró'
             });
         }
 
@@ -311,14 +310,12 @@ export async function codigoRecuperarPsw(req, res)
             return res.status(400).json({ mensaje: 'El código es incorrecto o ya expiró' });
         }
 
-        usuario.idPersona = usuarioEncontrado.id_persona;
+        usuario.idPersona = usuarioEncontrado.idPersona;
         usuario.psw = await hashPsw(usuario.psw);
 
         await cambiarPswUsuario(usuario);
 
-        return res.status(200).json({
-            message: "Funcionó paaa"
-        })
+        return res.status(200).end();
     }
     catch(err)
     {
@@ -339,22 +336,8 @@ export async function obtenerPerfil(req, res)
             return res.status(404).json({ mensaje: "Usuario no encontrado" });
         }
 
-        return res.status(200).json({
-            perfil: {
-                idPersona: datos.id_persona,
-                email: datos.email,
-                nombre: datos.nombre,
-                apellido: datos.apellido,
-                telefono: datos.telefono,
-                direccion: datos.direccion,
-                piso: datos.piso,
-                depto: datos.depto,
-                pais: datos.pais,
-                provincia: datos.provincia,
-                ciudad: datos.ciudad,
-                codigo: datos.codigo
-            }
-        });
+        return res.status(200).json({ perfil: datos });
+
     }
     catch (err)
     {

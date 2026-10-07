@@ -4,19 +4,13 @@ export async function obtenerEstadisticas(req, res)
 {
     try
     {
-        const [tienda] = req.models;
-        const { desde, hasta } = req.query;
+        const [tienda, filtros] = req.models;
 
         if (tienda.idTienda !== req.user.id_tienda)
         {
             return res.status(403).json({ mensaje: "No tenés acceso a las estadísticas de esta tienda" });
         }
-
-        const ahora = new Date();
-        const desdeFinal = desde || new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const hastaFinal = hasta || ahora.toISOString();
-
-        const estadisticas = await obtenerEstadisticasService(tienda, desdeFinal, hastaFinal);
+        const estadisticas = await obtenerEstadisticasService(tienda, filtros);
 
         return res.status(200).json(estadisticas);
     }
@@ -30,19 +24,14 @@ export async function descargarEstadisticasCsv(req, res)
 {
     try
     {
-        const [tienda] = req.models;
-        const { desde, hasta } = req.query;
+        const [tienda, filtros] = req.models;
 
         if (tienda.idTienda !== req.user.id_tienda)
         {
             return res.status(403).json({ mensaje: "No tenés acceso a las estadísticas de esta tienda" });
         }
 
-        const ahora = new Date();
-        const desdeFinal = desde || new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const hastaFinal = hasta || ahora.toISOString();
-
-        const csv = await generarCsvEstadisticasService(tienda, desdeFinal, hastaFinal);
+        const csv = await generarCsvEstadisticasService(tienda, filtros);
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="estadisticas.csv"');

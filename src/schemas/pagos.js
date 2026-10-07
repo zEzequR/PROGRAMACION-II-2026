@@ -25,3 +25,11 @@ export const procesarPago = z.object({
     }),
     body: z.discriminatedUnion('metodo', [bodyPagoTarjeta, bodyPagoQr])
 });
+
+export const conectarMercadoPagoQr = z.object({
+    query: z.object({
+        direccion: z.string().trim().min(1).max(255),
+        ciudad: z.string().trim().min(1).max(60),
+        provincia: z.string().trim().min(1).max(60)
+    })
+});

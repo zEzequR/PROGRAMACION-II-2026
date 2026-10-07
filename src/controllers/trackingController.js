@@ -21,12 +21,17 @@ async function registrarInteraccion(req, res)
     }
 }
 
-export async function registrarVista(req, res)
+export async function registrarDetalle(req, res)
 {
     return registrarInteraccion(req, res);
 }
 
-export async function registrarClick(req, res)
+export async function registrarVisitaTienda(req, res)
+{
+    return registrarInteraccion(req, res);
+}
+
+export async function registrarCarrito(req, res)
 {
     return registrarInteraccion(req, res);
 }

@@ -1,12 +1,13 @@
 import jwt from 'jsonwebtoken'
 import Pagos from '../models/pagos.js'
 import { Emprendedor } from '../models/usuario.js'
+import { Ventas } from '../models/ventas.js'
 import { crearPagoService } from '../services/pagosService.js'
 import { finalizarVentaService, obtenerVentaParaPagarService } from '../services/ventasService.js'
 import { obtenerEmprendedorPorMpUserId, modificarEmprendedorService } from '../services/emprendedorService.js'
 import { validarDireccion } from '../services/api/googleMapsService.js'
 import { generarToken } from '../utils/generarToken.js'
-import { MP_QR_CLIENT_ID, MP_WEBHOOK_SECRET, MP_QR_WEBHOOK_SECRET } from '../config/mercadopago.js'
+import { MP_QR_CLIENT_ID, MP_WEBHOOK_SECRET, MP_QR_WEBHOOK_SECRET, MP_CONEXION_RETORNO_URL } from '../config/mercadopago.js'
 import
 {
     obtenerUrlConexion,
@@ -58,7 +59,7 @@ export async function callbackMercadoPago(req, res)
 
         if (!code || !state)
         {
-            return res.status(400).send('Falta el código de autorización');
+            return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpError=cancelado`);
         }
 
         // Recuperamos quién había iniciado la conexión (ver conectarMercadoPago).
@@ -69,7 +70,7 @@ export async function callbackMercadoPago(req, res)
         }
         catch(errState)
         {
-            return res.status(400).send('El estado de la conexión es inválido o expiró, iniciá la conexión de nuevo');
+            return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpError=vencido`);
         }
 
         const resultado = await intercambiarCodigoService(code);
@@ -85,12 +86,12 @@ export async function callbackMercadoPago(req, res)
 
         await modificarEmprendedorService(emprendedor);
 
-        return res.redirect('/feedtrucho.html?mpConectado=true');
+        return res.redirect(MP_CONEXION_RETORNO_URL);
     }
     catch(err)
     {
         console.error(err);
-        return res.status(500).send('No se pudo completar la conexión con Mercado Pago');
+        return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpError=fallo`);
     }
 }
 
@@ -109,14 +110,10 @@ export async function conectarMercadoPagoQr(req, res)
 {
     try
     {
-        const { direccion, ciudad, provincia } = req.query;
+        const [ubicacion] = req.models;
+        ubicacion.pais = "Argentina";
 
-        if (!direccion || !ciudad || !provincia)
-        {
-            return res.status(400).json({ mensaje: "Faltan datos de la dirección (direccion, ciudad, provincia)" });
-        }
-
-        const resultadoDireccion = await validarDireccion({ direccion, ciudad, provincia, pais: "Argentina" });
+        const resultadoDireccion = await validarDireccion(ubicacion);
 
         if (!resultadoDireccion.esValida)
         {
@@ -146,7 +143,7 @@ export async function callbackMercadoPagoQr(req, res)
 
         if (!code || !state)
         {
-            return res.status(400).send('Falta el código de autorización');
+            return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpError=cancelado`);
         }
 
         let decoded;
@@ -156,7 +153,7 @@ export async function callbackMercadoPagoQr(req, res)
         }
         catch(errState)
         {
-            return res.status(400).send('El estado de la conexión es inválido o expiró, iniciá la conexión de nuevo');
+            return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpError=vencido`);
         }
 
         const resultado = await intercambiarCodigoQrService(code);
@@ -187,12 +184,12 @@ export async function callbackMercadoPagoQr(req, res)
 
         await modificarEmprendedorService(emprendedorConCaja);
 
-        return res.redirect('/feedtrucho.html?mpQrConectado=true');
+        return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpQrConectado=true`);
     }
     catch(err)
     {
         console.error(err);
-        return res.status(500).send(`No se pudo completar la conexión QR con Mercado Pago: ${err.message}`);
+        return res.redirect(`${MP_CONEXION_RETORNO_URL}?mpError=fallo`);
     }
 }
 
@@ -232,7 +229,7 @@ export async function webhookMercadoPago(req, res)
             console.error('[WEBHOOK FIRMA INVALIDA] data.id:', req.query['data.id']);
             console.error('[WEBHOOK FIRMA INVALIDA] es QR:', esNotificacionQr);
             console.error('[WEBHOOK FIRMA INVALIDA] secret usado (primeros 7):', (secretFirma || '').slice(0, 7));
-            return res.status(401).send("firma inválida");
+            return res.status(401).json({ mensaje: "Firma inválida" });
         }
 
         const type = req.query.type || req.body?.type;
@@ -248,7 +245,7 @@ export async function webhookMercadoPago(req, res)
             if (!emprendedor)
             {
                 console.error('[WEBHOOK] No se encontró ningún emprendedor conectado con mp_user_id:', mpUserId);
-                return res.status(200).send("ok");
+                return res.status(200).end();
             }
 
             let accessToken;
@@ -278,18 +275,18 @@ export async function webhookMercadoPago(req, res)
             if (info.status === 'processed')
             {
                 // Pago aprobado: cerramos la venta y queda guardado qué pago la cerró.
-                await finalizarVentaService({ idVenta, idPago });
+                await finalizarVentaService(new Ventas({ idVenta: Number(idVenta), idPago: idPago }));
             }
         }
 
         // Mercado Pago reintenta si no respondemos 200, así que SIEMPRE devolvemos
         // 200 acá (incluso en el catch de abajo) aunque algo haya fallado del lado nuestro.
-        return res.status(200).send("ok");
+        return res.status(200).end();
     }
     catch(err)
     {
         console.error(err);
-        return res.status(200).send("ok");
+        return res.status(200).end();
     }
 }
 
@@ -313,7 +310,7 @@ export async function crearOrden(req, res)
         const datosVenta = {
             idVenta: venta.idVenta,
             descripcion: req.body.descripcion,
-            monto: infoVenta.precio_final
+            monto: infoVenta.precioFinal
         };
 
         // Con tarjeta, req.body trae lo que armó el Card Payment Brick (token, cuotas, etc.)
@@ -344,7 +341,8 @@ export async function crearOrden(req, res)
             case "Esta tienda todavía no conectó su cuenta de Mercado Pago":
             case "Esta tienda todavía no conectó el cobro por QR":
                 return res.status(409).json({ mensaje: err.message });
-
+            case "Los datos del pago no son válidos":
+                return res.status(400).json({ mensaje: err.message });
             default:
                 return res.status(500).json({ mensaje: `No se pudo crear la orden de pago: ${err.message}` });
         }

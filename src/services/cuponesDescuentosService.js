@@ -1,6 +1,7 @@
 import pool from '../config/conexion.js'
 import { buscarProductoPorId } from './productosService.js';
 import { Productos } from '../models/productos.js';
+import { cuponesDescuentos } from '../models/cuponesDescuentos.js';
 
 export async function crearCuponService(cupon)
 {
@@ -26,7 +27,7 @@ export async function crearCuponService(cupon)
             {
                 const productoActual = await buscarProductoPorId(new Productos({ idProducto: idProducto }));
 
-                if (!productoActual || productoActual.id_tienda !== cupon.idTienda)
+                if (!productoActual || productoActual.idTienda !== cupon.idTienda)
                 {
                     throw new Error("Hay productos que no existen o no son de tu tienda");
                 }
@@ -75,7 +76,7 @@ export async function eliminarCuponService(cupon)
     {
         const cuponActual = await buscarCuponPorId(cupon);
 
-        if (!cuponActual || cuponActual.id_tienda !== cupon.idTienda)
+        if (!cuponActual || cuponActual.idTienda !== cupon.idTienda)
         {
             return false;
         }
@@ -119,7 +120,7 @@ export async function modificarCuponService(cupon)
     {
         const cuponActual = await buscarCuponPorId(cupon);
 
-        if (!cuponActual || cuponActual.id_tienda !== cupon.idTienda)
+        if (!cuponActual || cuponActual.idTienda !== cupon.idTienda)
         {
             return false;
         }
@@ -128,7 +129,7 @@ export async function modificarCuponService(cupon)
         {
             const cuponMismoCodigo = await buscarCuponPorCodigo(cupon);
 
-            if (cuponMismoCodigo && cuponMismoCodigo.id_cupon_desc !== cupon.idCuponDesc)
+            if (cuponMismoCodigo && cuponMismoCodigo.idCuponDesc !== cupon.idCuponDesc)
             {
                 throw new Error("Ya tenés un cupón con ese código");
             }
@@ -140,7 +141,7 @@ export async function modificarCuponService(cupon)
             {
                 const productoActual = await buscarProductoPorId(new Productos({ idProducto: idProducto }));
 
-                if (!productoActual || productoActual.id_tienda !== cupon.idTienda)
+                if (!productoActual || productoActual.idTienda !== cupon.idTienda)
                 {
                     throw new Error("Hay productos que no existen o no son de tu tienda");
                 }
@@ -190,7 +191,7 @@ export async function modificarCuponService(cupon)
 export async function obtenerCuponesTiendaService(cupon)
 {
     const query = `
-        SELECT id_cupon_desc, codigo, tipo, valor, fecha_expiracion, usos_maximos,
+        SELECT id_cupon_desc, id_tienda, codigo, tipo, valor, fecha_expiracion, usos_maximos,
             COALESCE(usos_actuales, 0) AS usos_actuales
         FROM cupones_descuento
         WHERE id_tienda = $1
@@ -200,7 +201,10 @@ export async function obtenerCuponesTiendaService(cupon)
     try
     {
         const resultado = await pool.query(query, [cupon.idTienda]);
-        return resultado.rows;
+        return resultado.rows.map(function (fila)
+        {
+            return cuponesDescuentos.fromRow(fila);
+        });
     }
     catch (err)
     {
@@ -226,7 +230,7 @@ export async function buscarCuponPorId(cupon)
             return null;
         }
 
-        return resultado.rows[0];
+        return cuponesDescuentos.fromRow(resultado.rows[0]);
     }
     catch (err)
     {
@@ -253,7 +257,7 @@ export async function buscarCuponPorCodigo(cupon)
             return null;
         }
 
-        return resultado.rows[0];
+        return cuponesDescuentos.fromRow(resultado.rows[0]);
     }
     catch (err)
     {

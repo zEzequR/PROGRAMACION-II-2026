@@ -10,8 +10,9 @@ import { crearLicenciaVentaService } from './licenciaVentaService.js';
 import { InteraccionEvento } from '../models/eventos.js';
 import { publicarEvento } from './api/kafkaService.js';
 import { obtenerEmprendedorPorTienda } from './emprendedorService.js';
-import { Tiendas } from '../models/tiendas.js';
 import { buscarCuponPorCodigo } from './cuponesDescuentosService.js';
+import { Correo } from '../models/correo.js'
+import { Ventas, DetalleVenta } from '../models/ventas.js'
 
 
 export async function crearVentaService(tienda, usuario, listaProductos, cupon)
@@ -61,15 +62,15 @@ export async function crearVentaService(tienda, usuario, listaProductos, cupon)
 
             const infoProducto = await buscarProductoPorId(producto);
 
-            if (!infoProducto || !infoProducto.activo || infoProducto.id_tienda !== tienda.idTienda)
+            if (!infoProducto || !infoProducto.activo || infoProducto.idTienda !== tienda.idTienda)
             {
                 throw new Error("Producto no disponible");
             }
-            if (infoProducto.tipo_prod === 'DIGITAL' && producto.cantidad !== 1)
+            if (infoProducto.tipoProd === 'DIGITAL' && producto.cantidad !== 1)
             {
                 throw new Error("Los productos digitales se compran de a uno");
             }
-            if (infoProducto.tipo_prod === 'FISICO' && producto.cantidad > infoProducto.stock)
+            if (infoProducto.tipoProd === 'FISICO' && producto.cantidad > infoProducto.stock)
             {
                 throw new Error("No hay stock suficiente");
             }
@@ -93,12 +94,12 @@ export async function crearVentaService(tienda, usuario, listaProductos, cupon)
                 throw new Error("El cupón está vencido");
             }
 
-            if (datosCupon.usos_maximos !== null && Number(datosCupon.usos_actuales) >= datosCupon.usos_maximos)
+            if (datosCupon.usosMaximos !== null && datosCupon.usosMaximos !== undefined && datosCupon.usosActuales >= datosCupon.usosMaximos)
             {
                 throw new Error("El cupón ya no tiene usos disponibles");
             }
 
-            const resProductosCupon = await pool.query(queryVerificarProductosCupon, [datosCupon.id_cupon_desc]);
+            const resProductosCupon = await pool.query(queryVerificarProductosCupon, [datosCupon.idCuponDesc]);
             const productosCupon = resProductosCupon.rows.map(function (fila)
             {
                 return fila.id_producto;
@@ -124,9 +125,9 @@ export async function crearVentaService(tienda, usuario, listaProductos, cupon)
                 throw new Error("El cupón no aplica a los productos de la compra");
             }
 
-            const valorCupon = Number(datosCupon.valor);
+            const valorCupon = datosCupon.valor;
 
-            if (datosCupon.tipo === 'PORCENTAJE')
+            if (datosCupon.tipoDescuento === 'PORCENTAJE')
             {
                 descuento = totalAplicable * valorCupon / 100;
             }
@@ -140,7 +141,7 @@ export async function crearVentaService(tienda, usuario, listaProductos, cupon)
             }
 
             descuento = Math.round(descuento * 100) / 100;
-            idCuponDesc = datosCupon.id_cupon_desc;
+            idCuponDesc = datosCupon.idCuponDesc;
         }
 
 
@@ -156,7 +157,7 @@ export async function crearVentaService(tienda, usuario, listaProductos, cupon)
             const subtotal = Number(infoProducto.precio) * producto.cantidad;
 
             let idLicVta = null;
-            if (infoProducto.usa_licencia)
+            if (infoProducto.usaLicencia)
             {
                 const keyHash = await crearKeyHash(usuario);
                 const licencia = new licenciaVenta({
@@ -179,55 +180,12 @@ export async function crearVentaService(tienda, usuario, listaProductos, cupon)
 
         if (precioFinal === 0)
         {
-            await finalizarVentaService({ idVenta: idVenta });
+            await finalizarVentaService(new Ventas({ idVenta: idVenta }));
         }
 
         return [idVenta, listaProdCompleta, precioFinal, descuento];
     }
     catch (err)
-    {
-        throw new Error(err.message);
-    }
-}
-
-export async function obtenerVentaService(venta)
-{
-    const query = `
-        SELECT
-            Personas.id_persona,
-            Personas.email,
-            Personas.nombre,
-            Personas.apellido,
-            Detalle_Venta.id_producto,
-            Detalle_Venta.precio_unitario,
-            Productos.nombre_prod,
-            Productos.precio,
-            Productos.imagen_prod,
-            Detalle_Venta.cantidad,
-            Productos_Digitales.archivo_prod,
-            Licencia_Venta.clave_digital
-        FROM Ventas
-        JOIN Clientes
-            ON Ventas.id_cliente = Clientes.id_cliente
-        JOIN Personas
-            ON Clientes.id_persona = Personas.id_persona
-        JOIN Detalle_Venta
-            ON Ventas.id_venta = Detalle_Venta.id_venta
-        JOIN Productos
-            ON Detalle_Venta.id_producto = Productos.id_producto
-        LEFT JOIN Productos_Digitales
-            ON Productos.id_producto = Productos_Digitales.id_producto
-        LEFT JOIN Licencia_Venta
-            ON Licencia_Venta.id_lic_vta = Detalle_Venta.id_lic_vta
-        WHERE Ventas.id_venta = $1;
-    `;
-
-    try
-    {
-        const resultado = await pool.query(query, [venta.idVenta]);
-        return resultado.rows;
-    }
-    catch(err)
     {
         throw new Error(err.message);
     }
@@ -268,27 +226,23 @@ export async function finalizarVentaService(venta)
         await pool.query(queryStock, [venta.idVenta]);
         await pool.query(queryUsoCupon, [venta.idVenta]);
 
-        const items = await obtenerVentaService(venta);
         try
         {
-            const htmlEmail = await generarPlantillaVenta(venta, items);
-            await enviarCorreoIndividual({
-                to: items[0].email,
-                subject: 'Confirmación de compra',
-                html: htmlEmail
-            });
+            await publicarEvento('ventas_cerradas', { id_venta: venta.idVenta });
         }
-        catch(err)
+        catch (errEvento)
         {
-            console.error(`No se pudo enviar el mail de la venta ${venta.idVenta}: ${err.message}`);
+            console.error(`No se pudo publicar el cierre de la venta ${venta.idVenta}: ${errEvento.message}`);
         }
-        for (const item of items)
+
+        const detalle = await obtenerDetalleVentaService(venta);
+        for (const item of detalle.items)
         {
             try
             {
                 const evento = new InteraccionEvento({
-                    idPersona: item.id_persona,
-                    idProducto: item.id_producto,
+                    idPersona: detalle.cliente.idPersona,
+                    idProducto: item.idProducto,
                     tipoEvento: 'Compra'
                 });
                 await publicarEvento('interacciones_feed', {
@@ -299,7 +253,7 @@ export async function finalizarVentaService(venta)
             }
             catch (errEvento)
             {
-                console.error(`No se pudo publicar el evento de compra del producto ${item.id_producto}: ${errEvento.message}`);
+                console.error(`No se pudo publicar el evento de compra del producto ${item.idProducto}: ${errEvento.message}`);
             }
         }
         return venta.idVenta;
@@ -313,10 +267,14 @@ export async function finalizarVentaService(venta)
 export async function buscarVentaPorId(venta)
 {
     const query = `
-        SELECT Ventas.id_venta, Ventas.id_tienda, Ventas.id_cliente, Clientes.id_persona,
-            Ventas.estado, Ventas.precio_final, Ventas.fecha_venta, Ventas.id_cupon_desc, Ventas.id_pago
+        SELECT Ventas.id_venta, Ventas.fecha_venta, Ventas.id_tienda, Ventas.id_cliente, Ventas.precio_final,
+            Ventas.estado, Ventas.id_pago, Ventas.id_cupon_desc,
+            Tiendas.nombre_tienda, Tiendas.logo_tienda,
+            Personas.id_persona, Personas.email, Personas.nombre, Personas.apellido
         FROM Ventas
+        JOIN Tiendas ON Tiendas.id_tienda = Ventas.id_tienda
         JOIN Clientes ON Clientes.id_cliente = Ventas.id_cliente
+        JOIN Personas ON Personas.id_persona = Clientes.id_persona
         WHERE Ventas.id_venta = $1
     `;
 
@@ -329,7 +287,43 @@ export async function buscarVentaPorId(venta)
             return null;
         }
 
-        return resultado.rows[0];
+        return Ventas.fromRow(resultado.rows[0]);
+    }
+    catch (err)
+    {
+        throw new Error(err.message);
+    }
+}
+
+export async function obtenerDetalleVentaService(venta)
+{
+    const queryItems = `
+        SELECT Detalle_Venta.id_venta, Detalle_Venta.id_producto, Detalle_Venta.precio_unitario,
+            Detalle_Venta.cantidad, Detalle_Venta.subtotal, Detalle_Venta.id_lic_vta,
+            Productos.tipo_prod, Productos.nombre_prod, Productos.imagen_prod,
+            Licencia_Venta.clave_digital, Licencia_Venta.clave_usada
+        FROM Detalle_Venta
+        JOIN Productos ON Productos.id_producto = Detalle_Venta.id_producto
+        LEFT JOIN Licencia_Venta ON Licencia_Venta.id_lic_vta = Detalle_Venta.id_lic_vta
+        WHERE Detalle_Venta.id_venta = $1
+    `;
+
+    try
+    {
+        const cabecera = await buscarVentaPorId(venta);
+
+        if (!cabecera)
+        {
+            return null;
+        }
+
+        const resItems = await pool.query(queryItems, [venta.idVenta]);
+        const items = resItems.rows.map(function (row)
+        {
+            return DetalleVenta.fromRow(row);
+        });
+
+        return new Ventas({ ...cabecera, items: items });
     }
     catch (err)
     {
@@ -341,7 +335,7 @@ export async function obtenerVentaParaPagarService(venta, usuario, metodo)
 {
     const infoVenta = await buscarVentaPorId(venta);
 
-    if (!infoVenta || infoVenta.id_persona !== usuario.idPersona)
+    if (!infoVenta || infoVenta.cliente.idPersona !== usuario.idPersona)
     {
         throw new Error("Venta no encontrada");
     }
@@ -351,18 +345,18 @@ export async function obtenerVentaParaPagarService(venta, usuario, metodo)
         throw new Error("Esta venta ya no se puede pagar");
     }
 
-    const emprendedor = await obtenerEmprendedorPorTienda(new Tiendas({ idTienda: infoVenta.id_tienda }));
+    const emprendedor = await obtenerEmprendedorPorTienda(infoVenta.tienda);
 
     if (metodo === 'QR')
     {
-        if (!emprendedor || !emprendedor.mp_qr_access_token || !emprendedor.mp_qr_pos_id)
+        if (!emprendedor || !emprendedor.mpQrAccessToken || !emprendedor.mpQrPosId)
         {
             throw new Error("Esta tienda todavía no conectó el cobro por QR");
         }
     }
     else
     {
-        if (!emprendedor || !emprendedor.mp_access_token)
+        if (!emprendedor || !emprendedor.mpAccessToken)
         {
             throw new Error("Esta tienda todavía no conectó su cuenta de Mercado Pago");
         }
@@ -376,16 +370,22 @@ export async function obtenerVentaParaPagarService(venta, usuario, metodo)
 export async function obtenerVentasClienteService(venta)
 {
     const query = `
-        SELECT id_venta, fecha_venta, id_tienda, precio_final, estado
+        SELECT Ventas.id_venta, Ventas.fecha_venta, Ventas.id_tienda, Ventas.precio_final, Ventas.estado,
+            Ventas.id_pago, Ventas.id_cupon_desc,
+            Tiendas.nombre_tienda, Tiendas.logo_tienda
         FROM Ventas
-        WHERE id_cliente = $1
-        ORDER BY fecha_venta DESC
+        JOIN Tiendas ON Tiendas.id_tienda = Ventas.id_tienda
+        WHERE Ventas.id_cliente = $1
+        ORDER BY Ventas.fecha_venta DESC, Ventas.id_venta DESC
     `;
 
     try
     {
         const resultado = await pool.query(query, [venta.idCliente]);
-        return resultado.rows;
+        return resultado.rows.map(function (fila)
+        {
+            return Ventas.fromRow(fila);
+        });
     }
     catch(err)
     {
@@ -403,7 +403,7 @@ export async function verificarAccesoVentaService(venta, usuario, tienda)
         return null;
     }
 
-    if (infoVenta.id_persona === usuario.idPersona || infoVenta.id_tienda === tienda.idTienda)
+    if (infoVenta.cliente.idPersona === usuario.idPersona || infoVenta.idTienda === tienda.idTienda)
     {
         return infoVenta;
     }
@@ -414,17 +414,24 @@ export async function verificarAccesoVentaService(venta, usuario, tienda)
 export async function obtenerVentasPersonaService(cliente)
 {
     const query = `
-        SELECT Ventas.id_venta, Ventas.fecha_venta, Ventas.id_tienda, Ventas.precio_final, Ventas.estado
+        SELECT Ventas.id_venta, Ventas.fecha_venta, Ventas.id_tienda, Ventas.precio_final, Ventas.estado,
+            Ventas.id_pago, Ventas.id_cupon_desc,
+            Tiendas.nombre_tienda, Tiendas.logo_tienda
         FROM Ventas
         JOIN Clientes ON Clientes.id_cliente = Ventas.id_cliente
+        JOIN Tiendas ON Tiendas.id_tienda = Ventas.id_tienda
         WHERE Clientes.id_persona = $1
-        ORDER BY Ventas.fecha_venta DESC
+        ORDER BY Ventas.fecha_venta DESC, Ventas.id_venta DESC
     `;
 
     try
     {
         const resultado = await pool.query(query, [cliente.idPersona]);
-        return resultado.rows;
+
+        return resultado.rows.map(function (fila)
+        {
+            return Ventas.fromRow(fila);
+        });
     }
     catch (err)
     {

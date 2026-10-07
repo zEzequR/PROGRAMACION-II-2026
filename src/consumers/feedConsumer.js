@@ -1,20 +1,43 @@
 import { kafka } from '../config/kafka.js';
 import { registrarInteraccionFeed, syncProductoFeed, setInteresesUsuarioFeed } from '../services/api/MCPservice.js';
+import { InteraccionEvento, SyncProductoEvento, SyncInteresEvento } from '../models/eventos.js';
 
 async function manejarInteraccion(datos)
 {
-    await registrarInteraccionFeed(datos.id_persona, datos.id_producto, datos.tipo_evento);
+    const evento = new InteraccionEvento({
+        idPersona: datos.id_persona,
+        idProducto: datos.id_producto,
+        tipoEvento: datos.tipo_evento
+    });
+
+    await registrarInteraccionFeed(evento);
 }
 
 async function manejarSync(datos)
 {
     if (datos.tipo === 'producto')
     {
-        await syncProductoFeed(datos.id_producto, datos.id_cat, datos.id_tienda, datos.activo);
+
+        const evento = new SyncProductoEvento({
+            tipo: 'producto',
+            idProducto: datos.id_producto,
+            idCat: datos.id_cat,
+            idTienda: datos.id_tienda,
+            activo: datos.activo
+        });
+
+        await syncProductoFeed(evento);
     }
     else if (datos.tipo === 'interes')
     {
-        await setInteresesUsuarioFeed(datos.id_persona, datos.id_cat, datos.accion);
+        const evento = new SyncInteresEvento({
+            tipo: 'interes',
+            idPersona: datos.id_persona,
+            idCat: datos.id_cat,
+            accion: datos.accion
+        });
+
+        await setInteresesUsuarioFeed(evento);
     }
     else
     {

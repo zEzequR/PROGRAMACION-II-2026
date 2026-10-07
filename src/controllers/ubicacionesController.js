@@ -26,7 +26,6 @@ export async function validarDireccionController(req, res)
 
         if (!googleRes.esValida) {
             return res.status(400).json({
-                estado: "ERROR",
                 mensaje: "La dirección ingresada no es válida",
                 motivo: googleRes.motivo
             });
@@ -38,7 +37,7 @@ export async function validarDireccionController(req, res)
     }
     catch(err){
         return res.status(500).json({
-            message: err.message
+            mensaje: err.message
         })
     }
 

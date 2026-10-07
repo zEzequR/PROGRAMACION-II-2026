@@ -24,41 +24,49 @@ export async function resyncCompletoFeed(productos, intereses)
     await llamarToolMCP('resync_completo', { lista_productos: productos, lista_intereses: intereses });
 }
 
-export async function getUserFeedMcp(idPersona, total, offset)
+export async function getUserFeedMcp(usuario, filtros, tiendaPropia)
 {
-    const MCPres = await llamarToolMCP('get_user_feed', {
-        id_persona: idPersona,
-        total: total,
-        offset: offset
-    });
+    const parametros = {
+        id_persona: usuario.idPersona,
+        total: filtros.total,
+        offset: filtros.offset
+    };
+
+    if (tiendaPropia)
+    {
+        parametros.id_tienda_excluida = tiendaPropia.idTienda;
+    }
+
+    const MCPres = await llamarToolMCP('get_user_feed', parametros);
 
     return JSON.parse(formatearResultado(MCPres));
 }
 
-export async function registrarInteraccionFeed(idPersona, idProducto, tipoEvento)
+
+export async function registrarInteraccionFeed(evento)
 {
     await llamarToolMCP('registrar_interaccion', {
-        id_persona: idPersona,
-        id_producto: idProducto,
-        tipo_evento: tipoEvento
+        id_persona: evento.idPersona,
+        id_producto: evento.idProducto,
+        tipo_evento: evento.tipoEvento
     });
 }
 
-export async function syncProductoFeed(idProducto, idCat, idTienda, activo)
+export async function syncProductoFeed(evento)
 {
     await llamarToolMCP('sync_producto', {
-        id_producto: idProducto,
-        id_cat: idCat,
-        id_tienda: idTienda,
-        activo: activo
+        id_producto: evento.idProducto,
+        id_cat: evento.idCat,
+        id_tienda: evento.idTienda,
+        activo: evento.activo
     });
 }
 
-export async function setInteresesUsuarioFeed(idPersona, idCat, accion)
+export async function setInteresesUsuarioFeed(evento)
 {
     await llamarToolMCP('set_intereses_usuario', {
-        id_persona: idPersona,
-        id_cat: idCat,
-        accion: accion
+        id_persona: evento.idPersona,
+        id_cat: evento.idCat,
+        accion: evento.accion
     });
 }

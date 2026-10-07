@@ -3,7 +3,7 @@ import 'dotenv/config';
 
 
 export function generarCodigo(user) {
-    const data = `${user.email}:${Math.floor(Date.now() / (60 * 1000))}`;
+    const data = `${user.email}:${Math.floor(Date.now() / (60 * 5000))}`;
 
     const hmac = crypto.createHmac('sha256', process.env.CRYPTO_SECRET)
                         .update(data)

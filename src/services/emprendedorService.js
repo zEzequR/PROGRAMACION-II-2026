@@ -1,4 +1,5 @@
 import pool from '../config/conexion.js'
+import { Emprendedor } from '../models/usuario.js';
 
 export async function crearEmprendedorService(emprendedor)
 {
@@ -87,7 +88,7 @@ export async function obtenerEmprendedorPorTienda(emprendedor)
         {
             return null;
         }
-        return resultado.rows[0];
+        return Emprendedor.fromRow(resultado.rows[0]);
     }
     catch(err)
     {
@@ -111,7 +112,7 @@ export async function obtenerEmprendedorPorMpUserId(emprendedor)
         {
             return null;
         }
-        return resultado.rows[0];
+        return Emprendedor.fromRow(resultado.rows[0]);
     }
     catch(err)
     {

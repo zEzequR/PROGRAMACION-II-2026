@@ -5,6 +5,7 @@ import { guardarUbicacionService, actualizarUbicacionService,
 import { guardarInteresesService } from './interesesService.js'
 import { cambiarActivoTiendaService, buscarTiendaPorPersona } from './tiendasService.js'
 import { Tiendas } from '../models/tiendas.js'
+import { Usuario } from '../models/usuario.js';
 
 export async function registrarseManualService(user, ubicacion, categorias)
 {
@@ -38,9 +39,9 @@ export async function registrarseManualService(user, ubicacion, categorias)
         user.nombre, user.apellido, user.telefono, user.idUbicacion, user.activo];
         
         const resultado = await pool.query(query, values);
-        const nuevaPersona = resultado.rows[0];
+        const nuevaPersona = Usuario.fromRow(resultado.rows[0]);
 
-        user.idPersona = nuevaPersona.id_persona
+        user.idPersona = nuevaPersona.idPersona
         await guardarInteresesService(user, categorias)
 
         return nuevaPersona;
@@ -83,7 +84,7 @@ export async function modificarUsuarioService(usuario, ubicacion, categorias) {
             apellido = COALESCE($3, apellido),
             telefono = COALESCE($4, telefono)
         WHERE id_persona = $1
-        RETURNING id_persona, email, nombre, apellido, telefono;
+        RETURNING id_persona, email, nombre, apellido, telefono, activo;
     `;
 
     const values = [
@@ -103,9 +104,10 @@ export async function modificarUsuarioService(usuario, ubicacion, categorias) {
             {
                 const usuarioActual = await buscarUsuarioPorId(usuario);
 
-                if (usuarioActual && usuarioActual.id_ubicacion)
+                if (usuarioActual && usuarioActual.idUbicacion)
                 {
-                    ubicacion.idUbicacion = usuarioActual.id_ubicacion;
+                    ubicacion.idUbicacion = usuarioActual.idUbicacion;
+
                     const compartida = await ubicacionCompartidaService(usuario, ubicacion);
 
                     if (compartida)
@@ -126,7 +128,7 @@ export async function modificarUsuarioService(usuario, ubicacion, categorias) {
             {
                 throw new Error("Usuario no encontrado");
             }
-            return resultado.rows[0];
+            return Usuario.fromRow(resultado.rows[0]);
     }
     catch (err)
     {
@@ -139,7 +141,7 @@ export async function cambiarActivoUsuarioService(user)
     const query = `
         UPDATE Personas SET activo = $2
         WHERE id_persona = $1
-        RETURNING id_persona, email, nombre, apellido, telefono
+        RETURNING id_persona, email, nombre, apellido, telefono, activo
     `;
 
     try
@@ -152,17 +154,17 @@ export async function cambiarActivoUsuarioService(user)
         }
 
         const tiendaPersona = await buscarTiendaPorPersona(user);
-        if (tiendaPersona && tiendaPersona.id_tienda)
+        if (tiendaPersona && tiendaPersona.idTienda)
         {
             const tienda = new Tiendas(
                 { 
-                    idTienda: tiendaPersona.id_tienda,
+                    idTienda: tiendaPersona.idTienda,
                     activo: user.activo
                 });
             await cambiarActivoTiendaService(tienda);
         }
 
-        return resultado.rows[0];
+        return Usuario.fromRow(resultado.rows[0]);
     }
     catch (err)
     {
@@ -188,7 +190,7 @@ export async function buscarUsuarioPorEmail(user)
             return null;
         }
 
-        return resultado.rows[0];
+        return Usuario.fromRow(resultado.rows[0]);
     }
     catch (err)
     {
@@ -217,7 +219,7 @@ export async function buscarUsuarioPorId(user)
             return null;
         }
 
-        return resultado.rows[0];
+        return Usuario.fromRow(resultado.rows[0]);
     }
     catch (err)
     {

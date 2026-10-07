@@ -1,22 +1,35 @@
 import { getUserFeedMcp } from './api/MCPservice.js';
 import { Productos } from '../models/productos.js';
-import { buscarProductoPorId, filaAProducto } from './productosService.js';
+import { buscarProductosPorIds } from './productosService.js';
 
-export async function obtenerFeedService(idPersona, total, offset)
+export async function obtenerFeedService(usuario, filtros, tiendaPropia)
 {
-    const ids = await getUserFeedMcp(idPersona, total, offset);
+    const ids = await getUserFeedMcp(usuario, filtros, tiendaPropia);
+
+    const productos = [];
+    for (const id of ids)
+    {
+        productos.push(new Productos({ idProducto: id }));
+    }
+
+    const encontrados = await buscarProductosPorIds(productos);
+
+    const productoPorId = new Map();
+    for (const producto of encontrados)
+    {
+        productoPorId.set(producto.idProducto, producto);
+    }
 
     const productosOrdenados = [];
 
     for (const id of ids)
     {
-        const fila = await buscarProductoPorId(new Productos({ idProducto: id }));
+        const producto = productoPorId.get(id);
 
-        if (fila && fila.activo && fila.tienda_activa)
+        if (producto && producto.activo && producto.tienda.activo)
         {
-            productosOrdenados.push(filaAProducto(fila));
+            productosOrdenados.push(producto);
         }
     }
     return productosOrdenados;
 }
-

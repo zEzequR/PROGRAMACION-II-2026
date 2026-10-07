@@ -1,0 +1,95 @@
+{
+  "id": "6ac68ca873708b7d0a240a6d",
+  "$kind": "collection",
+  "name": "Feed MCP",
+  "description": "Las 6 tools del microservicio de feed (`feed-service`, Rust) como **requests MCP**. Es un servidor MCP (Model Context Protocol) que arma el feed personalizado del marketplace con una SQLite propia. No se conecta a Postgres: Node le avisa los cambios y le pide el feed llamando a estas tools.\n\n**Servidor:** `http://192.168.1.8:3002/mcp` · transporte _Streamable HTTP_ · librería `rmcp` 3.4 · sin sesión\n\n## Cómo usarla\n\n1. Con el feed-service prendido (`cargo run` en `feed-service/`), abrí un request y tocá **Run**. Postman hace solo el `initialize` y el `tools/list`.\n2. Desde la misma VM la URL es `http://127.0.0.1:3002/mcp`. El servicio solo acepta esos dos `Host`.\n3. Los requests están en el orden en que Postman lista las tools. El 02 necesita que el producto de prueba esté indexado: si responde _Producto no encontrado en el índice local_, corré antes el 05.\n\n## Cómo se ve un error\n\n| Cuándo | Cómo se ve |\n| --- | --- |\n| Argumentos inválidos o falla de la lógica | `isError: true` y el motivo en el texto de la respuesta |\n| Tool que no existe | Error JSON-RPC `-32602` (`tool not found`) |\n\nLos errores de HTTP (406 sin `Accept`, 405 con GET, 415 con JSON roto) y las pruebas automáticas están en la colección **Feed MCP · feed-service**, con requests HTTP y tests. Los requests MCP no admiten scripts.\n\n## Datos de prueba\n\nLas tools que escriben usan **999999** como persona, producto, categoría y tienda: no existe en Postgres y el producto queda **inactivo**, así que nada aparece en el feed de nadie. El feed se pide para el comprador de prueba (persona 40).\n\n| # | Tool | Escribe |\n| --- | --- | --- |\n| 01 | `get_user_feed` | No |\n| 02 | `registrar_interaccion` | Sí (persona de prueba) |\n| 03 | `resync_completo` | Guardado con argumentos inválidos a propósito: no borra nada |\n| 04 | `set_intereses_usuario` | Sí (interés de la persona de prueba) |\n| 05 | `sync_producto` | Sí (producto de prueba inactivo) |\n| 06 | `verificar_estado` | No |\n\n## Observaciones\n\n- `get_user_feed` devuelve los ids como texto (`\"[73,57]\"`), no como objeto `{ ids }`.\n- `set_intereses_usuario` y `resync_completo` responden `\"...\"` cuando salen bien.\n- En `tools/list`, la descripción de `resync_completo` es la misma que la de `set_intereses_usuario` (\"Actualizar los intereses del usuario en SQLite\").",
+  "type": "extensibleCollection",
+  "variables": [],
+  "scripts": [],
+  "items": [
+    {
+      "id": "6ac68dac1eac8953bc85f91f",
+      "$kind": "mcp-request",
+      "name": "01 · Pedir el feed",
+      "description": "Devuelve los `id_producto` del feed, ya ordenados. Node después trae de Postgres los datos de cada producto (`GET /feed`).\n\n- **Sin `id_persona`:** lo más visto de la última semana, con tope por categoría y por tienda.\n- **Persona sin historial:** lo mismo, filtrado a sus categorías de interés (si no tiene, como sin persona).\n- **Persona con historial:** mezcla afinidad por categoría (50 %), por tienda (20 %) y lo más visto (30 %), sin lo que ya compró.\n\n**Tool:** `get_user_feed` · el request pide 5 productos para el comprador de prueba (persona 40).\n\n### Argumentos (todos opcionales)\n\n| Argumento | Tipo | Detalle |\n| --- | --- | --- |\n| `id_persona` | entero | Sin él es el feed de alguien sin sesión |\n| `total` | entero | Cantidad de ids (por defecto `FEED_TOTAL`, 20). Con `0` devuelve una lista vacía |\n| `offset` | entero | Para la página siguiente. Un valor negativo se toma como 0 |\n| `id_tienda_excluida` | entero | Tienda que no tiene que aparecer (la del emprendedor que pide el feed) |\n\n### Respuestas\n\n| Caso | Respuesta |\n| --- | --- |\n| Argumentos válidos | Lista de ids como texto, por ejemplo `[73,96,89,62,26]` · `isError: false` |\n| Argumento con otro tipo (`\"total\": \"diez\"`) | `isError: true` · `failed to deserialize parameters: invalid type: string \"diez\", expected i64` |",
+      "transport": "sse",
+      "url": "http://192.168.1.8:3002/mcp",
+      "headers": [],
+      "message": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"get_user_feed\",\n    \"arguments\": {\n      \"id_persona\": 40,\n      \"total\": 5\n    }\n  }\n}",
+      "settings": {
+        "version": "auto",
+        "requestTimeout": 0
+      }
+    },
+    {
+      "id": "6ac68dac1eac8953bc85f920",
+      "$kind": "mcp-request",
+      "name": "02 · Registrar una interacción",
+      "description": "Registra un evento de una persona sobre un producto y suma puntos al producto (trending), a su categoría y a su tienda, todo en una transacción. El consumer de Kafka de Node la llama por cada evento de `/tracking` y por cada compra.\n\n| Evento | Producto | Categoría | Tienda |\n| --- | --- | --- | --- |\n| `Detalle` | 2 | 2 | 1 |\n| `VisitaTienda` | 0 | 1 | 3 |\n| `Carrito` | 5 | 5 | 3 |\n| `Compra` | 9 | 9 | 9 |\n\nSalvo `Compra`, el mismo evento cuenta una sola vez por persona y producto cada 24 h (`FEED_VENTANA_REPETIDOS_HORAS`): si se repite, no guarda nada.\n\n**Tool:** `registrar_interaccion`\n\n### Argumentos (todos obligatorios)\n\n| Argumento | Tipo | Detalle |\n| --- | --- | --- |\n| `id_persona` | entero | |\n| `id_producto` | entero | Tiene que estar en `productos_index` |\n| `tipo_evento` | string | `Detalle`, `VisitaTienda`, `Carrito` o `Compra` |\n\n### Respuestas\n\n| Caso | Respuesta |\n| --- | --- |\n| Evento nuevo | `Interaccion registrada` · `isError: false` |\n| Mismo evento dentro de las 24 h | `Interaccion repetida dentro de la ventana: no suma puntos` · `isError: false` |\n| Producto que no está en el índice | `isError: true` · `Producto no encontrado en el índice local` |\n| Tipo de evento inválido (`\"Vista\"`) | `isError: true` · `failed to deserialize parameters: unknown variant ...` |\n\n> **Datos de prueba:** la persona y el producto son 999999: no existen en Postgres y el producto está inactivo, así que los puntos no mueven el feed de nadie. Si responde _Producto no encontrado en el índice local_ (por ejemplo, después de que Node hizo un `resync_completo` al arrancar), corré antes **05 · Sincronizar un producto**.",
+      "transport": "sse",
+      "url": "http://192.168.1.8:3002/mcp",
+      "headers": [],
+      "message": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"registrar_interaccion\",\n    \"arguments\": {\n      \"id_persona\": 999999,\n      \"id_producto\": 999999,\n      \"tipo_evento\": \"Detalle\"\n    }\n  }\n}",
+      "settings": {
+        "version": "auto",
+        "requestTimeout": 0
+      }
+    },
+    {
+      "id": "6ac68dac1eac8953bc85f921",
+      "$kind": "mcp-request",
+      "name": "03 · Reemplazar todo el índice",
+      "description": "Red de seguridad del sync: borra `productos_index` y `usuario_categorias` y los vuelve a cargar con el estado completo que manda Node, en una sola transacción (si falla, queda lo anterior). No toca `interacciones` ni los puntajes. Node la llama al arrancar y cada vez que se reconecta a Postgres.\n\n**Tool:** `resync_completo`\n\n### Argumentos (todos obligatorios)\n\n| Argumento | Tipo | Detalle |\n| --- | --- | --- |\n| `lista_productos` | array | `[{ id_producto, id_cat, id_tienda, activo }]` (enteros sin signo y boolean) |\n| `lista_intereses` | array | `[{ id_persona, id_cat }]` |\n\n### Respuestas\n\n| Caso | Respuesta |\n| --- | --- |\n| Índice reemplazado | `...` · `isError: false` |\n| Falta una lista o tiene otro tipo | `isError: true` · `failed to deserialize parameters: ...` (no borra nada) |\n\n> ⚠️ **Está guardado sin `lista_intereses` a propósito**, para que un _Run_ solo muestre el rechazo (`missing field \"lista_intereses\"`). Con las dos listas, aunque estén vacías, el índice queda solo con lo que mandes y el feed se vacía hasta que Node vuelva a sincronizar (reiniciar `server.js`). Un request MCP no tiene scripts que lo frenen.",
+      "transport": "sse",
+      "url": "http://192.168.1.8:3002/mcp",
+      "headers": [],
+      "message": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"resync_completo\",\n    \"arguments\": {\n      \"lista_productos\": []\n    }\n  }\n}",
+      "settings": {
+        "version": "auto",
+        "requestTimeout": 0
+      }
+    },
+    {
+      "id": "6ac68dac1eac8953bc85f922",
+      "$kind": "mcp-request",
+      "name": "04 · Agregar o quitar un interés",
+      "description": "Refleja en `usuario_categorias` que una persona agregó o quitó una categoría de interés. Node la llama cuando cambia `Personas_Intereses` en Postgres. Agregar una que ya tiene no hace nada.\n\n**Tool:** `set_intereses_usuario`\n\n### Argumentos (todos obligatorios)\n\n| Argumento | Tipo | Detalle |\n| --- | --- | --- |\n| `id_persona` | entero | |\n| `id_cat` | entero | |\n| `accion` | string | `agregar` o `eliminar` |\n\n### Respuestas\n\n| Caso | Respuesta |\n| --- | --- |\n| Interés agregado o quitado | `...` · `isError: false` |\n| Acción inválida (`\"quitar\"`) | `isError: true` · `failed to deserialize parameters: unknown variant ...` |\n\n> **Datos de prueba:** la persona 999999 no existe en Postgres. Para dejar la base como estaba, cambiá `accion` a `eliminar` y corrélo otra vez.",
+      "transport": "sse",
+      "url": "http://192.168.1.8:3002/mcp",
+      "headers": [],
+      "message": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"set_intereses_usuario\",\n    \"arguments\": {\n      \"id_persona\": 999999,\n      \"id_cat\": 999999,\n      \"accion\": \"agregar\"\n    }\n  }\n}",
+      "settings": {
+        "version": "auto",
+        "requestTimeout": 0
+      }
+    },
+    {
+      "id": "6ac68dac1eac8953bc85f923",
+      "$kind": "mcp-request",
+      "name": "05 · Sincronizar un producto",
+      "description": "Refleja en `productos_index` el alta, la baja o la edición de un producto: si el id ya está lo actualiza y si no lo inserta. Node la llama cuando Postgres avisa un cambio en `Productos` (por Kafka, topic de sync).\n\n**Tool:** `sync_producto`\n\n### Argumentos (todos obligatorios)\n\n| Argumento | Tipo | Detalle |\n| --- | --- | --- |\n| `id_producto` | entero | |\n| `id_cat` | entero | Si en Postgres es NULL, Node no llama a la tool |\n| `id_tienda` | entero | Ídem |\n| `activo` | boolean | `false` saca al producto del feed |\n\n### Respuestas\n\n| Caso | Respuesta |\n| --- | --- |\n| Producto sincronizado | `Producto sincronizado` · `isError: false` |\n| Falta un argumento | `isError: true` · `failed to deserialize parameters: missing field ...` |\n\n> **Datos de prueba:** el producto 999999 no existe en Postgres y va **inactivo**: queda en el índice pero nunca aparece en el feed. El próximo `resync_completo` de Node lo borra.",
+      "transport": "sse",
+      "url": "http://192.168.1.8:3002/mcp",
+      "headers": [],
+      "message": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"sync_producto\",\n    \"arguments\": {\n      \"id_producto\": 999999,\n      \"id_cat\": 999999,\n      \"id_tienda\": 999999,\n      \"activo\": false\n    }\n  }\n}",
+      "settings": {
+        "version": "auto",
+        "requestTimeout": 0
+      }
+    },
+    {
+      "id": "6ac68ca92fc842256b8965e7",
+      "$kind": "mcp-request",
+      "name": "06 · Verificar el estado de la base",
+      "description": "Confirma que el servicio responde y que su SQLite tiene las 6 tablas del índice (`productos_index`, `usuario_categorias`, `interacciones` y los tres `puntajes_*`). Node la llama antes de `resync_completo`.\n\n**Tool:** `verificar_estado` (sin argumentos)\n\n### Respuestas\n\n| Caso | Respuesta |\n| --- | --- |\n| Base completa | `6` (cantidad de tablas) · `isError: false` |\n| Base sin alguna tabla | La cantidad de tablas que encontró (menos de 6) |",
+      "transport": "sse",
+      "url": "http://192.168.1.8:3002/mcp",
+      "headers": [],
+      "message": "{\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"verificar_estado\",\n    \"arguments\": {}\n  }\n}",
+      "settings": {
+        "version": "auto",
+        "requestTimeout": 0
+      }
+    }
+  ]
+}

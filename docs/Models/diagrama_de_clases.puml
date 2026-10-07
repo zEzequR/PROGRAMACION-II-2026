@@ -1,7 +1,7 @@
 @startuml
 left to right direction
 skinparam linetype ortho
-skinparam nodesep 100 
+skinparam nodesep 100
 skinparam ranksep 140
 skinparam DefaultFontName "Ubuntu"
 
@@ -16,19 +16,6 @@ package ENUMS <<Frame>> #ffe9d4{
         CERRADA
     }
 
-    enum estadoPago{
-        PENDIENTE
-        PAGADA
-        RECHAZADO
-    }
-
-    enum metodoPago{
-        CREDITO
-        DEBITO
-        EFECTIVO
-        MERCADOPAGO
-    }
-
     enum tipoDescuento{
         MONTOFIJO
         PORCENTAJE
@@ -38,68 +25,125 @@ package ENUMS <<Frame>> #ffe9d4{
         MANUAL
         GOOGLE
     }
+
+    enum tipoProducto{
+        FISICO
+        DIGITAL
+    }
+
+    enum metodoPago{
+        QR
+        TARJETA
+    }
+
+    enum tipoArchivo{
+        ARCHIVO
+        IMAGEN PRODUCTO
+    }
+
+    enum tipoEvento{
+        Detalle
+        VisitaTienda
+        Carrito
+        Compra
+    }
+
+    enum accionSync{
+        agregar
+        eliminar
+    }
 }
 
+' ==========================================
+' 2. MODELS (src/models)
+' ==========================================
+
 namespace MODELS #ffffd4{
-    entity PERSONAS{
+    entity Usuario{
         - email : string
         - psw : string
-        - tipoAuth : string
+        - tipoAuth : tipoAuth
         - nombre : string
         - apellido : string
         - telefono : string
+        - activo : boolean
         - fechaBaja : date
         - fechaCreacion : date
-        - activo : bool
+        + {static} fromRow(row : object) : Usuario
     }
 
-    entity EMPRENDEDORES{
-        - cuit : int
+    entity Emprendedor{
+        - cuit : string
         - mpAccessToken : string
+        - mpRefreshToken : string
+        - mpUserId : string
+        - mpPublicKey : string
+        - mpTokenExpiresAt : date
+        - mpQrAccessToken : string
+        - mpQrRefreshToken : string
+        - mpQrUserId : string
+        - mpQrTokenExpiresAt : date
+        - mpQrStoreId : string
+        - mpQrPosId : string
+        + {static} fromRow(row : object) : Emprendedor
     }
 
-    entity CLIENTES{
+    entity Cliente{
         - suscripcion : boolean
+        - resendContactID : string
     }
 
+    entity Ubicaciones{
+        - direccion : string
+        - piso : string
+        - depto : string
+        - pais : string
+        - provincia : string
+        - ciudad : string
+        - codigo : string
+        - placeid : string
+        + {static} fromRow(row : object) : Ubicaciones
+    }
 
-
-    entity TIENDAS{
-        - idPlantilla : int
+    entity Tiendas{
         - nombreTienda : string
         - logoTienda : string
-        - personalizacionTienda: json
         - fechaCreacion : date
+        - activo : boolean
+        + {static} fromRow(row : object) : Tiendas
     }
 
-
-
-    entity PRODUCTOS{
-        - tipoProd : string
+    entity Productos{
+        - tipoProd : tipoProducto
         - nombreProd : string
         - imagenProd : string
-        - descripProducto : string
+        - descripProd : string
         - precio : number
         - activo : boolean
-        + calcularPrecioVenta() : number
+        + {static} fromRow(row : object) : Productos
     }
 
-
-    entity categoriasProductos{
-        - categoria : string
-    }
-
-    entity productosDigitales{
+    entity ProductosDigitales{
         - archivoProd : string
+        - usaLicencia : boolean
     }
 
-    entity productosFisicos{
+    entity ProductosFisicos{
         - stock : int
-        + actualizarStock(cant: int, signo: int): void
-        + validarStock(cant: int): boolean
-        + verificarEstadoStock(): boolean
-        + getStockActual(): int
-        + getDetallesStock(): String
+    }
+
+    entity Categoria{
+        - categoria : string
+        + {static} fromRow(row : object) : Categoria
+    }
+
+    entity AtributoCategoria{
+        - nombreAtributo : string
+    }
+
+    entity EspecificacionProducto{
+        - valor : string
+        + {static} fromRow(row : object) : EspecificacionProducto
     }
 
     entity cuponesDescuentos{
@@ -107,275 +151,512 @@ namespace MODELS #ffffd4{
         - tipoDescuento : tipoDescuento
         - valor : number
         - fechaExpiracion : date
-        - usosMaximos : number
-        - usosActuales : number
+        - usosMaximos : int
+        - usosActuales : int
+        - aplicaTienda : boolean
+        - vencido : boolean
+        + {static} fromRow(row : object) : cuponesDescuentos
     }
 
-    entity VENTAS{
+    entity cuponesDescuentosProductos
+
+    entity Ventas{
         - fechaVenta : date
         - precioFinal : number
-        - estadoVenta : estadoVenta
+        - estado : estadoVenta
+        + {static} fromRow(row : object, items : List<DetalleVenta>) : Ventas
     }
 
-    entity detalleVenta{
+    entity DetalleVenta{
         - precioUnitario : number
         - cantidad : int
         - subtotal : number
+        + {static} fromRow(row : object) : DetalleVenta
     }
+
+    entity DetalleVentaDigital
 
     entity licenciaVenta{
-        - claveDigital: string
+        - claveDigital : string
         - claveUsada : boolean
+        + {static} fromRow(row : object) : licenciaVenta
     }
 
-    entity tarjetasPagos{
-        - servicio : string
-        - servicioClienteID : string
-        - servicioTarjetaID : string
-        - ultDigitosTarjeta : string
-        - marcaTarjeta : string
-        - expiraMes : int
-        - expiraAno : int
-        - porDefecto : boolean
-    }
-
-    entity CORREOS{
-        - asunto : string
-        - mensaje : string
-        - cantidadEnviados : int
-        - estado : string
-        - idExterno : string
-    }
-
-    class Ubicaciones{
-        - pais: string
-        - provincia: string
-        - ciudad : string
-        - codigoPostal : string
-        - placeId : string
-    }
-
-        class detallePago{
+    entity Pagos{
+        - idTransaccion : string
         - estado : string
         - metodoPago : string
         - monto : number
-        - fechaPago : string
     }
 
-    entity atributosCategoria{
-    - nombreAtributo : string
-}
-    entity especificacionesProducto{
-    - valor : string
-}
-
-
-}
-
-package JSONS <<Frame>> #ffd4d4 {
-
-    json personalizacionTienda{
-        "colorPrimario" : "string",
-        "colorSecundario" : "string",
-        "fuente" : "string",
-        "banner" : "string",
-        "redesSociales" : "json"
+    class Correo{
+        - from : string
+        - to : string | List<string>
+        - subject : string
+        - html : string
+        - text : string
     }
 
+    class ArchivoDigital{
+        - originalname : string
+        - mimetype : string
+        - path : string
+        - size : int
+        - type : tipoArchivo
+        - key : string
+        + extension() : string
+    }
+
+    class Filtros{
+        - busqueda : string
+        - idCat : int
+        - total : int
+        - offset : int
+        - desde : date
+        - hasta : date
+    }
+}
+
+
+' ==========================================
+' 3. EVENTOS Y FEED (Kafka y microservicio de recomendaciones)
+' ==========================================
+
+namespace EVENTOS #ecdcff{
+    class InteraccionEvento{
+        - idPersona : int
+        - idProducto : int
+        - tipoEvento : tipoEvento
+    }
+
+    class SyncProductoEvento{
+        - tipo : string = "producto"
+        - idProducto : int
+        - idCat : int
+        - idTienda : int
+        - activo : boolean
+    }
+
+    class SyncInteresEvento{
+        - tipo : string = "interes"
+        - idPersona : int
+        - idCat : int
+        - accion : accionSync
+    }
+
+    class ProductoFeed{
+        - idProducto : int
+        - idCat : int
+        - idTienda : int
+        - activo : boolean
+    }
+
+    class InteresFeed{
+        - idPersona : int
+        - idCat : int
+    }
 }
 
 ' ==========================================
-' CAPA DE PERSISTENCIA (Servicios)
+' 4. SERVICES (src/services)
 ' ==========================================
 
-namespace SERVICIES #ddffd4{
-    class servicePersonas{
-        + verificarExistenciaUsuario() : boolean
-        + guardarPersona(usuario : PERSONAS) : void
-        + modificarDatosUsuario() : void
+namespace SERVICES #ddffd4{
+    class serviceUsuarios <<usuarioService.js>>{
+        + registrarseManualService(user : Usuario, ubicacion : Ubicaciones, categorias : List<Categoria>) : Usuario
+        + autenticarUsuarioService(user : Usuario) : Usuario
+        + modificarUsuarioService(usuario : Usuario, ubicacion : Ubicaciones, categorias : List<Categoria>) : Usuario
+        + cambiarActivoUsuarioService(user : Usuario) : Usuario
+        + buscarUsuarioPorEmail(user : Usuario) : Usuario
+        + buscarUsuarioPorId(user : Usuario) : Usuario
+        + cambiarPswUsuario(user : Usuario) : boolean
     }
 
-    class serviceEmprendedores{
-        + guardarEmprendedor(emprendedor : EMPRENDEDORES) : void
-        + buscarEmprendedor() : EMPRENDEDORES
-        + guardarFuenteIngreso() : void
+    class serviceClientes <<clientesService.js>>{
+        + crearClienteService(usuario : Cliente, tienda : Tiendas) : int
+        + seguirTiendaService(usuario : Usuario, tienda : Tiendas) : int
+        + dejarDeSeguirTiendaService(usuario : Usuario, tienda : Tiendas) : boolean
+        + obtenerTiendasSeguidasService(usuario : Usuario) : List<Tiendas>
+        + verificarAccesoClienteService(venta : Ventas, usuario : Usuario, tienda : Tiendas) : boolean
     }
 
-    class serviceClientes {
-        + guardarCliente(cliente : CLIENTES) : void
-        + buscarClientes(): CLIENTES
-        + obtenerTodos(): List<CLIENTES>
-        + guardarTarjeta() : void
-        + eliminarTarjeta() : void
-        + obtenerTarjeta() : tarjetasPagos
-        + obtenerClientesSuscriptos(suscripcion : true) : List<CLIENTES>
+    class serviceEmprendedores <<emprendedorService.js>>{
+        + crearEmprendedorService(emprendedor : Emprendedor) : int
+        + modificarEmprendedorService(emprendedor : Emprendedor) : boolean
+        + obtenerEmprendedorPorTienda(emprendedor : Emprendedor) : Emprendedor
+        + obtenerEmprendedorPorMpUserId(emprendedor : Emprendedor) : Emprendedor
     }
 
-    class serviceTiendas{
-        + crearTienda(tienda: TIENDAS) : void
-        + guardarTienda(tienda : TIENDAS) : void
-        + modificarTienda(tienda : TIENDAS) : void
-        + buscarPorNombre(nombreTienda : string): TIENDAS
-        + obtenerTodas(): List<TIENDAS>
+    class serviceTiendas <<tiendasService.js>>{
+        + crearTiendaService(emprendedor : Emprendedor, tienda : Tiendas) : int
+        + modificarTiendaService(tienda : Tiendas) : boolean
+        + cambiarActivoTiendaService(tienda : Tiendas) : boolean
+        + buscarTiendaPorId(tienda : Tiendas) : Tiendas
+        + buscarTiendaPorPersona(user : Usuario) : Tiendas
     }
 
-    class serviceProductos {
-        + guardarProducto(producto : PRODUCTOS)
-        + modificarProducto(producto : PRODUCTOS)
-        + buscarProductos(): List<PRODUCTOS>
-        + obtenerTodos(): List<PRODUCTOS>
-        + guardarEspecificacion(e: EspecificacionesProducto) : void
-        + obtenerEspecificacionesPorProducto(idProducto: int) : List<EspecificacionesProducto>
-        + obtenerAtributosPorCategoria(idCat: int) : List<atributosCategoria>
+    class serviceProductos <<productosService.js>>{
+        + sincronizarProductosTiendaFeed(tienda : Tiendas) : void
+        + crearProductoService(producto : Productos, atributos : AtributoCategoria, especificacion : EspecificacionProducto) : int
+        + modificarProductoService(producto : Productos, atributos : AtributoCategoria, especificacion : EspecificacionProducto) : boolean
+        + cambiarActivoProductosService(productos : List<Productos>) : boolean
+        + buscarProductoPorId(producto : Productos) : Productos
+        + buscarProductosPorIds(productos : List<Productos>) : List<Productos>
+        + obtenerArchivoProductoService(producto : Productos) : ArchivoDigital
+        + subirArchivoDigitalS3(archivo : ArchivoDigital) : boolean
+        + obtenerURLService(detalle : DetalleVenta, usuario : Usuario) : string
+        + obtenerProductosTiendaService(tienda : Tiendas) : List<Productos>
+        + buscarProductosService(filtros : Filtros) : List<Productos>
     }
 
-    class serviceCuponesDescuentos{
-        + guardarCuponDesc(cupon : cuponesDescuentos)
-        + modificarCuponDesc(cupon : cuponesDescuentos)
-        + buscarCuponDesc(): List<cuponesDescuentos>
-        + obtenerTodos(): List<cuponesDescuentos>
+    class serviceCategorias <<categoriasService.js>>{
+        + obtenerCategoriasService() : List<Categoria>
+        + guardarCategoriaService(atributos : AtributoCategoria, especificacion : EspecificacionProducto) : EspecificacionProducto
     }
 
-    class serviceVenta{
-        + crearVenta() : void
-        + obtenerVentas() : void
-        + obtenerDetalleVenta() : void
+    class serviceIntereses <<interesesService.js>>{
+        + obtenerInteresesService(usuario : Usuario) : List<Categoria>
+        + guardarInteresesService(user : Usuario, categorias : List<Categoria>) : boolean
     }
 
-    class servicePagos{
-        + obtenerDetallesPago() : void
-        + realizarPago() : void
-        + agregarDatosPagoCliente() : void
-        + aplicarDescPago() : void
+    class serviceUbicaciones <<ubicacionesService.js>>{
+        + guardarUbicacionService(ubicacion : Ubicaciones) : int
+        + actualizarUbicacionService(ubicacion : Ubicaciones) : Ubicaciones
+        + ubicacionCompartidaService(usuario : Usuario, ubicacion : Ubicaciones) : boolean
+        + copiarUbicacionService(ubicacion : Ubicaciones) : int
     }
-    
-    class serviceCorreos{
-        + enviarCorreo() : void
+
+    class serviceCuponesDescuentos <<cuponesDescuentosService.js>>{
+        + crearCuponService(cupon : cuponesDescuentos) : int
+        + eliminarCuponService(cupon : cuponesDescuentos) : boolean
+        + modificarCuponService(cupon : cuponesDescuentos) : boolean
+        + obtenerCuponesTiendaService(cupon : cuponesDescuentos) : List<cuponesDescuentos>
+        + buscarCuponPorId(cupon : cuponesDescuentos) : cuponesDescuentos
+        + buscarCuponPorCodigo(cupon : cuponesDescuentos) : cuponesDescuentos
+    }
+
+    class serviceVentas <<ventasService.js>>{
+        + crearVentaService(tienda : Tiendas, cliente : Cliente, items : List<DetalleVenta>, cupon : cuponesDescuentos) : [int, List<Productos>, number, number]
+        + finalizarVentaService(venta : Ventas) : int
+        + buscarVentaPorId(venta : Ventas) : Ventas
+        + obtenerDetalleVentaService(venta : Ventas) : Ventas
+        + obtenerVentaParaPagarService(venta : Ventas, usuario : Usuario, metodo : metodoPago) : [Ventas, Emprendedor]
+        + obtenerVentasClienteService(venta : Ventas) : List<Ventas>
+        + verificarAccesoVentaService(venta : Ventas, usuario : Usuario, tienda : Tiendas) : Ventas
+        + obtenerVentasPersonaService(usuario : Usuario) : List<Ventas>
+    }
+
+    class servicePagos <<pagosService.js>>{
+        + crearPagoService(pago : Pagos) : int
+    }
+
+    class serviceLicencias <<licenciaVentaService.js>>{
+        + crearLicenciaVentaService(licencia : licenciaVenta) : int
+        + validarLicenciaService(licencia : licenciaVenta, user : Usuario) : licenciaVenta
+    }
+
+    class serviceCorreos <<emailService.js>>{
+        + enviarPromocionTiendaService(correo : Correo) : object
+    }
+
+    class serviceEstadisticas <<estadisticasService.js>>{
+        + obtenerEstadisticasService(tienda : Tiendas, filtros : Filtros) : object
+        + generarCsvEstadisticasService(tienda : Tiendas, filtros : Filtros) : string
+    }
+
+    class serviceFeed <<feedService.js>>{
+        + obtenerFeedService(usuario : Usuario, filtros : Filtros, tiendaPropia : Tiendas) : List<Productos>
+    }
+
+    class serviceFeedSync <<feedSyncService.js>>{
+        + iniciarFeed() : void
+        + resincronizarFeed() : object
+    }
+}
+
+' ==========================================
+' 5. SERVICIOS EXTERNOS (src/services/api)
+' ==========================================
+
+namespace SERVICIOS_EXTERNOS #e9ffd4{
+    class serviceMercadoPago <<api/mercadoPagoService.js>>{
+        + obtenerUrlConexion(state : string) : string
+        + intercambiarCodigoService(code : string) : object
+        + obtenerAccessTokenVigente(emprendedor : Emprendedor) : string
+        + obtenerUrlConexionQr(state : string) : string
+        + intercambiarCodigoQrService(code : string) : object
+        + obtenerAccessTokenQrVigente(emprendedor : Emprendedor) : string
+        + crearOrdenService(datosVenta : Ventas, emprendedor : Emprendedor, metodo : metodoPago, datosTarjeta : object) : object
+        + crearSucursalYCajaService(accessToken : string, mpUserId : string, direccion : Ubicaciones) : object
+        + validarFirmaWebhook(xSignature : string, xRequestId : string, dataId : string, secret : string) : object
+        + consultarOrdenService(accessToken : string, idOrden : string) : object
+    }
+
+    class serviceAwsS3 <<api/awsS3Service.js>>{
+        + subirArchivo(archivo : ArchivoDigital) : boolean
+        + generarUrlDescarga(archivo : ArchivoDigital) : string
+        + generarURLPublica(archivo : ArchivoDigital) : string
+    }
+
+    class serviceGoogleMaps <<api/googleMapsService.js>>{
+        + obtenerPaisesDisponibles() : List<object>
+        + validarDireccion(ubicacion : Ubicaciones) : object
+    }
+
+    class serviceResend <<api/resendService.js>>{
+        + enviarCorreoIndividual(correo : Correo) : object
+        + enviarCorreosMarketing(correo : Correo, contactos : List<Cliente>) : object
+    }
+
+    class serviceKafka <<api/kafkaService.js>>{
+        + publicarEvento(topic : string, mensaje : object) : void
+    }
+
+    class serviceMCP <<api/MCPservice.js>>{
+        + verificarEstadoFeed() : string
+        + llamarToolMCP(tool : string, parametros : object) : object
+        + resyncCompletoFeed(productos : List<ProductoFeed>, intereses : List<InteresFeed>) : void
+        + getUserFeedMcp(usuario : Usuario, filtros : Filtros, tiendaPropia : Tiendas) : List<int>
+        + registrarInteraccionFeed(evento : InteraccionEvento) : void
+        + syncProductoFeed(evento : SyncProductoEvento) : void
+        + setInteresesUsuarioFeed(evento : SyncInteresEvento) : void
     }
 }
 
 ' =========================================
-'  CONTROLADORES
+'  6. CONTROLADORES (src/controllers)
 ' ==========================================
 
 namespace CONTROLLERS #d4fff1{
-    class controladorUsuarios{
+    class controladorUsuarios <<usuarioController.js>>{
         + registrarseManual() : void
         + registrarseGoogle() : void
-        + loggearseManual() : void
+        + logggearseManual() : void
         + loggearseGoogle() : void
-        + crearEmprendedor() : void
         + modificarDatosUsuario() : void
-        + agregarFuenteIngreso() : void
-        + crearCliente() : void
-        + obtenerClientes() : void
-        + agregarTarjeta() : void
-        + eliminarTarjeta() : void
-        + obtenerTarjetas() : void
+        + desactivarCuenta() : void
+        + reactivarCuenta() : void
+        + codigoRecuperarPsw() : void
+        + obtenerPerfil() : void
+        + obtenerMisIntereses() : void
     }
 
-
-    class controladorTiendas{
+    class controladorTiendas <<TiendasController.js>>{
         + crearTienda() : void
         + modificarTienda() : void
         + eliminarTienda() : void
-        + crearCategoria() : void
+        + reactivarTienda() : void
+        + obtenerPublicKey() : void
+        + obtenerTiendaPublica() : void
+        + obtenerMiTienda() : void
+        + seguirTienda() : void
+        + dejarDeSeguirTienda() : void
+        + obtenerTiendasSeguidas() : void
+    }
+
+    class controladorEstadisticas <<estadisticasController.js>>{
+        + obtenerEstadisticas() : void
+        + descargarEstadisticasCsv() : void
+    }
+
+    class controladorProductos <<productosController.js>>{
+        + crearProducto() : void
+        + modificarProducto() : void
+        + eliminarProducto() : void
+        + reactivarProducto() : void
+        + obtenerProducto() : void
+        + obtenerProductosTienda() : void
+        + obtenerMisProductos() : void
+        + descargarProducto() : void
+    }
+
+    class controladorCategorias <<categoriasController.js>>{
         + obtenerCategorias() : void
-        + crearCuponesDesc() : void
-        + modificarCuponesDesc() : void
-        + eliminarCuponesDesc() : void
-        + enviarCorreo() : void
     }
 
-    class controladorProductos{
-        + crearProd() : void
-        + modificarProd() : void
-        + eliminarProd() : void
-        + obtenerInfoProd() : void
-        + verificarKeyDigital() : void
-        + crearAtributo() : void
-        + obtenerAtributosPorCategoria() : void
+    class controladorUbicaciones <<ubicacionesController.js>>{
+        + obtenerTodosPaises() : void
+        + validarDireccionController() : void
     }
 
-    class controladorCheckOut{
+    class controladorCupones <<cuponController.js>>{
+        + crearCupon() : void
+        + obtenerCuponesTienda() : void
+        + modificarCupon() : void
+        + eliminarCupon() : void
+    }
+
+    class controladorVentas <<ventasController.js>>{
         + crearVenta() : void
-        + obtenerVentas() : void
-        + obtenerDetalleVenta() : void
-        + crearPago() : void
-        + realizarPago() : void
-        + aplicarDescPago() : void
-        + obtenerDetallesPago() : void
+        + obtenerVenta() : void
+        + obtenerMisCompras() : void
+        + obtenerEstadoVenta() : void
+        + obtenerVentasCliente() : void
     }
 
+    class controladorMercadoPago <<mercadoPagoController.js>>{
+        + conectarMercadoPago() : void
+        + callbackMercadoPago() : void
+        + conectarMercadoPagoQr() : void
+        + callbackMercadoPagoQr() : void
+        + crearOrden() : void
+        + webhookMercadoPago() : void
+    }
+
+    class controladorEmails <<emailController.js>>{
+        + enviarPromocion() : void
+        + solicitarCodigo() : void
+    }
+
+    class controladorLicencias <<licenciaController.js>>{
+        + validarLicencia() : void
+    }
+
+    class controladorFeed <<feedController.js>>{
+        + obtenerFeed() : void
+    }
+
+    class controladorTracking <<trackingController.js>>{
+        - registrarInteraccion() : void
+        + registrarDetalle() : void
+        + registrarVisitaTienda() : void
+        + registrarCarrito() : void
+    }
+}
+
+' ==========================================
+' 7. CONSUMERS DE KAFKA (src/consumers)
+' ==========================================
+
+namespace CONSUMERS #ffd4e8{
+    class consumerEmails <<emailConsumer.js>>{
+        - esperar(milisegundos : int) : void
+        - enviarComprobante(idVenta : int) : void
+        - manejarVentaCerrada(datos : object) : void
+        - iniciarConsumer() : void
+    }
+
+    class consumerFeed <<feedConsumer.js>>{
+        - manejarInteraccion(datos : object) : void
+        - manejarSync(datos : object) : void
+        - iniciarConsumer() : void
+    }
 }
 
 ' =========================================
 '  RELACIONES
 ' ==========================================
-VENTAS -- estadoVenta
-detallePago -- estadoPago
-detallePago -- metodoPago
+Ventas -- estadoVenta
 cuponesDescuentos -- tipoDescuento
-PERSONAS -- Ubicaciones
-PERSONAS -- tipoAuth
-TIENDAS *-- personalizacionTienda
-CLIENTES -- VENTAS
-CLIENTES -- tarjetasPagos
-productosDigitales -- licenciaVenta
-TIENDAS -- PRODUCTOS
-TIENDAS -- CLIENTES
-TIENDAS ---- VENTAS
-detalleVenta -- licenciaVenta
-cuponesDescuentos -- TIENDAS
-detallePago -- VENTAS
-PRODUCTOS -- cuponesDescuentos
-categoriasProductos *--  atributosCategoria
-PRODUCTOS *-- especificacionesProducto
-atributosCategoria -- especificacionesProducto
+Usuario -- tipoAuth
+Productos -- tipoProducto
+ArchivoDigital -- tipoArchivo
+InteraccionEvento -- tipoEvento
+SyncInteresEvento -- accionSync
+Usuario -- Ubicaciones
+Usuario -- Categoria : intereses
+Emprendedor -- Tiendas
+Tiendas -- Cliente
+Tiendas -- Productos
+Productos -- Categoria
+Tiendas -- cuponesDescuentos
+Tiendas ---- Ventas
+Tiendas -- Correo
+Cliente -- Ventas
+Ventas -- Pagos
+Ventas -- cuponesDescuentos
+DetalleVenta -- Productos
+cuponesDescuentosProductos -- Productos
+ProductosDigitales -- licenciaVenta
+DetalleVentaDigital -- licenciaVenta
+AtributoCategoria -- EspecificacionProducto
 ' Herencia
 ' ____________________________________
-PERSONAS <|--- EMPRENDEDORES
-PERSONAS <|---- CLIENTES
-PRODUCTOS <|-- productosDigitales
-PRODUCTOS <|-- productosFisicos
-' Dependencias
-' ____________________________________
-controladorUsuarios --> servicePersonas
-controladorCheckOut --> servicePagos
-controladorUsuarios --> serviceClientes
-controladorTiendas --> serviceCuponesDescuentos
-controladorUsuarios --> serviceEmprendedores
-controladorProductos --> serviceProductos
-controladorProductos --> serviceCuponesDescuentos
-controladorTiendas --> serviceTiendas
-controladorTiendas --> serviceCorreos
-' Agregaciones
-' ____________________________________
-serviceClientes o-- CLIENTES
-serviceProductos o-- PRODUCTOS
-serviceTiendas o-- TIENDAS
-servicePagos o-- tarjetasPagos
-serviceCuponesDescuentos o-- cuponesDescuentos
-servicePagos o-- detallePago
-serviceEmprendedores o-- EMPRENDEDORES
-servicePersonas o-- PERSONAS
-serviceCorreos o-- CORREOS
-serviceVenta o-- VENTAS
-' ____________________________________
-' Dependencia débiles
-PRODUCTOS ..> categoriasProductos
-servicePagos ..> detallePago
-servicePagos ..> VENTAS
-servicePagos ..> detalleVenta
-servicePagos ..> CLIENTES
-serviceClientes ..> tarjetasPagos
-serviceProductos ..> categoriasProductos
-serviceProductos ..> especificacionesProducto
-serviceProductos ..> atributosCategoria
-serviceVenta ..> detalleVenta
-
-' ____________________________________
+Usuario <|--- Emprendedor
+Usuario <|---- Cliente
+Productos <|-- ProductosDigitales
+Productos <|-- ProductosFisicos
+cuponesDescuentos <|-- cuponesDescuentosProductos
+DetalleVenta <|-- DetalleVentaDigital
 ' Composiciones
-VENTAS *-- detalleVenta
+' ____________________________________
+Ventas *-- DetalleVenta
+Categoria *-- AtributoCategoria
+Productos *-- EspecificacionProducto
+' Dependencias débiles entre models
+' ____________________________________
+Productos ..> ArchivoDigital
+Tiendas ..> ArchivoDigital
+InteraccionEvento ..> Productos
+SyncProductoEvento ..> Productos
+SyncInteresEvento ..> Categoria
+ProductoFeed ..> Productos
+InteresFeed ..> Categoria
+' Dependencias (controlador -> service)
+' ____________________________________
+controladorUsuarios --> serviceUsuarios
+controladorUsuarios --> serviceTiendas
+controladorUsuarios --> serviceIntereses
+controladorUsuarios --> serviceGoogleMaps
+controladorTiendas --> serviceTiendas
+controladorTiendas --> serviceEmprendedores
+controladorTiendas --> serviceProductos
+controladorTiendas --> serviceClientes
+controladorTiendas --> serviceAwsS3
+controladorEstadisticas --> serviceEstadisticas
+controladorProductos --> serviceProductos
+controladorProductos --> serviceTiendas
+controladorProductos --> serviceAwsS3
+controladorCategorias --> serviceCategorias
+controladorUbicaciones --> serviceGoogleMaps
+controladorCupones --> serviceCuponesDescuentos
+controladorVentas --> serviceVentas
+controladorVentas --> serviceClientes
+controladorMercadoPago --> servicePagos
+controladorMercadoPago --> serviceVentas
+controladorMercadoPago --> serviceEmprendedores
+controladorMercadoPago --> serviceGoogleMaps
+controladorMercadoPago --> serviceMercadoPago
+controladorEmails --> serviceCorreos
+controladorEmails --> serviceUsuarios
+controladorEmails --> serviceResend
+controladorLicencias --> serviceLicencias
+controladorFeed --> serviceFeed
+controladorFeed --> serviceProductos
+controladorTracking --> serviceKafka
+' Dependencias (service -> servicio externo)
+' ____________________________________
+serviceProductos --> serviceAwsS3
+serviceProductos --> serviceKafka
+serviceIntereses --> serviceKafka
+serviceVentas --> serviceResend
+serviceVentas --> serviceKafka
+serviceCorreos --> serviceResend
+serviceFeed --> serviceMCP
+serviceFeedSync --> serviceMCP
+serviceMercadoPago --> serviceEmprendedores
+' Dependencias (consumer -> service)
+' ____________________________________
+consumerEmails --> serviceVentas
+consumerEmails --> serviceResend
+consumerFeed --> serviceMCP
+consumerEmails ..> Correo
+consumerFeed ..> InteraccionEvento
+consumerFeed ..> SyncProductoEvento
+consumerFeed ..> SyncInteresEvento
+' Agregaciones (service -> model que administra)
+' ____________________________________
+serviceUsuarios o-- Usuario
+serviceClientes o-- Cliente
+serviceEmprendedores o-- Emprendedor
+serviceTiendas o-- Tiendas
+serviceProductos o-- Productos
+serviceCategorias o-- Categoria
+serviceUbicaciones o-- Ubicaciones
+serviceCuponesDescuentos o-- cuponesDescuentos
+serviceVentas o-- Ventas
+servicePagos o-- Pagos
+serviceLicencias o-- licenciaVenta
+serviceCorreos o-- Correo
 
 @enduml

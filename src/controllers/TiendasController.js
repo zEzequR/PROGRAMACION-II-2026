@@ -65,7 +65,7 @@ export async function crearTienda(req, res)
         }
         return res.status(500).json(
             {
-                error: err.message
+                mensaje: err.message
             });
     }
 }
@@ -137,7 +137,7 @@ export async function eliminarTienda(req, res)
     {
         return res.status(500).json(
             {
-                error: err.message
+                mensaje: err.message
             });
     }
 }
@@ -150,14 +150,14 @@ export async function reactivarTienda(req, res)
 
         const tiendaPersona = await buscarTiendaPorPersona(usuario);
 
-        if (!tiendaPersona || !tiendaPersona.id_tienda)
+        if (!tiendaPersona || !tiendaPersona.idTienda)
         {
             return res.status(404).json({ mensaje: "No tenés ninguna tienda" });
         }
 
 
         const tienda = new Tiendas({
-            idTienda: tiendaPersona.id_tienda,
+            idTienda: tiendaPersona.idTienda,
             activo: true
         });
 
@@ -171,7 +171,7 @@ export async function reactivarTienda(req, res)
             apellido: req.user.apellido,
             telefono: req.user.telefono,
             rol: ROLES.EMPRENDEDOR,
-            id_tienda: tiendaPersona.id_tienda,
+            id_tienda: tiendaPersona.idTienda,
             activo: true
         });
 
@@ -189,14 +189,15 @@ export async function obtenerPublicKey(req, res)
     {
         const [tienda] = req.models;
 
-        const emprendedorRow = await obtenerEmprendedorPorTienda(tienda);
+        const emprendedor = await obtenerEmprendedorPorTienda(tienda);
 
-        if (!emprendedorRow || !emprendedorRow.mp_public_key)
+        if (!emprendedor || !emprendedor.mpPublicKey)
         {
             return res.status(404).json({ mensaje: "Esta tienda no tiene Mercado Pago conectado" });
         }
 
-        return res.status(200).json({ publicKey: emprendedorRow.mp_public_key });
+        return res.status(200).json({ publicKey: emprendedor.mpPublicKey });
+
     }
     catch(err)
     {
@@ -217,7 +218,7 @@ export async function obtenerTiendaPublica(req, res)
             return res.status(404).json({ mensaje: "Tienda no encontrada" });
         }
 
-        const productos = await obtenerProductosTiendaService(tienda, true);
+        const productos = await  obtenerProductosTiendaService(tienda);
 
         return res.status(200).json({ tienda: tiendaEncontrada, productos });
     }
@@ -240,8 +241,8 @@ export async function obtenerMiTienda(req, res)
             return res.status(404).json({ mensaje: "No tenés ninguna tienda" });
         }
 
-        const emprendedorRow = await obtenerEmprendedorPorTienda(tienda);
-        const mpConectado = !!(emprendedorRow && emprendedorRow.mp_access_token);
+        const emprendedor = await obtenerEmprendedorPorTienda(tienda);
+        const mpConectado = !!(emprendedor && emprendedor.mpAccessToken);
 
         return res.status(200).json({ tienda: tiendaEncontrada, mpConectado });
     }

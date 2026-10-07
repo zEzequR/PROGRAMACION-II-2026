@@ -1,4 +1,5 @@
 import pool from '../config/conexion.js'
+import { Ubicaciones } from '../models/ubicaciones.js';
 
 export async function guardarUbicacionService(ubicacion)
 {
@@ -68,7 +69,7 @@ export async function actualizarUbicacionService(ubicacion)
     try
     {
         const resultado = await pool.query(query, values);
-        return resultado.rows[0];
+        return Ubicaciones.fromRow(resultado.rows[0]);
     }
     catch(err)
     {

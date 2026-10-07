@@ -3,8 +3,21 @@ import { stringify } from 'csv-stringify/sync'
 
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-export async function obtenerEstadisticasService(tienda, desde, hasta)
+export async function obtenerEstadisticasService(tienda, filtros)
 {
+    const ahora = new Date();
+    let desde = filtros.desde;
+    let hasta = filtros.hasta;
+
+    if (desde === undefined)
+    {
+        desde = new Date(ahora.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+    if (hasta === undefined)
+    {
+        hasta = ahora;
+    }
+
     const [resumen, ingresosPorDia, ventasPorDia, ventasPorCategoria, productosMasVendidos, ordenesRecientes] = await Promise.all([
         obtenerResumen(tienda, desde, hasta),
         obtenerIngresosPorDia(tienda, desde, hasta),
@@ -16,6 +29,7 @@ export async function obtenerEstadisticasService(tienda, desde, hasta)
 
     return { resumen, ingresosPorDia, ventasPorDia, ventasPorCategoria, productosMasVendidos, ordenesRecientes };
 }
+
 
 async function obtenerResumen(tienda, desde, hasta)
 {
@@ -154,11 +168,12 @@ async function obtenerProductosMasVendidos(tienda, desde, hasta)
     }
 }
 
-export async function generarCsvEstadisticasService(tienda, desde, hasta)
+export async function generarCsvEstadisticasService(tienda, filtros)
 {
-    const estadisticas = await obtenerEstadisticasService(tienda, desde, hasta);
+    const estadisticas = await obtenerEstadisticasService(tienda, filtros);
     return construirCsv(estadisticas);
 }
+
 
 function construirCsv(estadisticas)
 {

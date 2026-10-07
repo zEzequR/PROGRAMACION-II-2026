@@ -1,4 +1,5 @@
 import pool from '../config/conexion.js'
+import { Tiendas } from '../models/tiendas.js';
 
 export async function crearClienteService(usuario, tienda)
 {
@@ -85,7 +86,8 @@ export async function dejarDeSeguirTiendaService(usuario, tienda)
 export async function obtenerTiendasSeguidasService(usuario)
 {
     const query = `
-        SELECT Tiendas.id_tienda, Tiendas.nombre_tienda, Tiendas.logo_tienda
+        SELECT Tiendas.id_tienda, Tiendas.nombre_tienda, Tiendas.logo_tienda,
+        Tiendas.fecha_creacion, Tiendas.activo
         FROM Clientes
         JOIN Tiendas ON Tiendas.id_tienda = Clientes.id_tienda
         WHERE Clientes.id_persona = $1 AND Clientes.suscripcion = TRUE AND Tiendas.activo = TRUE
@@ -95,7 +97,11 @@ export async function obtenerTiendasSeguidasService(usuario)
     try
     {
         const resultado = await pool.query(query, [usuario.idPersona]);
-        return resultado.rows;
+        
+        return resultado.rows.map(function (fila)
+        {
+            return Tiendas.fromRow(fila);
+        });
     }
     catch (err)
     {

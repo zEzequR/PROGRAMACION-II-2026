@@ -1,26 +1,26 @@
 import { obtenerFeedService } from '../services/feedService.js';
 import { buscarProductosService } from '../services/productosService.js';
+import { Tiendas } from '../models/tiendas.js';
 
 export async function obtenerFeed(req, res)
 {
     try
     {
-        const { query, user } = req.models;
+        const [usuario, filtros] = req.models;
 
-        if (query.busqueda !== undefined || query.idCat !== undefined)
+        if (filtros.busqueda !== undefined || filtros.idCat !== undefined)
         {
-            const productos = await buscarProductosService(query);
+            const productos = await buscarProductosService(filtros);
             return res.status(200).json(productos);
         }
 
-        let idPersona;
-        if (user)
+        let tiendaPropia = null;
+        if (req.user && req.user.id_tienda)
         {
-            idPersona = user.idPersona;
+            tiendaPropia = new Tiendas({ idTienda: req.user.id_tienda });
         }
 
-        const productos = await obtenerFeedService(idPersona, query.total, query.offset);
-
+        const productos = await obtenerFeedService(usuario, filtros, tiendaPropia);
         return res.status(200).json(productos);
     }
     catch (err)
@@ -29,3 +29,4 @@ export async function obtenerFeed(req, res)
         return res.status(500).end();
     }
 }
+

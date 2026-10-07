@@ -101,6 +101,12 @@ export const obtenerProducto = z.object({
     })
 });
 
+export const obtenerProductosTienda = z.object({
+    params: z.object({
+        idTienda: z.coerce.number().int().positive()
+    })
+});
+
 export const descargarProducto = z.object({
     params: z.object({
         idVenta: z.coerce.number().int().positive(),

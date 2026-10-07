@@ -74,12 +74,12 @@ export async function intercambiarCodigoService(code)
 // Devuelve: un string, el access_token listo para usar.
 export async function obtenerAccessTokenVigente(emprendedor)
 {
-    const expira = emprendedor.mp_token_expires_at ? new Date(emprendedor.mp_token_expires_at).getTime() : 0;
+    const expira = emprendedor.mpTokenExpiresAt ? new Date(emprendedor.mpTokenExpiresAt).getTime() : 0;
     const faltaPocoOYaVencio = (expira - Date.now()) < MARGEN_RENOVACION_MS;
 
-    if (!faltaPocoOYaVencio || !emprendedor.mp_refresh_token)
+    if (!faltaPocoOYaVencio || !emprendedor.mpRefreshToken)
     {
-        return emprendedor.mp_access_token;
+        return emprendedor.mpAccessToken;
     }
 
     try
@@ -93,7 +93,7 @@ export async function obtenerAccessTokenVigente(emprendedor)
                 client_id: MP_CLIENT_ID,
                 client_secret: MP_CLIENT_SECRET,
                 grant_type: "refresh_token",
-                refresh_token: emprendedor.mp_refresh_token
+                refresh_token: emprendedor.mpRefreshToken
             })
         });
 
@@ -106,7 +106,7 @@ export async function obtenerAccessTokenVigente(emprendedor)
 
         const emprendedorRenovado = new Emprendedor(
         {
-            idPersona: emprendedor.id_persona,
+            idPersona: emprendedor.idPersona,
             mpAccessToken: resultado.access_token,
             mpRefreshToken: resultado.refresh_token,
             mpUserId: String(resultado.user_id),
@@ -175,12 +175,12 @@ export async function intercambiarCodigoQrService(code)
 // Igual que obtenerAccessTokenVigente pero con los campos mp_qr_* del emprendedor.
 export async function obtenerAccessTokenQrVigente(emprendedor)
 {
-    const expira = emprendedor.mp_qr_token_expires_at ? new Date(emprendedor.mp_qr_token_expires_at).getTime() : 0;
+    const expira = emprendedor.mpQrTokenExpiresAt ? new Date(emprendedor.mpQrTokenExpiresAt).getTime() : 0;
     const faltaPocoOYaVencio = (expira - Date.now()) < MARGEN_RENOVACION_MS;
 
-    if (!faltaPocoOYaVencio || !emprendedor.mp_qr_refresh_token)
+    if (!faltaPocoOYaVencio || !emprendedor.mpQrRefreshToken)
     {
-        return emprendedor.mp_qr_access_token;
+        return emprendedor.mpQrAccessToken;
     }
 
     try
@@ -194,7 +194,7 @@ export async function obtenerAccessTokenQrVigente(emprendedor)
                 client_id: MP_QR_CLIENT_ID,
                 client_secret: MP_QR_CLIENT_SECRET,
                 grant_type: "refresh_token",
-                refresh_token: emprendedor.mp_qr_refresh_token
+                refresh_token: emprendedor.mpQrRefreshToken
             })
         });
 
@@ -207,7 +207,7 @@ export async function obtenerAccessTokenQrVigente(emprendedor)
 
         const emprendedorRenovado = new Emprendedor(
         {
-            idPersona: emprendedor.id_persona,
+            idPersona: emprendedor.idPersona,
             mpQrAccessToken: resultado.access_token,
             mpQrRefreshToken: resultado.refresh_token,
             mpQrUserId: String(resultado.user_id),
@@ -269,7 +269,7 @@ export async function crearOrdenService(datosVenta, emprendedor, metodo, datosTa
         {
             qr:
             {
-                external_pos_id: emprendedor.mp_qr_pos_id, // la caja del emprendedor (de crearSucursalYCajaService)
+                external_pos_id: emprendedor.mpQrPosId, // la caja del emprendedor (de crearSucursalYCajaService)
                 mode: "dynamic" // un QR nuevo por cada venta, no uno fijo reutilizable
             }
         };
@@ -330,6 +330,11 @@ export async function crearOrdenService(datosVenta, emprendedor, metodo, datosTa
     // Cualquier otro código (400, 401, etc.) sí es un error real
     console.error(`[MP ORDER ERROR ${metodo}] body enviado:`, JSON.stringify(body));
     console.error(`[MP ORDER ERROR ${metodo}] respuesta:`, JSON.stringify(data));
+
+    if (res.status === 400 && metodo === 'TARJETA')
+    {
+        throw new Error("Los datos del pago no son válidos");
+    }
 
     let detalle = data.message || JSON.stringify(data);
     if (Array.isArray(data.errors))

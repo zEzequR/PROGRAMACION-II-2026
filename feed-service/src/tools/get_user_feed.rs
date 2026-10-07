@@ -11,6 +11,7 @@ pub struct UserFeedBody
     pub id_persona: Option<i64>,
     pub total: Option<i64>,
     pub offset: Option<i64>,
+    pub id_tienda_excluida: Option<i64>,
 }
 
 #[tool_router(router = tool_router_get_user_feed, vis = "pub")]

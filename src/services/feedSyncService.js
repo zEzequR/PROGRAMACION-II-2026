@@ -21,9 +21,11 @@ export async function iniciarFeed()
 export async function resincronizarFeed()
 {
     const queryProductos = `
-        SELECT id_producto, id_cat, id_tienda, COALESCE(activo, FALSE) AS activo
+        SELECT Productos.id_producto, Productos.id_cat, Productos.id_tienda,
+            (COALESCE(Productos.activo, FALSE) AND COALESCE(Tiendas.activo, FALSE)) AS activo
         FROM Productos
-        WHERE id_cat IS NOT NULL AND id_tienda IS NOT NULL
+        JOIN Tiendas ON Tiendas.id_tienda = Productos.id_tienda
+        WHERE Productos.id_cat IS NOT NULL
     `;
     const queryIntereses = `SELECT id_persona, id_cat FROM Personas_Intereses`;
 

@@ -4,7 +4,7 @@ class InteraccionEvento {
     static propiedades = z.object({
         idPersona: z.number(),
         idProducto: z.number(),
-        tipoEvento: z.enum(['Vista', 'Click', 'Compra'])
+        tipoEvento: z.enum(['Detalle', 'VisitaTienda', 'Carrito', 'Compra'])
     });
 
     constructor(datos) {

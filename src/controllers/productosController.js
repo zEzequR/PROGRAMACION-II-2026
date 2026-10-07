@@ -1,11 +1,11 @@
 import { crearProductoService, modificarProductoService,
     cambiarActivoProductosService,
     subirArchivoDigitalS3, obtenerURLService, buscarProductoPorId,
-    obtenerProductosTiendaService } from '../services/productosService.js';
+    obtenerProductosTiendaService, obtenerArchivoProductoService } from '../services/productosService.js';
 import { ArchivoDigital } from '../models/archivoDigital.js'
 import { generarURLPublica } from '../services/api/awsS3Service.js';
 import { Tiendas } from '../models/tiendas.js';
-import { Productos } from '../models/productos.js';
+import { buscarTiendaPorId } from '../services/tiendasService.js';
 
 
 export async function crearProducto(req, res)
@@ -16,18 +16,17 @@ export async function crearProducto(req, res)
 
         if (!req.files || !req.files['imagenProd'])
         {
-            return res.status(400).json({
-                estado: "ERROR",
-                mensaje: "Se requiere subir una imagen del producto"
-            });
+            return res.status(400).json({ mensaje: "Se requiere subir una imagen del producto" });
+        }
+
+        if (!req.files['imagenProd'][0].mimetype.startsWith('image/'))
+        {
+            return res.status(400).json({ mensaje: "La imagen del producto tiene que ser PNG, JPG o WEBP" });
         }
 
         if (producto.tipoProd === 'DIGITAL' && !req.files['archivoProd'])
         {
-            return res.status(400).json({
-                estado: "ERROR",
-                mensaje: "Para productos digitales se requiere subir un archivo digital"
-            });
+            return res.status(400).json({ mensaje: "Para productos digitales se requiere subir un archivo digital" });
         }
 
         const fotoProducto = new ArchivoDigital(
@@ -61,10 +60,10 @@ export async function crearProducto(req, res)
             producto.archivoProd = archivo.key;
         }
 
-        const resultado = await crearProductoService(producto, atributo, especificacion);
+        const idProducto = await crearProductoService(producto, atributo, especificacion);
 
         return res.status(201).json({
-            idProducto: resultado.id_producto,
+            idProducto: idProducto,
             imagenProd: producto.imagenProd
         });
     }
@@ -72,7 +71,6 @@ export async function crearProducto(req, res)
     {
         console.error(err);
         return res.status(500).json({
-            estado: "ERROR",
             mensaje: `No se pudo crear el producto: ${err.message}`
         });
     }
@@ -86,27 +84,26 @@ export async function modificarProducto(req, res)
 
         const productoActual = await buscarProductoPorId(producto);
 
-        if (!productoActual || productoActual.id_tienda !== req.user.id_tienda
-            || productoActual.tipo_prod !== producto.tipoProd)
+        if (!productoActual || productoActual.idTienda !== req.user.id_tienda
+            || productoActual.tipoProd !== producto.tipoProd)
         {
-            return res.status(404).json({
-                estado: "ERROR",
-                mensaje: "Producto no encontrado"
-            });
+            return res.status(404).json({ mensaje: "Producto no encontrado" });
         }
 
         producto.idTienda = req.user.id_tienda;
 
         if (atributo.idCat === undefined)
         {
-            atributo.idCat = productoActual.id_cat;
+            atributo.idCat = productoActual.idCat;
         }
 
         if (producto.tipoProd === 'DIGITAL' && req.file)
         {
+            const archivoActual = await obtenerArchivoProductoService(producto);
+
             const archivo = new ArchivoDigital(
                 {
-                    key: productoActual.archivo_prod,
+                    key: archivoActual.key,
                     path: req.file.path,
                     mimetype: req.file.mimetype,
                     type: 'ARCHIVO',
@@ -120,7 +117,6 @@ export async function modificarProducto(req, res)
         await modificarProductoService(producto, atributo, especificacion);
 
         return res.status(200).json({
-            estado: "EXITO",
             mensaje: `Producto ${producto.tipoProd.toLowerCase()} modificado correctamente`,
         });
 
@@ -129,7 +125,6 @@ export async function modificarProducto(req, res)
     {
         console.error(err);
         return res.status(500).json({
-            estado: "ERROR",
             mensaje: `No se pudo modificar el producto: ${err.message}`
         });
     }
@@ -206,34 +201,48 @@ export async function obtenerProducto(req, res)
 
         const producto = await buscarProductoPorId(productoBuscado);
 
-        if (!producto || !producto.activo || !producto.tienda_activa)
+        if (!producto || !producto.activo || !producto.tienda.activo)
         {
             return res.status(404).json({ mensaje: "Producto no encontrado" });
         }
 
+        let categoria = null;
+        if (producto.categoria)
+        {
+            categoria = producto.categoria.categoria;
+        }
+        let stock = null;
+        if (producto.tipoProd === 'FISICO')
+        {
+            stock = producto.stock;
+        }
+        let usaLicencia = false;
+        if (producto.tipoProd === 'DIGITAL')
+        {
+            usaLicencia = producto.usaLicencia === true;
+        }
+
         return res.status(200).json({
             producto: {
-                idProducto: producto.id_producto,
-                idTienda: producto.id_tienda,
-                nombreTienda: producto.nombre_tienda,
-                logoTienda: producto.logo_tienda,
-                idCat: producto.id_cat,
-                categoria: producto.categoria,
-                tipoProd: producto.tipo_prod,
-                nombreProd: producto.nombre_prod,
-                imagenProd: producto.imagen_prod,
-                descripProd: producto.descrip_prod,
-                precio: Number(producto.precio),
-                stock: producto.stock,
-                usaLicencia: producto.usa_licencia
+                idProducto: producto.idProducto,
+                idTienda: producto.idTienda,
+                nombreTienda: producto.tienda.nombreTienda,
+                logoTienda: producto.tienda.logoTienda,
+                idCat: producto.idCat,
+                categoria: categoria,
+                tipoProd: producto.tipoProd,
+                nombreProd: producto.nombreProd,
+                imagenProd: producto.imagenProd,
+                descripProd: producto.descripProd,
+                precio: producto.precio,
+                stock: stock,
+                usaLicencia: usaLicencia
             }
         });
-
     }
     catch (err)
     {
         return res.status(500).json({
-            estado: "ERROR",
             mensaje: `No se pudo obtener el producto: ${err.message}`
         });
     }
@@ -245,7 +254,14 @@ export async function obtenerProductosTienda(req, res)
     {
         const [tienda] = req.models;
 
-        const productos = await obtenerProductosTiendaService(tienda, true);
+        const tiendaEncontrada = await buscarTiendaPorId(tienda);
+
+        if (!tiendaEncontrada || !tiendaEncontrada.activo)
+        {
+            return res.status(404).json({ mensaje: "Tienda no encontrada" });
+        }
+
+        const productos = await obtenerProductosTiendaService(tienda);
 
         return res.status(200).json({ productos });
     }
@@ -259,9 +275,13 @@ export async function obtenerMisProductos(req, res)
 {
     try
     {
-        const tienda = new Tiendas({ idTienda: req.user.id_tienda });
+        const tienda = new Tiendas(
+            {
+                idTienda: req.user.id_tienda,
+                activo: false
+            });
 
-        const productos = await obtenerProductosTiendaService(tienda, false);
+        const productos = await obtenerProductosTiendaService(tienda);
 
         return res.status(200).json({ productos });
     }
@@ -284,10 +304,10 @@ export async function descargarProducto(req, res)
             return res.status(403).json({ mensaje: "No tenés acceso a este archivo o la compra todavía no está pagada" });
         }
 
-        return res.status(200).json({ estado: 'EXITO', downloadUrl: url })
+        return res.status(200).json({ downloadUrl: url })
     }
     catch(err)
     {
-        return res.status(403).json({ estado: 'ERROR', mensaje: err.message })
+        return res.status(403).json({ mensaje: err.message })
     }
 }

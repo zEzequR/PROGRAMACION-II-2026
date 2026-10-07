@@ -19,15 +19,20 @@ pub struct InteraccionParams
 #[tool_router(router = tool_router_interaccion, vis = "pub")]
 impl FeedServer
 {
-    #[tool(description = "Registra una interaccion (vista, click, favorito o compra) 
-    de un usuario sobre un producto, y actualiza los puntajes de categoría, producto y tienda")]
+    #[tool(description = "Registra una interaccion (Detalle, VisitaTienda, Carrito o Compra)
+    de un usuario sobre un producto, y actualiza los puntajes de categoría, producto y tienda.
+    Salvo la compra, el mismo evento cuenta una sola vez por persona y producto dentro de la ventana")]
     pub async fn registrar_interaccion(&self, Parameters(parametros): Parameters<InteraccionParams>) -> Result<String, String>
     {
-        match interaccion_service::registrar_interaccion_service(&self.conexion, parametros.id_persona, parametros.id_producto, parametros.tipo_evento).await
+        match interaccion_service::registrar_interaccion_service(&self.conexion, &self.config, parametros.id_persona, parametros.id_producto, parametros.tipo_evento).await
         {
-            Ok(_) =>
+            Ok(true) =>
             {
                 Ok("Interaccion registrada".to_string())
+            }
+            Ok(false) =>
+            {
+                Ok("Interaccion repetida dentro de la ventana: no suma puntos".to_string())
             }
             Err(e) =>
             {

@@ -1,4 +1,5 @@
 import pool from '../config/conexion.js'
+import { licenciaVenta } from '../models/licenciaVenta.js';
 
 export async function crearLicenciaVentaService(licencia)
 {
@@ -37,7 +38,7 @@ export async function validarLicenciaService(licencia, user)
         UPDATE Licencia_Venta
         SET clave_usada = TRUE
         WHERE clave_digital = $1 AND clave_usada = FALSE
-        RETURNING id_lic_vta, id_producto
+        RETURNING id_lic_vta, id_producto, clave_usada
     `;
 
     try
@@ -62,7 +63,7 @@ export async function validarLicenciaService(licencia, user)
             throw new Error("Esta licencia ya fue utilizada");
         }
 
-        return resultado.rows[0];
+        return licenciaVenta.fromRow(resultado.rows[0]);
     }
     catch (err)
     {

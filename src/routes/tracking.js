@@ -7,9 +7,11 @@ import { InteraccionEvento } from '../models/eventos.js';
 
 const router = Router();
 
-router.post('/vista', JWTVerify, validateSchemas(trackingSchemas.registrarVista, [InteraccionEvento]),
-trackingControlador.registrarVista);
-router.post('/click', JWTVerify, validateSchemas(trackingSchemas.registrarClick, [InteraccionEvento]),
-trackingControlador.registrarClick);
+router.post('/detalle', JWTVerify, validateSchemas(trackingSchemas.registrarDetalle, [InteraccionEvento]),
+trackingControlador.registrarDetalle);
+router.post('/visita-tienda', JWTVerify, validateSchemas(trackingSchemas.registrarVisitaTienda, [InteraccionEvento]),
+trackingControlador.registrarVisitaTienda);
+router.post('/carrito', JWTVerify, validateSchemas(trackingSchemas.registrarCarrito, [InteraccionEvento]),
+trackingControlador.registrarCarrito);
 
 export default router;
