@@ -4,3 +4,4 @@ pub mod registrar_interaccion;
 pub mod sync_producto;
 pub mod resync_completo;
 pub mod get_user_feed;
+pub mod mejorar_especificaciones_producto;

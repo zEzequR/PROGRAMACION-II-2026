@@ -116,3 +116,11 @@ export const descargarProducto = z.object({
         idPersona: z.number()
     })
 });
+
+export const sugerirProducto = z.object({
+    body: z.object({
+        nombreProd: z.string().trim().min(1).max(60),
+        idCat: z.coerce.number().int().positive(),
+        idProducto: z.coerce.number().int().positive().optional()
+    })
+});

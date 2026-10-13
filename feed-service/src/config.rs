@@ -14,6 +14,8 @@ pub struct Config
     pub feed_tope_x_tienda: u32,
     pub feed_ventana_trend_dias: u32,
     pub feed_ventana_repetidos_horas: u32,
+    pub anthropic_api_key: Option<String>,
+    pub ia_modelo: String,
 }
 
 pub fn leer_valores_env() -> Result<Config>
@@ -29,7 +31,9 @@ pub fn leer_valores_env() -> Result<Config>
         feed_tope_x_cat: env::var("FEED_TOPE_POR_CATEGORIA").unwrap_or_else(|_| "5".to_string()).parse()?,
         feed_tope_x_tienda: env::var("FEED_TOPE_POR_TIENDA").unwrap_or_else(|_| "3".to_string()).parse()?,
         feed_ventana_trend_dias: env::var("FEED_VENTANA_TRENDING_DIAS").unwrap_or_else(|_| "7".to_string()).parse()?,
-        feed_ventana_repetidos_horas: env::var("FEED_VENTANA_REPETIDOS_HORAS").unwrap_or_else(|_| "24".to_string()).parse()?
+        feed_ventana_repetidos_horas: env::var("FEED_VENTANA_REPETIDOS_HORAS").unwrap_or_else(|_| "24".to_string()).parse()?,
+        anthropic_api_key: env::var("ANTHROPIC_API_KEY").ok().filter(|clave| !clave.trim().is_empty()),
+        ia_modelo: env::var("IA_MODELO").unwrap_or_else(|_| "claude-opus-5-5".to_string())
     };
 
     Ok(config)

@@ -1,0 +1,1 @@
+# [Colección del servidor MCP](https://www.postman.com/ezequiel-ramos-9947372/workspace/ezequiel-ramos-s-workspace/collection/6ac68ca873708b7d0a240a6d?action=share&source=copy-link&creator=54533664)

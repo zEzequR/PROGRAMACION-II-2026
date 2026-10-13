@@ -1,6 +1,7 @@
 import pool from '../config/conexion.js';
 import { Categoria } from '../models/categorias.js';
 import { EspecificacionProducto } from '../models/especificacionProducto.js';
+import { AtributoCategoria } from '../models/atributoCategoria.js';
 
 export async function obtenerCategoriasService()
 {
@@ -84,4 +85,45 @@ export async function guardarCategoriaService(atributos, Especificacion) {
         {
             throw new Error(`Error al obtener o crear el atributo/especificación: ${err.message}`);
         }
+}
+
+export async function obtenerCategoriaConAtributosService(categoria)
+{
+    const query = `
+        SELECT Categorias_Productos.id_cat, Categorias_Productos.categoria,
+            Atributos_Categoria.id_atributo, Atributos_Categoria.nombre_atributo
+        FROM Categorias_Productos
+        LEFT JOIN Atributos_Categoria ON Atributos_Categoria.id_cat = Categorias_Productos.id_cat
+        WHERE Categorias_Productos.id_cat = $1
+        ORDER BY Atributos_Categoria.nombre_atributo
+    `;
+
+    try
+    {
+        const resultado = await pool.query(query, [categoria.idCategoria]);
+
+        if (resultado.rows.length === 0)
+        {
+            return null;
+        }
+
+        const atributos = [];
+        for (const fila of resultado.rows)
+        {
+            if (fila.id_atributo !== null)
+            {
+                atributos.push(new AtributoCategoria({
+                    idAtributo: fila.id_atributo,
+                    idCat: fila.id_cat,
+                    nombreAtributo: fila.nombre_atributo
+                }));
+            }
+        }
+
+        return [Categoria.fromRow(resultado.rows[0]), atributos];
+    }
+    catch (err)
+    {
+        throw new Error(`Error al buscar la categoría: ${err.message}`);
+    }
 }

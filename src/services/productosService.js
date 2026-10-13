@@ -1,11 +1,13 @@
 import pool from '../config/conexion.js'
 import fs from 'fs'
 import { subirArchivo, generarUrlDescarga } from '../services/api/awsS3Service.js'
-import { guardarCategoriaService } from './categoriasService.js'
+import { guardarCategoriaService,  obtenerCategoriaConAtributosService } from './categoriasService.js'
 import { SyncProductoEvento } from '../models/eventos.js';
 import { publicarEvento } from './api/kafkaService.js';
 import { ArchivoDigital } from '../models/archivoDigital.js';
 import { Productos } from '../models/productos.js';
+import { mejorarProductoMcp } from './api/MCPservice.js';
+import { Categoria } from '../models/categorias.js';
 
 const queryProductoCompleto = `
     SELECT Productos.id_producto, Productos.id_tienda, Productos.id_cat, Categorias_Productos.categoria,
@@ -482,4 +484,25 @@ export async function buscarProductosService(filtros)
     {
         throw new Error(err.message);
     }
+}
+
+export async function sugerirDatosProductoService(producto, imagen)
+{
+    const resultado = await obtenerCategoriaConAtributosService(new Categoria({ idCategoria: producto.idCat }));
+
+    if (!resultado)
+    {
+        throw new Error('Categoría no encontrada');
+    }
+
+    const [categoria, atributos] = resultado;
+
+    let urlImagen = producto.imagenProd;
+    if (imagen)
+    {
+        await subirArchivoDigitalS3(imagen);
+        urlImagen = await generarUrlDescarga(imagen);
+    }
+
+    return mejorarProductoMcp(producto, categoria, atributos, urlImagen);
 }

@@ -42,6 +42,9 @@ validateSchemas(productoSchemas.descargarProducto, [DetalleVenta, Usuario]),
 productoControlador.descargarProducto);
 router.get('/:idProducto', validateSchemas(productoSchemas.obtenerProducto, [Productos]),
 productoControlador.obtenerProducto);
+router.post('/enhance', JWTVerify, verfifyRoles([ROLES.EMPRENDEDOR]), upload.single('imagenProd'),
+validateSchemas(productoSchemas.sugerirProducto, [Productos]),
+productoControlador.sugerirProducto);
 
 
 export default router;

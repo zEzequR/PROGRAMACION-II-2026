@@ -6,6 +6,7 @@ mod models;
 mod enums;
 mod services;
 use std::sync::Arc;
+mod api;
 
 use rmcp::transport::streamable_http_server::{
     StreamableHttpService, StreamableHttpServerConfig,

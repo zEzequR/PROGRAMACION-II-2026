@@ -39,6 +39,7 @@ package ENUMS <<Frame>> #ffe9d4{
     enum tipoArchivo{
         ARCHIVO
         IMAGEN PRODUCTO
+        IMAGEN TEMPORAL
     }
 
     enum tipoEvento{
@@ -215,6 +216,14 @@ namespace MODELS #ffffd4{
         - desde : date
         - hasta : date
     }
+
+    class SugerenciaProducto{
+        - nombreProd : string
+        - descripProd : string
+        - nombreAtributo : string
+        - valor : string
+        + {static} fromMcp(datos : object) : SugerenciaProducto
+    }
 }
 
 
@@ -307,11 +316,14 @@ namespace SERVICES #ddffd4{
         + obtenerURLService(detalle : DetalleVenta, usuario : Usuario) : string
         + obtenerProductosTiendaService(tienda : Tiendas) : List<Productos>
         + buscarProductosService(filtros : Filtros) : List<Productos>
+        + sugerirDatosProductoService(producto : Productos, imagen : ArchivoDigital) : SugerenciaProducto
+        + descartarArchivoLocal(ruta : string) : void
     }
 
     class serviceCategorias <<categoriasService.js>>{
         + obtenerCategoriasService() : List<Categoria>
         + guardarCategoriaService(atributos : AtributoCategoria, especificacion : EspecificacionProducto) : EspecificacionProducto
+        + obtenerCategoriaConAtributosService(categoria : Categoria) : [Categoria, List<AtributoCategoria>]
     }
 
     class serviceIntereses <<interesesService.js>>{
@@ -414,12 +426,13 @@ namespace SERVICIOS_EXTERNOS #e9ffd4{
 
     class serviceMCP <<api/MCPservice.js>>{
         + verificarEstadoFeed() : string
-        + llamarToolMCP(tool : string, parametros : object) : object
+        + llamarToolMCP(tool : string, parametros : object, opciones : object) : object
         + resyncCompletoFeed(productos : List<ProductoFeed>, intereses : List<InteresFeed>) : void
         + getUserFeedMcp(usuario : Usuario, filtros : Filtros, tiendaPropia : Tiendas) : List<int>
         + registrarInteraccionFeed(evento : InteraccionEvento) : void
         + syncProductoFeed(evento : SyncProductoEvento) : void
         + setInteresesUsuarioFeed(evento : SyncInteresEvento) : void
+        + mejorarProductoMcp(producto : Productos, categoria : Categoria, atributos : List<AtributoCategoria>, urlImagen : string) : SugerenciaProducto
     }
 }
 
@@ -468,6 +481,7 @@ namespace CONTROLLERS #d4fff1{
         + obtenerProductosTienda() : void
         + obtenerMisProductos() : void
         + descargarProducto() : void
+        + sugerirProducto() : void
     }
 
     class controladorCategorias <<categoriasController.js>>{
@@ -592,6 +606,7 @@ SyncProductoEvento ..> Productos
 SyncInteresEvento ..> Categoria
 ProductoFeed ..> Productos
 InteresFeed ..> Categoria
+SugerenciaProducto ..> Productos
 ' Dependencias (controlador -> service)
 ' ____________________________________
 controladorUsuarios --> serviceUsuarios
@@ -635,6 +650,8 @@ serviceCorreos --> serviceResend
 serviceFeed --> serviceMCP
 serviceFeedSync --> serviceMCP
 serviceMercadoPago --> serviceEmprendedores
+serviceProductos --> serviceMCP
+serviceMCP ..> SugerenciaProducto
 ' Dependencias (consumer -> service)
 ' ____________________________________
 consumerEmails --> serviceVentas

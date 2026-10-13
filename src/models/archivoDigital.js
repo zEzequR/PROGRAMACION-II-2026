@@ -23,6 +23,9 @@ class ArchivoDigital {
             case 'IMAGEN PRODUCTO':
                 this.key = datosValidados.key || `tiendas/${this.idTienda}/img/${generarUUID()}.${this.extension}`;
                 break;
+            case 'IMAGEN TEMPORAL':
+                this.key = datosValidados.key || `tmp/tiendas/${this.idTienda}/${generarUUID()}.${this.extension}`;
+                break;
         }
     }
 

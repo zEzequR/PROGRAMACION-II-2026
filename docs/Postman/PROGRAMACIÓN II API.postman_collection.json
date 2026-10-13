@@ -4849,6 +4849,96 @@
           ]
         },
         {
+          "name": "Sugerir los datos de un producto con IA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Con la foto del producto, el nombre que escribió el emprendedor y la categoría que eligió, la IA propone un nombre mejorado, una descripción y una característica con su valor, para autocompletar el formulario de _Publicar un producto_. **No guarda nada**: el emprendedor revisa la sugerencia y publica el producto después.\n\nPor dentro, la API sube la foto a una carpeta temporal del almacenamiento (se borra sola al día), busca la categoría y los atributos que ya tiene, y le pide la sugerencia al microservicio de feed, que llama a la API de Claude. Tarda unos segundos. Si el nombre trae una marca, la sugerencia la respeta.\n\n**Ruta:** `POST /productos/enhance`  \n**Acceso:** Emprendedor · `Authorization: Bearer {{tokenEmprendedor}}`\n\n> ⚠️ **Efecto real:** cada envío exitoso es una llamada paga a la API de Claude (dos si hay que reintentar) y deja la foto en la carpeta temporal del almacenamiento. \n  \n\n### Body (`multipart/form-data`)\n\n| Campo | Tipo | Obligatorio | Detalle |\n| --- | --- | --- | --- |\n| `nombreProd` | string (1-60) | Sí | El nombre que escribió el emprendedor |\n| `idCat` | entero | Sí | Categoría elegida |\n| `imagenProd` | archivo | Sí, salvo que se mande `idProducto` | PNG, JPG o WEBP, hasta 5 MB |\n| `idProducto` | entero | No | Producto que ya existe: se usa su foto y no hace falta `imagenProd` |\n\n### Respuestas\n\n| Status | Cuándo | Body |\n| --- | --- | --- |\n| `200` | Sugerencia generada | `{ nombreProd, descripProd, nombreAtributo, valor }` (hasta 60, 255, 60 y 60 caracteres) |\n| `400` | Sin foto ni `idProducto` | `{ mensaje: \"Se requiere subir una imagen del producto\" }` |\n| `400` | La foto no es PNG, JPG o WEBP | `{ mensaje: \"La imagen del producto tiene que ser PNG, JPG o WEBP\" }` |\n| `400` | La foto pesa más de 5 MB | `{ mensaje: \"La imagen puede pesar hasta 5 MB\" }` |\n| `400` | Datos con formato inválido | `{ mensaje: \"Datos inválidos\", detalle: string[] }` |\n| `401` / `403` | Sin token, token vencido, cuenta desactivada o rol sin permiso (ver la descripción de la colección) | `{ mensaje }` |\n| `404` | `idProducto` que no existe o es de otra tienda | `{ mensaje: \"Producto no encontrado\" }` |\n| `404` | La categoría no existe | `{ mensaje: \"Categoría no encontrada\" }` |\n| `502` | Falla el microservicio de feed o la API de Claude, o no acepta la imagen | `{ mensaje: \"No pudimos generar la sugerencia: …\" }` |"
+          },
+          "response": [
+            {
+              "name": "Sugerir los datos de un producto con IA",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "nombreProd",
+                      "value": "zapatillas adidas",
+                      "type": "text",
+                      "uuid": "0029f2a0-0c59-49eb-b8a0-a6274d746e81"
+                    },
+                    {
+                      "key": "idCat",
+                      "value": "1",
+                      "type": "text",
+                      "uuid": "94373886-61ec-4664-951e-3829b2f5a280"
+                    },
+                    {
+                      "key": "imagenProd",
+                      "type": "file",
+                      "uuid": "c5558f53-8342-4557-8b5a-3f74c864a003",
+                      "src": "/C:/Users/ezequ/Downloads/zapatillapumaaldosivi.jpg"
+                    }
+                  ],
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/productos/enhance",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "productos",
+                    "enhance"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "317"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"13d-ro8htDdHIQFPransa5RZX0MD1mM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 08 Oct 2026 23:55:07 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"nombreProd\": \"Zapatillas Adidas urbanas verdes y naranjas\",\n    \"descripProd\": \"Zapatillas urbanas de caña baja en gamuza verde, con franja lateral naranja, interior naranja, cordones verdes y suela de goma marrón. Un modelo de estilo retro para usar todos los días.\",\n    \"nombreAtributo\": \"Color\",\n    \"valor\": \"Verde y naranja\"\n}"
+            }
+          ]
+        },
+        {
           "name": "Dar de baja productos de mi tienda",
           "request": {
             "auth": {
@@ -5632,7 +5722,7 @@
           ]
         }
       ],
-      "description": "Productos físicos (con stock) y digitales (con archivo descargable y, opcionalmente, licencia). Alta con imagen y archivo, modificación, baja y reactivación, catálogo de una tienda, detalle y descarga de lo comprado.\n\n**Ruta base:** `/productos` · **Endpoints:** 10\n\n## Endpoints\n\n| Endpoint | Qué hace | Acceso |\n| --- | --- | --- |\n| [`POST /productos/fisicos`](https://go.postman.co/request/54533664-68f904cb-a8f4-31fb-9d16-a82a8965cbe6) | Publicar un producto físico | Con sesión, rol `EMPRENDEDOR` |\n| [`POST /productos/digitales`](https://go.postman.co/request/54533664-7f54c2a9-b57b-a364-06e4-dd19efed5555) | Publicar un producto digital | Con sesión, rol `EMPRENDEDOR` |\n| [`PUT /productos/fisicos/:idProducto`](https://go.postman.co/request/54533664-af9b1faa-be5b-728b-f322-b59d7e637376) | Modificar un producto físico | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [`PUT /productos/digitales/:idProducto`](https://go.postman.co/request/54533664-91a2b901-39e2-c88d-8fa5-88560303769d) | Modificar un producto digital | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [`DELETE /productos`](https://go.postman.co/request/54533664-642a0c16-ca94-e789-c6ed-1ec0991816a5) | Dar de baja productos de mi tienda | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [`PATCH /productos`](https://go.postman.co/request/54533664-9b88ce44-5b56-5cb2-b66a-d3170f858971) | Reactivar productos de mi tienda | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [`GET /productos/mios`](https://go.postman.co/request/54533664-4dd56495-1ba1-9365-5bd8-4c0a3c77797c) | Ver todos los productos de mi tienda | Con sesión, rol `EMPRENDEDOR` |\n| [`GET /productos/tienda/:idTienda`](https://go.postman.co/request/54533664-c22e4905-e14d-bc1e-2f78-3826297cd62f) | Ver los productos activos de una tienda | Público |\n| [`GET /productos/:idProducto`](https://go.postman.co/request/54533664-3f0e3eaf-6d4e-22dd-7be7-c183e96561cd) | Ver el detalle de un producto | Público |\n| [`GET /productos/descargar/:idVenta/:idProducto`](https://go.postman.co/request/54533664-2299c6f7-25fd-704b-c9f8-e8fe295b0f27) | Obtener el link de descarga de un producto digital comprado | Con sesión, cualquier rol |\n\nEl detalle de cada endpoint (entrada, respuestas y ejemplos) está en su request. Los diagramas de secuencia están en `docs/Secuencia` y el resultado de la prueba con las métricas en `docs/test`, en el repositorio."
+      "description": "Productos físicos (con stock) y digitales (con archivo descargable y, opcionalmente, licencia). Alta con imagen y archivo, modificación, baja y reactivación, catálogo de una tienda, detalle y descarga de lo comprado.\n\n**Ruta base:** `/productos` · **Endpoints:** 10\n\n## Endpoints\n\n| Endpoint | Qué hace | Acceso |\n| --- | --- | --- |\n| [<code>POST /productos/fisicos</code>](https://go.postman.co/request/54533664-68f904cb-a8f4-31fb-9d16-a82a8965cbe6) | Publicar un producto físico | Con sesión, rol `EMPRENDEDOR` |\n| [<code>POST /productos/digitales</code>](https://go.postman.co/request/54533664-7f54c2a9-b57b-a364-06e4-dd19efed5555) | Publicar un producto digital | Con sesión, rol `EMPRENDEDOR` |\n| [<code>PUT /productos/fisicos/:idProducto</code>](https://go.postman.co/request/54533664-af9b1faa-be5b-728b-f322-b59d7e637376) | Modificar un producto físico | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [<code>PUT /productos/digitales/:idProducto</code>](https://go.postman.co/request/54533664-91a2b901-39e2-c88d-8fa5-88560303769d) | Modificar un producto digital | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [<code>DELETE /productos</code>](https://go.postman.co/request/54533664-642a0c16-ca94-e789-c6ed-1ec0991816a5) | Dar de baja productos de mi tienda | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [<code>PATCH /productos</code>](https://go.postman.co/request/54533664-9b88ce44-5b56-5cb2-b66a-d3170f858971) | Reactivar productos de mi tienda | Con sesión, rol `EMPRENDEDOR` (solo productos propios) |\n| [<code>GET /productos/mios</code>](https://go.postman.co/request/54533664-4dd56495-1ba1-9365-5bd8-4c0a3c77797c) | Ver todos los productos de mi tienda | Con sesión, rol `EMPRENDEDOR` |\n| [<code>GET /productos/tienda/:idTienda</code>](https://go.postman.co/request/54533664-c22e4905-e14d-bc1e-2f78-3826297cd62f) | Ver los productos activos de una tienda | Público |\n| [<code>GET /productos/:idProducto</code>](https://go.postman.co/request/54533664-3f0e3eaf-6d4e-22dd-7be7-c183e96561cd) | Ver el detalle de un producto | Público |\n| [<code>GET /productos/descargar/:idVenta/:idProducto</code>](https://go.postman.co/request/54533664-2299c6f7-25fd-704b-c9f8-e8fe295b0f27) | Obtener el link de descarga de un producto digital comprado | Con sesión, cualquier rol |\n| [<code>POST /productos/enhance</code>](https://ezequiel-ramos-9947372.postman.co/workspace/EZEQUIEL-RAMOS's-Workspace~5a99070b-86fa-41b4-8712-ddfc51120dd8/request/54533664-34d0eb57-8441-464b-a931-19a639f8541a?action=share&source=copy-link&creator=54533664) | Sugerir los datos de un producto con IA | Emprendedor |\n\nEl detalle de cada endpoint (entrada, respuestas y ejemplos) está en su request. Los diagramas de secuencia están en `docs/Secuencia` y el resultado de la prueba con las métricas en `docs/test`, en el repositorio."
     },
     {
       "name": "07 · Cupones",

@@ -28,7 +28,16 @@ export async function subirArchivo(archivo)
                     ContentType: archivo.mimetype,
                     ContentDisposition: "inline"
                 }));
+                break;
 
+            case 'IMAGEN TEMPORAL':
+                await s3.send(new PutObjectCommand({
+                    Bucket: process.env.AWS_BUCKET_NAME,
+                    Key: archivo.key,
+                    Body: fileStream,
+                    ContentType: archivo.mimetype,
+                    ContentDisposition: "inline"
+                }));
                 break;
         }
 

@@ -1,7 +1,7 @@
 import { crearProductoService, modificarProductoService,
     cambiarActivoProductosService,
     subirArchivoDigitalS3, obtenerURLService, buscarProductoPorId,
-    obtenerProductosTiendaService, obtenerArchivoProductoService } from '../services/productosService.js';
+    obtenerProductosTiendaService, obtenerArchivoProductoService, sugerirDatosProductoService } from '../services/productosService.js';
 import { ArchivoDigital } from '../models/archivoDigital.js'
 import { generarURLPublica } from '../services/api/awsS3Service.js';
 import { Tiendas } from '../models/tiendas.js';
@@ -311,3 +311,70 @@ export async function descargarProducto(req, res)
         return res.status(403).json({ mensaje: err.message })
     }
 }
+
+export async function sugerirProducto(req, res)
+{
+    try
+    {
+        const [producto] = req.models;
+        let imagen = null;
+
+        if (req.file)
+        {
+            if (req.file.mimetype !== 'image/png'
+            && req.file.mimetype !== 'image/jpeg'
+            && req.file.mimetype !== 'image/jpg'
+            && req.file.mimetype !== 'image/webp')
+
+            {
+                return res.status(400).json({ mensaje: "La imagen del producto tiene que ser PNG, JPG o WEBP" });
+            }
+
+            if (req.file.size > 5 * 1024 * 1024)
+            {
+                return res.status(400).json({ mensaje: `La imagen puede pesar hasta ${5} MB` });
+            }
+
+            imagen = new ArchivoDigital(
+            {
+                originalname: req.file.originalname,
+                mimetype: req.file.mimetype,
+                path: req.file.path,
+                size: req.file.size,
+                type: 'IMAGEN TEMPORAL',
+                idTienda: req.user.id_tienda
+            });
+        }
+        else if (producto.idProducto)
+        {
+            const productoActual = await buscarProductoPorId(producto);
+
+            if (!productoActual || productoActual.idTienda !== req.user.id_tienda)
+            {
+                return res.status(404).json({ mensaje: "Producto no encontrado" });
+            }
+
+            producto.imagenProd = productoActual.imagenProd;
+        }
+        else
+        {
+            return res.status(400).json({ mensaje: "Se requiere subir una imagen del producto" });
+        }
+
+        const sugerencia = await sugerirDatosProductoService(producto, imagen);
+
+        return res.status(200).json(sugerencia);
+    }
+    catch (err)
+    {
+        console.error(err);
+
+        if (err.message === 'Categoría no encontrada')
+        {
+            return res.status(404).json({ mensaje: err.message });
+        }
+
+        return res.status(502).json({ mensaje: `No pudimos generar la sugerencia: ${err.message}` });
+    }
+}
+

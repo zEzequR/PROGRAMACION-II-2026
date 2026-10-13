@@ -1,5 +1,6 @@
 import { mcp } from '../../config/MCP.js';
 import { formatearResultado } from '../../utils/formatearResultadoMCP.js';
+import { SugerenciaProducto } from '../../models/sugerenciasProducto.js';
 
 export async function verificarEstadoFeed()
 {
@@ -7,9 +8,9 @@ export async function verificarEstadoFeed()
     return formatearResultado(mcpRes);
 }
 
-export async function llamarToolMCP(tool, parametros)
+export async function llamarToolMCP(tool, parametros, opciones)
 {
-    const mcpRes = await mcp.callTool({name: tool, arguments: parametros});
+    const mcpRes = await mcp.callTool({name: tool, arguments: parametros}, undefined, opciones);
 
     if (mcpRes.isError)
     {
@@ -69,4 +70,22 @@ export async function setInteresesUsuarioFeed(evento)
         id_cat: evento.idCat,
         accion: evento.accion
     });
+}
+
+export async function mejorarProductoMcp(producto, categoria, atributos, urlImagen)
+{
+    const nombresAtributos = [];
+    for (const atributo of atributos)
+    {
+        nombresAtributos.push(atributo.nombreAtributo);
+    }
+
+    const mcpRes = await llamarToolMCP('mejorar_producto', {
+        nombre_prod: producto.nombreProd,
+        categoria: categoria.categoria,
+        atributos_categoria: nombresAtributos,
+        url_imagen: urlImagen
+    }, { timeout: 90000 });
+
+    return SugerenciaProducto.fromMcp(JSON.parse(formatearResultado(mcpRes)));
 }
